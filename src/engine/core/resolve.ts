@@ -8,6 +8,8 @@ import { runCropHarvest } from '../world/crops.ts';
 import { countWoodcutters, runDawnNeeds, runDeliveries, runHarvest } from '../world/economy.ts';
 import { updateSmoke } from '../world/sickness.ts';
 import { runNight } from '../world/hazards.ts';
+import { runRealityLaws, type RealityPlan } from '../reality/execute.ts';
+import { realityDawn, realityDusk, realityNight } from '../reality/entities.ts';
 import { cloneState } from './clone.ts';
 import { emit, type Ctx } from './events.ts';
 import { claimDef, findLandmark, modActive } from './lookup.ts';
@@ -52,11 +54,19 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   countWoodcutters(ctx);
   moveToNight(ctx);
   const mods = computeModifiers(s);
+  // Generative Reality laws add their own contributions and entity intents (absent in classic runs: nothing changes there)
+  let reality: RealityPlan | null = null;
+  if (s.v2) {
+    reality = runRealityLaws(ctx, mods);
+    realityDusk(ctx, reality, mods);
+  }
   for (const law of s.laws) if (law.status === 'active' || law.status === 'wavering') law.activeNights += 1;
   runNight(ctx, mods); // G  hazards and resources
+  if (reality) realityNight(ctx, reality);
   runRivalPlan(ctx); // H  rivals decide (announced a day ahead)
   runFactionPlan(ctx); // H' factions endorse or announce
   runDawnNeeds(ctx);
+  if (reality) realityDawn(ctx, reality);
 
   const ev = evaluate(s); // I  threat and win/loss
   if (ev.over) {

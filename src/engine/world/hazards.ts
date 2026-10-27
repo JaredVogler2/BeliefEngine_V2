@@ -69,6 +69,19 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
           text: `The rain the bells turned away pools on the low ground of ${w.regions.find((r) => r.id === region)?.name ?? region}: ${pooled} tiles take ${amount} extra depth.`,
         });
     }
+    // Generative Reality moves water by volume: each step is six tile-depths, laid one deep on the region's lowest dry ground
+    for (const sink of mods.sinks ?? []) {
+      const tiles: number[] = [];
+      for (let i = 0; i < w.region.length; i++) if (w.regions[w.region[i]]?.id === sink.region && w.terrain[i] !== T.RIVER && water[i] === 0) tiles.push(i);
+      tiles.sort((a, b) => w.elev[a] - w.elev[b] || a - b);
+      const pooledTiles = tiles.slice(0, 6 * sink.amount);
+      for (const i of pooledTiles) water[i] += 1;
+      if (pooledTiles.length)
+        emit(ctx, {
+          step: 'hazard', code: 'WATER_POOLED', importance: 2,
+          text: `Water moved by belief pools on the low ground of ${w.regions.find((r) => r.id === sink.region)?.name ?? sink.region}: ${pooledTiles.length} tiles stand a tile deep.`,
+        });
+    }
   }
   w.water = water;
 
@@ -80,7 +93,7 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
   if (bridge && floodActive && s.scn.features.bridge) {
     const raw = Math.max(0, L - 1) * (s.scn.consts.dmgBridge ?? 11);
     const watched = (bridge.data.watchers ?? 0) > 0 ? mods.bridgeShield : 0;
-    const dmg = Math.round(raw * (1 - watched));
+    const dmg = mods.bridgeHardness === undefined ? Math.round(raw * (1 - watched)) : Math.round(raw * (1 - watched) * (1 - mods.bridgeHardness));
     const saved = raw - dmg;
     const before = bridge.hp;
     bridge.hp = Math.max(0, bridge.hp - dmg);
@@ -130,7 +143,8 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
     const d = water[i];
     const d0 = cfWater[i];
     let dmg = homeDamage(d);
-    if (w.fire[i] >= 1) dmg += Math.round(40 * (1 - (mods.fireDamageCut[l.district] ?? 0)));
+    if (mods.homeShield?.[l.id] !== undefined) dmg = Math.round(dmg * (1 - mods.homeShield[l.id]));
+    if (w.fire[i] >= 1) dmg += mods.homeFireCut?.[l.id] === undefined ? Math.round(40 * (1 - (mods.fireDamageCut[l.district] ?? 0))) : Math.round(40 * (1 - (mods.fireDamageCut[l.district] ?? 0)) * (1 - mods.homeFireCut[l.id]));
     for (const ss of mods.stoneStress) if (Math.abs(ss.x - l.x) + Math.abs(ss.y - l.y) <= ss.r) dmg += ss.amount;
     if (dmg <= 0) {
       if (d0 >= 1 && floodLaws.length) {
@@ -194,7 +208,7 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
     let depth = water[i];
     if (v.place === 'br') depth = Math.max(0, L - (s.scn.consts.deckLevel ?? 6));
     const cf = cfWater[i];
-    const fireHere = w.fire[i] >= 1;
+    const fireHere = w.fire[i] >= 1 && !(mods.fireproof?.includes(v.id) ?? false);
     if (depth >= (s.scn.consts.waterDeath ?? 2)) {
       kill(ctx, v, 'drowned', `${v.name} drowned. The water stood ${depth} deep at ${placeName(s, v)}. ${v.duty === 'trapped' ? 'There was no way out.' : ''}`.trim());
     } else if (fireHere && w.fire[i] >= 2 && v.health <= 30) {

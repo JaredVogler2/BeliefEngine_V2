@@ -3,6 +3,8 @@ import { cloneState } from './clone.ts';
 import { claimDef, findLandmark, findVillager, trustOf, neighborsOf, edgeBetween, allClaimDefs, evidenceMult, modActive, repeatMult } from './lookup.ts';
 import { pledgeKey } from '../progress/options.ts';
 import { MAX_CUSTOM_CLAIMS, buildClaim, composeCostOf } from '../nl/build.ts';
+import { MAX_REALITY_CLAIMS, buildRealityClaim } from '../reality/build.ts';
+import { realityComposeCost } from '../reality/cost.ts';
 import { installClaim } from '../nl/stress.ts';
 import { NL_VERSION } from '../nl/ontology.ts';
 import { memoryFactor, remember } from './memory.ts';
@@ -49,8 +51,8 @@ export function actionCost(s: RunState, a: Action): number {
     case 'TRADE':
       return s.scn.deals?.find((d) => d.id === a.deal)?.ap ?? 1;
     case 'COMPOSE':
-      // what a belief costs to write follows from its strength (nl/balance.ts), never from what the request says it costs
-      return composeCostOf(a.claim?.custom?.ast);
+      // what a belief costs to write follows from its strength (nl/balance.ts, reality/balance.ts), never from what the request says
+      return a.claim?.reality ? realityComposeCost(s, a.claim.reality.ast) : composeCostOf(a.claim?.custom?.ast);
     case 'END_DAY':
       return 0;
   }
@@ -288,6 +290,7 @@ function perform(ctx: Ctx, a: Action): Fail | null {
  */
 function doCompose(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | null {
   const s = ctx.s;
+  if (a.claim?.reality) return doComposeReality(ctx, a);
   if (!s.flags.inventor) return fail('NOT_AVAILABLE', 'Writing your own belief is part of Inventor runs. Start one from the briefing (Inventor mode is unranked).');
   const made = s.claims.filter((c) => c.def?.custom).length;
   if (made >= MAX_CUSTOM_CLAIMS) return fail('TOO_MANY', `You can write at most ${MAX_CUSTOM_CLAIMS} beliefs in one run.`);
@@ -304,6 +307,32 @@ function doCompose(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | nu
   emit(ctx, {
     step: 'action', code: 'BELIEF_WRITTEN', importance: 2, claim: def.id,
     text: `You write a new belief into the village: “${def.short}”. It needs ${Math.round(def.spec.thresholds.on * 100)}% local support and ${def.spec.thresholds.minSupporters} firm believers before it can wake. ${def.unlockDay !== undefined && s.day < def.unlockDay ? `The village will take it up on day ${def.unlockDay}.` : 'Now tell someone.'}`,
+  });
+  return null;
+}
+
+/**
+ * Compose a Generative Reality belief. The request carries an AST v2 and the run revision it was previewed against; the claim is
+ * rebuilt here from that structure alone (validation, grounding in this village, balance, costs), so nothing the client says about
+ * its strength is believed, and a confirmation made against a village that has since changed is refused (STALE_REVISION).
+ */
+function doComposeReality(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | null {
+  const s = ctx.s;
+  const r = a.claim.reality!;
+  if (!s.v2) return fail('NOT_AVAILABLE', 'Beliefs in the reality language are written in Generative Reality runs.');
+  const made = s.claims.filter((c) => c.def?.reality).length;
+  if (made >= MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)) return fail('TOO_MANY', `You can write at most ${MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)} beliefs in one run.`);
+  if (r.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since this belief was read. Read it again (reading is free).');
+  const built = buildRealityClaim(s, r.ast, { title: a.claim.short, rev: r.rev });
+  if (!built.ok) return fail(built.code, `${built.message}${built.issues.length ? ` ${built.issues.slice(0, 3).join('; ')}.` : ''}`);
+  const def = built.draft.claim;
+  if (def.reality!.hash !== r.hash) return fail('STALE_BELIEF', 'That belief was prepared under other rules. Read it again.');
+  if (s.claims.some((c) => c.id === def.id)) return fail('ALREADY_WRITTEN', 'You already wrote a belief that does exactly this.');
+  installClaim(s, def);
+  s.flags.composed = ((s.flags.composed as number | undefined) ?? 0) + 1;
+  emit(ctx, {
+    step: 'action', code: 'BELIEF_WRITTEN', importance: 2, claim: def.id,
+    text: `You write a new belief into the village: “${def.short}”. It needs ${Math.round(def.spec.thresholds.on * 100)}% local support and ${def.spec.thresholds.minSupporters} firm believers before it can wake. Now tell someone.`,
   });
   return null;
 }

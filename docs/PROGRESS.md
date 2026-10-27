@@ -8,11 +8,63 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 01 V1 audit | **VERIFIED** | [`V1_AUDIT.md`](V1_AUDIT.md); V1 baseline run in a clone ([`BASELINE.md`](BASELINE.md)) |
 | 02 Migration and baseline | **VERIFIED** | [`MIGRATION.md`](MIGRATION.md), [`BASELINE.md`](BASELINE.md), `tests/unit/v2-migration.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
 | 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
-| 04 Generative belief language | NOT STARTED | next: [`CONTINUE_HERE.md`](CONTINUE_HERE.md) |
-| 05-17 | NOT STARTED | |
+| 04 Generative belief language | **VERIFIED (gate: typed, validated, deterministic, V1-compatible, three novel executable claims, property tests); the interactive preview UI arrives with phase 05's composer** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md), `tests/unit/reality-language.test.ts`, `tests/unit/reality-properties.test.ts`, `tests/fixtures/reality-corpus-1.json` |
+| 05 Interpreter and compiler | NOT STARTED | next: [`CONTINUE_HERE.md`](CONTINUE_HERE.md) |
+| 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
+| 07-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-27 — Phases 04 and 06 (engine): the reality language and its night executor
+
+**What was done**
+
+- `src/engine/reality/` ([`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md)): AST v2 (`reality-1`) with literal text, author,
+  provenance, regions, 1-2 clauses (3 in Reality Lab) of trigger + condition + selector + effect + duration, explicit omissions
+  and narrative kept apart; a strict validator that never throws; mechanics and belief fingerprints. A world vocabulary built from
+  what the simulation really holds (14 kinds marked simulated / logical, 10 absent concepts with reasons, 18 properties with units),
+  19 operators (17 executable, 13 families) each with targets, typed ranges, tick order, cost weight, persistence, downside and a
+  3D effect key. Balance on V1's power scale (a lantern flood belief costs 40 in both languages), grounding against the actual
+  village, V1's pacing rule, a preview with units, needs, risks and omissions.
+- The night executor runs only in runs with `s.v2`: triggers read tonight's inputs, selectors resolve to ≤40 targets in the law's
+  region, effects become contributions combined per property, opposite pushes resolve by support (order independent), and results
+  go into V1's `Modifiers` (plus optional fields absent in Classic) so V1's hazard code carries the consequences. Two new entity
+  archetypes exist only in Generative Reality runs: **chickens** (coops, roosting, drowning, wolves, wind, eggs) and **loose
+  stones** (mass, wetness, hauling that raises the riverbank for good, floating debris that batters the bridge).
+- The three proof beliefs work on Redbank seed 1 against a control run: "Chickens fly when the bell rings" saves the flock that
+  the control loses to the flood; "Wet stone becomes light beside lanterns" raises the bank; "At night, bell ringing pulls rain
+  toward the orchard and makes local flames burn weaker" (compound) keeps 13 homes standing against the control's 7, at the cost
+  of water pooled on the fields. Four runs, four different state hashes.
+- `COMPOSE` rebuilds every reality claim from its AST and refuses a stale confirmation, a forged fingerprint or a classic run;
+  saves re-verify reality claims on load; the action log replays a reality run exactly with no model.
+- Every V1 rule has an AST v2 reading (`v1.ts`): all 11 authored claims and every combination V1's composer offers translate and
+  validate; V1 laws keep running on V1's executor so old saves and replays reproduce bit for bit.
+- A 172-sentence adversarial corpus (`tests/fixtures/reality-corpus-1.json`, 15 categories, 12 kinds) for phase 05's reader and
+  model contract.
+- **Found and fixed by the new loop test**: a belief anchored "near the bridge" but written for Eastbank fired an effect event
+  while changing nothing (the bridge stands in the river commons), and grounding had accepted it. Anchors now resolve inside the
+  law's region in every operator, grounding refuses per region (lanterns, smoke fires and `near` landmarks the region lacks), and
+  a clause that changes nothing reports `REALITY_IDLE`.
+
+**Commands and results** (this container: Node 22.22, redis-server 7.0.15)
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `BE_REQUIRE_REDIS=1 npm test` | 37 files, **438 passed** (was 400: +20 language and bridge and corpus, +14 executor, +4 property and time tests) |
+| `npx vitest run tests/unit/reality-properties.test.ts` | 4 passed: 1,500 seeded beliefs (875 valid, 206 built in Redbank, 669 refused with reasons) and 1,500 corrupted copies, no validator crash, every accepted belief within its bounds; a collapsing law stops acting and its raised bank stays; a flood-triggered law that draws more floodwater fires once a night and never compounds |
+| `npm run build`, `npm run size` | pass; entry **251 KB gzip of a 260 KB budget** (was 231: the reality engine is in the entry chunk), 3D chunk 193 KB, CSS 6.3 KB |
+| `npm run test:sim:smoke` | 256/256 runs, `SMOKE OK`, determinism 32/32 |
+| V1 golden hashes (`tests/unit/v2-migration.test.ts`) | unchanged |
+
+**Mock vs LIVE:** no model is involved in executing a validated AST. No model was called. **LIVE: UNVERIFIED** (unchanged).
+
+**Known limits:** the corpus is checked for shape only until phase 05's reader is scored against it; the same author wrote both,
+so its scores will measure regressions, not unbiased accuracy. Chickens and stones are not drawn in 3D yet, so phase 06 stays IN
+PROGRESS. The entry bundle has 9 KB gzip of headroom left: phase 05 loads the reader and composer lazily.
 
 ---
 

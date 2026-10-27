@@ -46,6 +46,7 @@ map with line references is [`V1_AUDIT.md`](V1_AUDIT.md); this page is the shape
 | `src/engine/social`, `laws`, `world`, `ai` | simulation | belief diffusion, law pressure and status, bounded physical effects, hazards, villager routines, rivals, factions, bots |
 | `src/engine/content`, `gen`, `progress`, `save` | content and meta | 3 chapters, procedural villages and the verified catalog, the Atlas, save format |
 | `src/engine/nl` | belief language v1 | offline lexicon reader, `BeliefAST`, balance, stress test, model-reply validator |
+| `src/engine/reality` | belief language v2 | AST v2 (`reality-1`), world vocabulary, operator registry, balance, grounding, night executor, chickens and stones, V1 bridge; runs only when `s.v2` exists ([`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md)) |
 | `src/render3d`, `src/render` | presentation | Three.js world and the Canvas2D map behind `WorldRenderer` |
 | `src/ui`, `src/audio`, `src/App.tsx`, `src/main.tsx` | shell | React screens, store and persistence, composer, procedural audio |
 | `src/v2` | V2 switches | `features.ts`: `serverInference` on since phase 03 (an opt-in offer), the rest off |
@@ -74,7 +75,7 @@ map with line references is [`V1_AUDIT.md`](V1_AUDIT.md); this page is the shape
 | Phase | New code | Seam to existing code |
 |---|---|---|
 | 03 provider, auth, budgets | **built**: `server/ai/` + `api/` (`/api/ai-status`, `/api/session`, `/api/interpret-belief`, `/api/npc-decision`, `/api/ai-metrics`), durable limiter, metering ([`AI_SETUP.md`](AI_SETUP.md)) | `src/ai/client.ts` replaced V1's `src/ui/interpreter.ts`; the composer's consent notice; `serverInference` on |
-| 04-06 belief language and primitives | `src/engine/rule-language/`: a versioned typed DSL (selectors, triggers, conditions, bounded effects) that compiles V1 `RuleSpec`s unchanged, plus new world primitives in `src/engine/world/` | `laws/effects.ts` `computeModifiers` (today a fixed `switch`), `nl/ast.ts` (today 1-2 clauses of a closed union) |
+| 04-06 belief language and primitives | **built (engine)**: `src/engine/reality/` ([`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md)); phase 05 adds the offline reader v2, the `interpret v2` model contract and the composer | `core/resolve.ts` runs the executor after `computeModifiers` and the entity steps after the night and dawn hazards, only when `s.v2` exists; results go into V1's `Modifiers` (plus optional fields that are absent in Classic) so V1's hazard code carries them; `core/actions.ts` `COMPOSE` rebuilds and checks a reality claim |
 | 07-09 villager cognition and society | `src/agents/`: salient-event selection, bounded memory with provenance, model-proposed intentions | `ai/routines.ts`, `ai/utility.ts`, `core/memory.ts`; belief change stays in `social/*` |
 | 10 3D effects | effect registry keyed by rule plans and event ids in `src/render3d/` | `render3d/plan.ts`, `magic.ts`, `effects.ts`; [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md) |
 | 13-14 MCP and replay | the same decision records exposed through MCP export/import | `mcp/service.ts` `versions` block, `save/versions.ts` |
@@ -83,7 +84,7 @@ map with line references is [`V1_AUDIT.md`](V1_AUDIT.md); this page is the shape
 
 | Layer | Command | Covers |
 |---|---|---|
-| unit | `npm test` | engine, content, generator, composer, MCP over stdio, source guards, V2 tripwire (364 tests) |
+| unit | `npm test` | engine, content, generator, composer, MCP over stdio, source guards, V2 tripwire, inference service, reality language (438 tests) |
 | simulation | `npm run test:sim:smoke` | 8 bot policies × 4 families, determinism, exploit search |
 | browser | `npm run test:e2e` | V1's 14 specs on the 2D map plus `tests/e2e/v2-world3d.spec.ts`, which forces the Three.js world |
 | cross-browser | `npm run test:e2e:browsers` | smoke in Firefox, WebKit and an iPhone 14 profile (CI installs those browsers) |
