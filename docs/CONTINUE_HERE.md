@@ -13,8 +13,10 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 
 ## Last good commit / branch
 
-Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2`. Commits: `a5c1c8a` (V1 import, merge of `6a92862`),
-`cc0389c` (identity and licences), then the commit that adds the V2 tests and these records (see `git log`).
+Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2`, on top of `main@0f6df54` (the V2 prompts):
+`a5c1c8a` V1 import (merge of `6a92862`) → `cc0389c` identity and licences → `c261433` V2 tripwire, switches and 3D browser tests →
+`ec691ca` phase 01-02 records and captures → the commit that updates this section. Every check in [`BASELINE.md`](BASELINE.md) was
+run on code identical to `c261433`'s; later commits change documentation only.
 
 ## Working files changed in phases 01-02
 
