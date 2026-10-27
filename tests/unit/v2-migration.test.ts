@@ -84,8 +84,9 @@ describe('V2 migration tripwire: the classic game is V1, byte for byte in its re
     expect(hashValue(JSON.parse(readFileSync(new URL('../../src/engine/gen/catalog.json', import.meta.url), 'utf8')))).toBe('17e472b720f7b7');
   });
 
-  it('ships with every V2 capability switched off, so the default game needs no model, key or inference endpoint', () => {
-    expect(Object.values(V2_FEATURES).every((on) => on === false)).toBe(true);
+  it('ships the V2 switches as recorded: the default game needs no model, key or inference endpoint', () => {
+    // phase 03 turned on serverInference (an opt-in offer, tested in nl-online-client and v2-online.spec); the rest stay off until their gates
+    expect(V2_FEATURES).toEqual({ serverInference: true, generativeReality: false, villagerCognition: false });
     expect(Object.keys(V2_FEATURES).sort()).toEqual(['generativeReality', 'serverInference', 'villagerCognition']);
   });
 });

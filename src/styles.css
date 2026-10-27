@@ -106,6 +106,9 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.55rem 0; border-bottom: 1px solid #1f3159; }
 .toggle-row input[type='range'] { width: 150px; accent-color: var(--gold); }
 .toggle-row input[type='checkbox'] { width: 24px; height: 24px; accent-color: var(--gold); }
+.online-row { border-top: 1px solid #1f3159; border-bottom: 1px solid #1f3159; padding: 0.5rem 0; margin: 0.2rem 0 0.6rem; }
+.consent ul { padding-left: 1.1rem; }
+.consent li { margin: 0.15rem 0; }
 
 /* ------------ play layout */
 .play { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 390px; grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: 'top top' 'coach coach' 'stage side' 'plan plan'; background: var(--bg); }

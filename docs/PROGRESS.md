@@ -7,11 +7,62 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 |---|---|---|
 | 01 V1 audit | **VERIFIED** | [`V1_AUDIT.md`](V1_AUDIT.md); V1 baseline run in a clone ([`BASELINE.md`](BASELINE.md)) |
 | 02 Migration and baseline | **VERIFIED** | [`MIGRATION.md`](MIGRATION.md), [`BASELINE.md`](BASELINE.md), `tests/unit/v2-migration.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
-| 03 Provider, auth, budgets | NOT STARTED | next: [`CONTINUE_HERE.md`](CONTINUE_HERE.md) |
-| 04-17 | NOT STARTED | |
+| 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
+| 04 Generative belief language | NOT STARTED | next: [`CONTINUE_HERE.md`](CONTINUE_HERE.md) |
+| 05-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
-Live model calls so far: **none**. Inference spend so far: **0**.
+Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-27 — Phase 03: the inference service, safe with no credentials
+
+**What was done**
+
+- Checked the current APIs before writing code: `ai@7.0.155` (latest; `generateText` + `Output.object`, `instructions` replaces the
+  deprecated `system`), `@ai-sdk/gateway@4.0.128` (API key, else OIDC), the gateway budget and OIDC docs (updated 2026-09-08/10),
+  and the public model catalog (496 models; defaults `anthropic/claude-haiku-5.5` $0.10/$0.50 and `anthropic/claude-sonnet-5.5`
+  $2/$10 per million tokens). Recorded in [`AI_SETUP.md`](AI_SETUP.md) and [`AI_COSTS.md`](AI_COSTS.md).
+- Built `server/ai/` as one transport-free app behind five Vercel Functions in `api/`: `GET /api/ai-status`, `POST /api/session`
+  (consent + allowed origin + per-network rate → HMAC-signed 2 h token), `POST /api/interpret-belief` (the V1 vocabulary contract;
+  phase 05 adds v2), `POST /api/npc-decision` (validated against each villager's own moves, targets and memories),
+  `GET /api/ai-metrics` (operator only). Durable store over the Upstash REST protocol with one atomic Lua reservation across
+  session, network, project-call, token and dollar counters; worst-case cost reserved before a call and settled after; **fail
+  closed** on any store error; validated-only cache re-validated on read; metering with no text, session, address or key.
+- **Found and fixed a deployment defect before deploying**: Vercel's builder keeps `.ts` import paths (verified with
+  `vercel build` 65.4.0 offline), so functions importing `../server/*.ts` crash with `ERR_MODULE_NOT_FOUND`;
+  `rewriteRelativeImportExtensions` fixes it, and `tests/unit/ai-functions.test.ts` (mutation-checked) keeps it fixed. The SPA
+  rewrite now leaves `/api/` to the functions (audit hole H12).
+- Browser: `src/ai/client.ts` (same-origin, token in memory only, nothing sent until the player opts in) replaced V1's
+  `src/ui/interpreter.ts` and its build-time `VITE_INTERPRETER_URL`; the composer gained a consent notice (what leaves the device,
+  who pays, offline always works) and labels every online reading with its source, "simulated (no model)" for the scripted
+  provider. `V2_FEATURES.serverInference` is now on (an offer, not a default). V1's in-memory proxy was removed.
+- Local simulator `npm run dev:api` (same app; scripted provider with `BE_AI_DEV_PROVIDER=mock`); `npm run ai:smoke` for the LIVE
+  test (refuses and exits 2 without a credential); `.env.example` with names only; CI now installs `redis-server` and requires
+  the real-Redis tests.
+
+**Commands and results** (this container: Node 22.22, redis-server 7.0.15, Chromium 1243)
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `BE_REQUIRE_REDIS=1 npm test` | 34 files, **400 passed** (was 364: +47 inference tests in five new files, +2 secret guards, the 14 V1 proxy tests removed with the proxy, the 4 V1 client tests rewritten as 5) |
+| `npx vitest run tests/unit/ai-store.test.ts` | 8 passed, incl. 100 racing reservations from 4 clients on real Redis → exactly 10 admitted, counters exact |
+| `npx vitest run tests/unit/ai-app.test.ts` | 22 passed, incl. 100 simultaneous requests through 4 app instances sharing one store (memory and real Redis): provider calls = the per-network quota (60), never more |
+| `npm run build`, `npm run size` | pass; entry 231 KB gzip (was 228), no credential name, gateway host or SDK code in the bundle |
+| `npm run verify:hosting` | hosting configuration verified (CSP, headers, flows) |
+| `npx playwright test tests/e2e/v2-online.spec.ts --project=desktop` | 4 passed (Classic makes no `/api` request; consent; simulated reading labelled; not configured; provider failure spends nothing) |
+| `vercel build` (CLI 65.4.0, offline, scratch copy) | 5 functions (`nodejs24.x`) + static site; each built function imported and called with plain Node: `disabled` unconfigured, `quota_unavailable` with an unreachable store |
+| `npm run ai:smoke` | `LIVE: UNVERIFIED` (no credential), exit 2, nothing called |
+| `npx playwright test` (full) | **149 passed, 59 skipped, 0 failed** in 8.9 min (was 145/55: the 4 online-reading tests pass on desktop and skip on phone) |
+
+**Mock vs LIVE:** every inference test used a scripted provider or the AI SDK's `MockLanguageModelV4`: **TESTED MOCK ONLY**. No model
+has been called. **LIVE: UNVERIFIED.** No Vercel project exists for this repository: **NOT DEPLOYED.**
+
+**Known limits:** no CAPTCHA/BotID (sessions are rate-limited per network; project-wide call and dollar caps bound the total); the
+Upstash REST protocol is exercised through a local shim over real Redis, not against Upstash itself; costs in `AI_COSTS.md` are
+list-price arithmetic, not measurements.
 
 ---
 

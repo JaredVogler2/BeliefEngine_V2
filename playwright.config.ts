@@ -15,12 +15,23 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'off',
   },
-  webServer: {
-    command: 'npm run build && npm run preview',
-    url: `http://127.0.0.1:${PORT}`,
-    reuseExistingServer: true,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      command: 'npm run build && npm run preview',
+      url: `http://127.0.0.1:${PORT}`,
+      reuseExistingServer: true,
+      timeout: 180_000,
+    },
+    {
+      // the inference routes, as the local simulator with its scripted provider: NO model is called, and the game labels every
+      // answer "simulated". `vite preview` forwards /api here. Only the online-reading spec uses it; Classic never calls /api.
+      command: 'npm run dev:api',
+      url: 'http://127.0.0.1:8787/api/ai-status',
+      reuseExistingServer: true,
+      timeout: 60_000,
+      env: { BE_AI_ENABLED: '1', BE_AI_DEV_PROVIDER: 'mock', BE_AI_DEV_MEMORY_STORE: '1', BE_AI_DEV_PORT: '8787' },
+    },
+  ],
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
     {

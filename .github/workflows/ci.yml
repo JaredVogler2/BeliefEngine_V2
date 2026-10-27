@@ -24,9 +24,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # a real Redis, so the quota store's atomic Lua scripts run in tests (tests/unit/ai-store.test.ts, ai-app.test.ts)
+      - run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends redis-server && sudo systemctl stop redis-server || true
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+        env:
+          BE_REQUIRE_REDIS: '1'
       - run: npm run build
       - run: npm run size
       - run: npx playwright install --with-deps chromium

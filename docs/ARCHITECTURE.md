@@ -48,9 +48,10 @@ map with line references is [`V1_AUDIT.md`](V1_AUDIT.md); this page is the shape
 | `src/engine/nl` | belief language v1 | offline lexicon reader, `BeliefAST`, balance, stress test, model-reply validator |
 | `src/render3d`, `src/render` | presentation | Three.js world and the Canvas2D map behind `WorldRenderer` |
 | `src/ui`, `src/audio`, `src/App.tsx`, `src/main.tsx` | shell | React screens, store and persistence, composer, procedural audio |
-| `src/v2` | V2 switches | `features.ts`: every V2 capability, all `false` |
+| `src/v2` | V2 switches | `features.ts`: `serverInference` on since phase 03 (an opt-in offer), the rest off |
+| `src/ai` | online-reading client | same-origin `/api` only, session token in memory, no request before the player opts in |
 | `mcp/` | agent interface | stdio MCP server over a transport-free game service |
-| `server/` | optional inference | V1's interpreter proxy sketch (never deployed; see the audit's H1-H12) |
+| `server/ai/`, `api/` | inference service | transport-free app (`app.ts`), config, sessions, durable fail-closed quotas, AI SDK 7 provider, metering, task contracts; `api/*.ts` are the Vercel Functions ([`AI_SETUP.md`](AI_SETUP.md)) |
 | `scripts/`, `tests/` | tooling | tournaments, capture, acceptance journeys; unit, browser and simulation tests |
 | `docs/`, `prompts/` | records and plans | [`docs/README.md`](README.md) says which docs are V2 records |
 
@@ -72,7 +73,7 @@ map with line references is [`V1_AUDIT.md`](V1_AUDIT.md); this page is the shape
 
 | Phase | New code | Seam to existing code |
 |---|---|---|
-| 03 provider, auth, budgets | `server/` Vercel functions (`/api/interpret-belief`, `/api/npc-decision`, `/api/ai-status`), a durable limiter, cost metering | `src/ui/interpreter.ts` already fetches a same-origin URL and falls back offline on any failure; `switch serverInference` |
+| 03 provider, auth, budgets | **built**: `server/ai/` + `api/` (`/api/ai-status`, `/api/session`, `/api/interpret-belief`, `/api/npc-decision`, `/api/ai-metrics`), durable limiter, metering ([`AI_SETUP.md`](AI_SETUP.md)) | `src/ai/client.ts` replaced V1's `src/ui/interpreter.ts`; the composer's consent notice; `serverInference` on |
 | 04-06 belief language and primitives | `src/engine/rule-language/`: a versioned typed DSL (selectors, triggers, conditions, bounded effects) that compiles V1 `RuleSpec`s unchanged, plus new world primitives in `src/engine/world/` | `laws/effects.ts` `computeModifiers` (today a fixed `switch`), `nl/ast.ts` (today 1-2 clauses of a closed union) |
 | 07-09 villager cognition and society | `src/agents/`: salient-event selection, bounded memory with provenance, model-proposed intentions | `ai/routines.ts`, `ai/utility.ts`, `core/memory.ts`; belief change stays in `social/*` |
 | 10 3D effects | effect registry keyed by rule plans and event ids in `src/render3d/` | `render3d/plan.ts`, `magic.ts`, `effects.ts`; [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md) |

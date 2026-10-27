@@ -9,7 +9,9 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 700,
   },
-  server: { host: '127.0.0.1', port: 5173 },
+  // the inference routes live in api/ (Vercel Functions); locally `npm run dev:api` serves the same app, and Vite forwards /api to it
+  server: { host: '127.0.0.1', port: 5173, proxy: { '/api': 'http://127.0.0.1:8787' } },
+  preview: { proxy: { '/api': 'http://127.0.0.1:8787' } },
   test: {
     include: ['tests/unit/**/*.test.ts', 'tests/unit/**/*.test.tsx'],
     environment: 'node',

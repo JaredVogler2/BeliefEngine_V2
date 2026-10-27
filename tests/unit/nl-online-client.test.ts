@@ -1,59 +1,93 @@
 import { describe, expect, it, vi } from 'vitest';
+import { AiClient, runRef } from '../../src/ai/client.ts';
 import { GameSession } from '../../src/engine/index.ts';
-import { askOnline, INTERPRETER_URL } from '../../src/ui/interpreter.ts';
 
-/** The browser side of the optional online interpreter, against a mocked fetch only. */
+/**
+ * The browser side of online reading (src/ai/client.ts), against a mocked fetch only. In V2 it speaks to this site's own /api/*
+ * functions with a session token (V1 posted to a build-time URL with no session); the guarantees V1 tested still hold.
+ */
 const state = GameSession.create({ scenarioId: 'redbank', seed: 1, inventor: true }).state;
-const OK = { ok: true, cached: false, reply: { schema: 1, understood: true, candidates: [{ subject: 'river', effect: 'repel', trigger: 'lit_beacon', intensity: 2, radius: 2 }] } };
-const reply = (body: unknown) => vi.fn(async () => ({ json: async () => body }) as unknown as Response) as unknown as typeof fetch;
+const READING = { ok: true, contract: 1, id: 'abc123', cached: false, provider: 'gateway', model: { tier: 'fast', id: 'anthropic/claude-haiku-5.5' }, promptVersion: 'interpret-v1.x', reply: { schema: 1, understood: true, candidates: [{ subject: 'river', effect: 'repel', trigger: 'lit_beacon', intensity: 2, radius: 2 }] }, usage: { latencyMs: 812 } };
+const SESSION = { ok: true, token: 'tok.sig', expiresAt: Date.now() + 3600_000, scopes: ['interpret', 'npc'] };
 
-describe('online interpreter client (mocked)', () => {
-  it('is off unless the site was built with an interpreter URL', async () => {
-    expect(INTERPRETER_URL).toBeNull();
-    const r = await askOnline(state, 'The river turns aside from lit lanterns.');
-    expect(r.ok).toBe(false);
+function server(routes: Record<string, (init: RequestInit) => [number, unknown]>) {
+  return vi.fn(async (url: string, init: RequestInit) => {
+    const route = Object.keys(routes).find((r) => url.endsWith(r));
+    const [status, body] = route ? routes[route](init) : [404, { ok: false, reason: 'not_found' }];
+    return { status, json: async () => body } as unknown as Response;
+  }) as unknown as typeof fetch & { mock: { calls: [string, RequestInit][] } };
+}
+
+describe('online reading client (mocked)', () => {
+  it('makes no request until asked', () => {
+    const f = server({});
+    new AiClient({ fetch: f });
+    expect(f).not.toHaveBeenCalled();
   });
 
-  it('sends only the sentence, the ontology version and coarse village names: never the save, villagers or progress', async () => {
-    const f = reply(OK);
-    const r = await askOnline(state, 'The river turns aside from lit lanterns.', { fetchImpl: f, url: 'https://interp.example/api' });
+  it('opens a session with consent, then sends only the sentence, the vocabulary version, coarse village names and a hashed run reference', async () => {
+    const f = server({ '/api/session': () => [200, SESSION], '/api/interpret-belief': () => [200, READING] });
+    const c = new AiClient({ fetch: f });
+    const r = await c.interpretV1(state, 'The river turns aside from lit lanterns.');
     expect(r.ok).toBe(true);
-    const [url, init] = (f as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0];
-    expect(url).toBe('https://interp.example/api');
-    expect(init.credentials).toBe('omit');
-    expect(init.referrerPolicy).toBe('no-referrer');
-    const body = JSON.parse(init.body as string);
-    expect(Object.keys(body).sort()).toEqual(['context', 'ontology', 'text']);
+    if (r.ok) expect(r.meta).toMatchObject({ id: 'abc123', model: 'anthropic/claude-haiku-5.5', tier: 'fast', cached: false, latencyMs: 812 });
+    const [[sUrl, sInit], [iUrl, iInit]] = f.mock.calls;
+    expect(sUrl).toBe('/api/session');
+    expect(JSON.parse(sInit.body as string)).toEqual({ consent: true });
+    expect(iUrl).toBe('/api/interpret-belief');
+    for (const init of [sInit, iInit]) {
+      expect(init.credentials).toBe('omit');
+      expect(init.referrerPolicy).toBe('no-referrer');
+    }
+    expect((iInit.headers as Record<string, string>).authorization).toBe('Bearer tok.sig');
+    const body = JSON.parse(iInit.body as string);
+    expect(Object.keys(body).sort()).toEqual(['context', 'ontology', 'run', 'text', 'v']);
     expect(Object.keys(body.context).sort()).toEqual(['features', 'regions']);
-    const wire = init.body as string;
+    expect(body.run).toEqual(runRef(state));
+    const wire = iInit.body as string;
     for (const v of state.villagers.slice(0, 5)) expect(wire).not.toContain(v.name);
     expect(wire.length).toBeLessThan(600);
+    // the session is reused
+    await c.interpretV1(state, 'The river turns aside from lit lanterns.');
+    expect(f.mock.calls.filter(([u]) => u === '/api/session').length).toBe(1);
   });
 
-  it('turns a valid reply into readings, and every failure into "use the offline reading"', async () => {
-    const good = await askOnline(state, 'x', { fetchImpl: reply(OK), url: 'u' });
-    expect(good.ok && good.readings[0].subject).toBe('river');
-    const cases: [string, unknown][] = [
-      ['proxy says no', { ok: false, reason: 'not_configured', message: 'The online interpreter is not configured.', fallback: 'offline' }],
-      ['garbage', 'nope'],
-      ['null', null],
-      ['schema drift', { ok: true, reply: { schema: 9, understood: true, candidates: [] } }],
-      ['extra field', { ok: true, reply: { ...OK.reply, evil: 'x' } }],
-      ['not understood', { ok: true, reply: { schema: 1, understood: false, candidates: [] } }],
-      ['outside the ontology', { ok: true, reply: { schema: 1, understood: true, candidates: [{ subject: 'time', effect: 'stop', trigger: 'always' }] } }],
+  it('turns every failure into an explained "use the offline reading", and drops the session on 401', async () => {
+    const cases: [string, number, unknown][] = [
+      ['server says not configured', 503, { ok: false, reason: 'not_configured', message: 'x', fallback: 'offline' }],
+      ['over budget', 429, { ok: false, reason: 'over_budget', message: 'x', fallback: 'offline', retryAfterSec: 3600 }],
+      ['garbage', 200, 'nope'],
+      ['null', 200, null],
+      ['schema drift', 200, { ...READING, reply: { schema: 9, understood: true, candidates: [] } }],
+      ['extra field', 200, { ...READING, reply: { ...READING.reply, evil: 'x' } }],
+      ['not understood', 200, { ...READING, reply: { schema: 1, understood: false, candidates: [] } }],
+      ['outside the vocabulary', 200, { ...READING, reply: { schema: 1, understood: true, candidates: [{ subject: 'time', effect: 'stop', trigger: 'always' }] } }],
     ];
-    for (const [name, body] of cases) {
-      const r = await askOnline(state, 'x', { fetchImpl: reply(body), url: 'u' });
+    for (const [name, status, body] of cases) {
+      const c = new AiClient({ fetch: server({ '/api/session': () => [200, SESSION], '/api/interpret-belief': () => [status, body] }) });
+      const r = await c.interpretV1(state, 'x');
       expect(r.ok, name).toBe(false);
       if (!r.ok) expect(r.why.length, name).toBeGreaterThan(5);
     }
+    const c = new AiClient({ fetch: server({ '/api/session': () => [200, SESSION], '/api/interpret-belief': () => [401, { ok: false, reason: 'unauthorized', message: 'x' }] }) });
+    await c.interpretV1(state, 'x');
+    expect(c.hasSession()).toBe(false);
+    const refused = new AiClient({ fetch: server({ '/api/session': () => [403, { ok: false, reason: 'forbidden', message: 'Online sessions can only be opened from the game itself.' }] }) });
+    expect(await refused.interpretV1(state, 'x')).toMatchObject({ ok: false, reason: 'forbidden' });
   });
 
   it('gives up after its timeout and on network errors', async () => {
     const hang = vi.fn((_u: unknown, init?: RequestInit) => new Promise((_res, rej) => init?.signal?.addEventListener('abort', () => rej(Object.assign(new Error('x'), { name: 'AbortError' }))))) as unknown as typeof fetch;
-    const t = await askOnline(state, 'x', { fetchImpl: hang, url: 'u', timeoutMs: 30 });
-    expect(t).toEqual({ ok: false, why: 'The online interpreter took too long.' });
-    const down = await askOnline(state, 'x', { fetchImpl: vi.fn(async () => { throw new TypeError('offline'); }) as unknown as typeof fetch, url: 'u' });
-    expect(down.ok).toBe(false);
+    const c = new AiClient({ fetch: hang });
+    expect(await c.status()).toMatchObject({ ok: false, reason: 'timeout' });
+    const down = new AiClient({ fetch: vi.fn(async () => { throw new TypeError('offline'); }) as unknown as typeof fetch });
+    expect(await down.interpretV1(state, 'x')).toMatchObject({ ok: false, reason: 'network' });
+  }, 20_000);
+
+  it('reads the status honestly, including a simulated (mock) provider', async () => {
+    const f = server({ '/api/ai-status': () => [200, { ok: true, available: true, reason: null, provider: 'mock', models: { fast: 'a/b', accurate: 'c/d' }, privacy: 'p', limits: { claimMaxChars: 240, interpretCooldownMs: 3000 } }] });
+    expect(await new AiClient({ fetch: f }).status()).toMatchObject({ available: true, provider: 'mock' });
+    const off = server({ '/api/ai-status': () => [200, { ok: true, available: false, reason: 'not_configured', provider: null, models: null, privacy: 'p', limits: {} }] });
+    expect(await new AiClient({ fetch: off }).status()).toMatchObject({ available: false, reason: 'not_configured', provider: null });
   });
 });
