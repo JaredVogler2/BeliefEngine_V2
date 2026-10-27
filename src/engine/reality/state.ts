@@ -3,6 +3,7 @@ import type { Landmark, RunState, WorldState } from '../core/types.ts';
 import { DIRS4, T, idx, inBounds, regionAt } from '../world/grid.ts';
 import { REALITY_LANG } from './ontology.ts';
 import type { OpId } from './operators.ts';
+import type { MindsState } from '../mind/types.ts';
 
 /**
  * The state a Generative Reality run adds to V1's RunState, under `s.v2`. Classic runs never have it, so their hashes, saves
@@ -74,6 +75,8 @@ export interface RealityState {
   /** what reality laws did last night */
   lastNight: AppliedEffect[];
   eggs: number;
+  /** villager minds (phase 07): personality, goals and memories; absent in reality saves made before them */
+  minds?: MindsState;
 }
 
 export const MAX_CHICKENS = 24;

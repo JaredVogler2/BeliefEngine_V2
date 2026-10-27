@@ -10,6 +10,7 @@ import { updateSmoke } from '../world/sickness.ts';
 import { runNight } from '../world/hazards.ts';
 import { runRealityLaws, type RealityPlan } from '../reality/execute.ts';
 import { realityDawn, realityDusk, realityNight } from '../reality/entities.ts';
+import { captureMemories } from '../mind/memory.ts';
 import { cloneState } from './clone.ts';
 import { emit, type Ctx } from './events.ts';
 import { claimDef, findLandmark, modActive } from './lookup.ts';
@@ -41,6 +42,8 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   }
   s.history.push({ day, actions: s.today.map((a) => a.action), summary: emptySummary(day) });
   emit(ctx, { step: 'action', code: 'DAY_COMMITTED', importance: 1, text: `Day ${day}: night falls.` });
+  // villager minds remember the day where they spent it (V2 runs only)
+  captureMemories(s);
 
   if (s.scn.features.smoke) updateSmoke(s);
   runRivalExecute(ctx); // A  queued / announced moves land
@@ -78,6 +81,8 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
     });
   }
   runBeats(ctx);
+  // …and the night, where they spent it
+  captureMemories(s);
   const summary = buildSummary(ctx.events, day);
   s.history[s.history.length - 1].summary = summary;
 

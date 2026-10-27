@@ -6,6 +6,7 @@ import { clone } from '../gen/blueprint.ts';
 import { buildWorld } from '../world/build.ts';
 import { assignDay } from '../ai/routines.ts';
 import { initReality } from '../reality/state.ts';
+import { initMinds } from '../mind/init.ts';
 import { emit, type Ctx } from './events.ts';
 import { hashKeys, rand } from './rng.ts';
 import {
@@ -136,6 +137,7 @@ export function createRunFromDef(base: ScenarioDef, opts: CreateRunOptions): Run
   // Generative Reality: the reality block exists only in these runs, so every classic run (and its hash) is exactly V1's
   if (opts.reality || opts.realityLab) {
     s.v2 = initReality(s, !!opts.realityLab);
+    s.v2.minds = initMinds(s);
     s.flags.reality = opts.realityLab ? 2 : 1;
   }
   const ctx: Ctx = { s, events: [], expect: false };
