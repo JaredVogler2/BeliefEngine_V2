@@ -1,0 +1,62 @@
+{
+ "seedsPerLoser": 40,
+ "losers": [
+  "greedy",
+  "threat-aware",
+  "broadcaster",
+  "random"
+ ],
+ "results": {
+  "redbank": {
+   "3 days left": {
+    "lostRuns": 98,
+    "savedByGenericPlans": 64,
+    "savedByScriptedPlans": 30
+   },
+   "2 days left": {
+    "lostRuns": 98,
+    "savedByGenericPlans": 13,
+    "savedByScriptedPlans": 40
+   },
+   "1 day left": {
+    "lostRuns": 98,
+    "savedByGenericPlans": 0,
+    "savedByScriptedPlans": 0
+   }
+  },
+  "harvest": {
+   "3 days left": {
+    "lostRuns": 120,
+    "savedByGenericPlans": 0,
+    "savedByScriptedPlans": 41
+   },
+   "2 days left": {
+    "lostRuns": 120,
+    "savedByGenericPlans": 0,
+    "savedByScriptedPlans": 0
+   },
+   "1 day left": {
+    "lostRuns": 120,
+    "savedByGenericPlans": 0,
+    "savedByScriptedPlans": 0
+   }
+  },
+  "ashwood": {
+   "3 days left": {
+    "lostRuns": 131,
+    "savedByGenericPlans": 29,
+    "savedByScriptedPlans": 19
+   },
+   "2 days left": {
+    "lostRuns": 131,
+    "savedByGenericPlans": 3,
+    "savedByScriptedPlans": 2
+   },
+   "1 day left": {
+    "lostRuns": 131,
+    "savedByGenericPlans": 0,
+    "savedByScriptedPlans": 0
+   }
+  }
+ }
+}

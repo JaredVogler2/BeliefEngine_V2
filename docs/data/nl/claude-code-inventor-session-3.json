@@ -1,0 +1,238 @@
+{
+ "note": "Accepted actions of real Claude Code session 3 (Harvest, Inventor). Replays with replayRun to state hash 038250c72b75f0 at the commit that added it.",
+ "runId": "r_34b345fff294b54fc754f1888219b5cc",
+ "options": {
+  "scenarioId": "harvest",
+  "seed": 2,
+  "difficulty": "normal",
+  "mode": "story",
+  "inventor": true
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "moonlight_ripens_grain"
+  },
+  {
+   "type": "COMPOSE",
+   "claim": {
+    "id": "custom_1074897aed",
+    "text": "Wheat and barley grow faster in the valley whenever the village bells are rung.",
+    "short": "Bells ripen the crops",
+    "icon": "moon",
+    "spec": {
+     "id": "custom_1074897aed",
+     "version": 1,
+     "subject": "grain",
+     "effect": "grow",
+     "trigger": {
+      "kind": "bell"
+     },
+     "radius": 0,
+     "intensity": 2,
+     "thresholds": {
+      "on": 0.6,
+      "off": 0.45,
+      "minSupporters": 4,
+      "ramp": 64,
+      "decay": 22
+     },
+     "upkeep": {
+      "fuel": 0
+     },
+     "side": [],
+     "tags": [
+      "custom",
+      "inventor",
+      "grain"
+     ]
+    },
+    "regions": [
+     "valley"
+    ],
+    "ritual": "ring_bells",
+    "contradicts": [
+     "moon_sours_grain"
+    ],
+    "benefit": "On nights the bells ring, crops in The Valley ripen about 20% faster.",
+    "risk": "No side effects, but it only works while its trigger is met.",
+    "flavor": "Wheat and barley grow faster in the valley whenever the village bells are rung.",
+    "startsAvailable": true,
+    "custom": {
+     "text": "Wheat and barley grow faster in the valley whenever the village bells are rung.",
+     "astHash": "1074897aedd4d1",
+     "parser": "offline-lexicon-1",
+     "balance": 311126191,
+     "ast": {
+      "version": 1,
+      "clauses": [
+       {
+        "subject": "grain",
+        "effect": "grow",
+        "trigger": "bell",
+        "radius": 0,
+        "intensity": 2
+       }
+      ],
+      "regions": [
+       "valley"
+      ]
+     },
+     "source": "offline",
+     "nl": 1
+    }
+   }
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "anselm"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "lark"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "hobb"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "marta"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "tobias"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1074897aed"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "dalia"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1074897aed"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "pim"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "GATHER",
+   "claim": "custom_1074897aed",
+   "site": "market",
+   "invite": [
+    "dalia",
+    "lark",
+    "pim",
+    "tobias",
+    "marta",
+    "anselm"
+   ]
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "dalia"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "GATHER",
+   "claim": "custom_1074897aed",
+   "site": "chapel",
+   "invite": [
+    "odo",
+    "wilma",
+    "esk",
+    "hobb",
+    "nessa",
+    "lark"
+   ]
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "odo"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1074897aed"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "marta"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "esk"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "tobias"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "dalia"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "marta"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "hobb"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "dalia"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ]
+}

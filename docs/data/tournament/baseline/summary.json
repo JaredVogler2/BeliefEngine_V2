@@ -1,0 +1,5622 @@
+{
+ "meta": {
+  "name": "baseline",
+  "command": "npm run test:sim -- --scenario all --seeds 1000 --determinism 12 --name baseline --time-budget 6000",
+  "rulesVersion": "1.0.0",
+  "genVersion": 1,
+  "seeds": {
+   "from": 1,
+   "to": 1000
+  },
+  "difficulty": "normal",
+  "capDays": 60,
+  "workers": 4,
+  "wallSeconds": 2685,
+  "node": "v22.22.0",
+  "oracleSeeds": 0,
+  "rescueSample": 0,
+  "determinismSample": 12,
+  "densitySample": 0,
+  "partial": false,
+  "notes": [
+   "The oracle (when present) is PRIVILEGED: it plays each candidate to the end on a private copy, so it sees every night's dice. It is an upper bound for regret, never a fair opponent.",
+   "The exploit-seeker and the controls (noop, random) are excluded from the \"thoughtful\" comparisons.",
+   "Expedition seeds are all generated villages in the range, including ones the offline witnesses could not win; win rates there are over every seed, not only verified ones."
+  ]
+ },
+ "cohorts": {
+  "redbank": {
+   "scenario": "redbank",
+   "seeds": 1000,
+   "policies": {
+    "bridge-builder": {
+     "n": 1000,
+     "wins": 995,
+     "winRate": 99.5,
+     "ci": [
+      98.8,
+      99.8
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 816.4,
+     "meanScoreWins": 817.3,
+     "meanAlive": 14,
+     "meanHomes": 6,
+     "firstBeliefDay": 3,
+     "firstLawDay": 6,
+     "runsWithLaw": 100,
+     "meanLawNights": 2.1,
+     "meanReach": 0.925,
+     "apSpentMean": 17.8,
+     "apUnspentMean": 3.3,
+     "passDayShare": 0.153,
+     "actionMix": {
+      "PICK_STARTER": 0.063,
+      "SEED": 0.253,
+      "GATHER": 0.063,
+      "RITUAL": 0.127,
+      "MESSENGER": 0.494
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 3
+     },
+     "rivalActionsPerRun": 0,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 53.3,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "food": 5
+     },
+     "duration": {
+      "medianMs": 285,
+      "p95Ms": 566,
+      "maxMs": 1105
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 5,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 5,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 5,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 18,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 16.5,
+       "believers": 2.8,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 15.2,
+       "believers": 7.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 14,
+       "food": 12.2,
+       "believers": 10.9,
+       "lawsOn": 0.068
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 14,
+       "food": 9,
+       "believers": 12.8,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "broadcaster": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 525.1,
+     "meanScoreWins": 0,
+     "meanAlive": 10,
+     "meanHomes": 6,
+     "firstBeliefDay": 3,
+     "firstLawDay": 7,
+     "runsWithLaw": 85.9,
+     "meanLawNights": 1.1,
+     "meanReach": 0.612,
+     "apSpentMean": 20.8,
+     "apUnspentMean": 0.2,
+     "passDayShare": 0.009,
+     "actionMix": {
+      "PICK_STARTER": 0.053,
+      "GATHER": 0.155,
+      "SEED": 0.198,
+      "MESSENGER": 0.541,
+      "COUNTER": 0.053
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 3
+     },
+     "rivalActionsPerRun": 2.715,
+     "rivalCounteredPerRun": 1.001,
+     "causalPct": 61.5,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 1000
+     },
+     "duration": {
+      "medianMs": 288,
+      "p95Ms": 566,
+      "maxMs": 975
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 18,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 17,
+       "believers": 1.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 16,
+       "believers": 4.9,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 14,
+       "food": 13,
+       "believers": 7.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 14,
+       "food": 9.7,
+       "believers": 8.5,
+       "lawsOn": 0.066
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "evidence-first": {
+     "n": 1000,
+     "wins": 1000,
+     "winRate": 100,
+     "ci": [
+      99.6,
+      100
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 834.2,
+     "meanScoreWins": 834.2,
+     "meanAlive": 14,
+     "meanHomes": 6,
+     "firstBeliefDay": 2,
+     "firstLawDay": 5,
+     "runsWithLaw": 100,
+     "meanLawNights": 3,
+     "meanReach": 0.929,
+     "apSpentMean": 14.9,
+     "apUnspentMean": 8.2,
+     "passDayShare": 0.291,
+     "actionMix": {
+      "PICK_STARTER": 0.077,
+      "RITUAL": 0.231,
+      "SEED": 0.078,
+      "MESSENGER": 0.613
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 3
+     },
+     "rivalActionsPerRun": 0,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 54.3,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {},
+     "duration": {
+      "medianMs": 207,
+      "p95Ms": 411,
+      "maxMs": 901
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {},
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 17.7,
+       "believers": 4.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 16.6,
+       "believers": 8,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 15.6,
+       "believers": 11.1,
+       "lawsOn": 0.042
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 14,
+       "food": 12.6,
+       "believers": 12.8,
+       "lawsOn": 0.996
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 14,
+       "food": 9.5,
+       "believers": 13,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 1
+    },
+    "exploit-seeker": {
+     "n": 1000,
+     "wins": 413,
+     "winRate": 41.3,
+     "ci": [
+      38.3,
+      44.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 563.1,
+     "meanScoreWins": 656.8,
+     "meanAlive": 10.9,
+     "meanHomes": 6.8,
+     "firstBeliefDay": 3,
+     "firstLawDay": 7,
+     "runsWithLaw": 42.8,
+     "meanLawNights": 1.1,
+     "meanReach": 0.616,
+     "apSpentMean": 21,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.058,
+      "GATHER": 0.059,
+      "SEED": 0.197,
+      "MESSENGER": 0.468,
+      "RITUAL": 0.219
+     },
+     "sideEffectsPerRun": {
+      "FIRE_STARTED": 0.288,
+      "FIELD_FLOODED": 3,
+      "BEACON_OUT": 0.622,
+      "LAW_DISCREDITED": 0.45
+     },
+     "rivalActionsPerRun": 1.598,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 59.4,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 587
+     },
+     "duration": {
+      "medianMs": 605,
+      "p95Ms": 1121,
+      "maxMs": 1909
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 587,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 587,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 587,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 17.9,
+       "believers": 1.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 16.9,
+       "believers": 2.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 15.9,
+       "believers": 3.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 14,
+       "food": 12.9,
+       "believers": 6.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 14,
+       "food": 9.8,
+       "believers": 7.8,
+       "lawsOn": 0.039
+      }
+     ],
+     "distinctOutcomes": 8
+    },
+    "greedy": {
+     "n": 1000,
+     "wins": 651,
+     "winRate": 65.1,
+     "ci": [
+      62.1,
+      68
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 640.3,
+     "meanScoreWins": 677.3,
+     "meanAlive": 11.6,
+     "meanHomes": 8.8,
+     "firstBeliefDay": 3,
+     "firstLawDay": 5,
+     "runsWithLaw": 100,
+     "meanLawNights": 2.8,
+     "meanReach": 0.632,
+     "apSpentMean": 15.5,
+     "apUnspentMean": 7.2,
+     "passDayShare": 0.262,
+     "actionMix": {
+      "PICK_STARTER": 0.075,
+      "GATHER": 0.081,
+      "SEED": 0.285,
+      "RITUAL": 0.149,
+      "MESSENGER": 0.336,
+      "COUNTER": 0.075
+     },
+     "sideEffectsPerRun": {
+      "FIRE_STARTED": 1.053,
+      "FIELD_FLOODED": 3,
+      "BEACON_OUT": 1.997,
+      "LAW_DISCREDITED": 1.006
+     },
+     "rivalActionsPerRun": 2.089,
+     "rivalCounteredPerRun": 1.001,
+     "causalPct": 39.4,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 339,
+      "food": 10
+     },
+     "duration": {
+      "medianMs": 189,
+      "p95Ms": 394,
+      "maxMs": 823
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 349,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 349,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 349,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 18,
+       "believers": 0.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 17,
+       "believers": 4.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 15.8,
+       "believers": 7.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 13.8,
+       "food": 12.5,
+       "believers": 8.4,
+       "lawsOn": 0.833
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 13.4,
+       "food": 9.1,
+       "believers": 8.8,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 11
+    },
+    "noop": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 493,
+     "meanScoreWins": 0,
+     "meanAlive": 10,
+     "meanHomes": 6,
+     "firstBeliefDay": null,
+     "firstLawDay": null,
+     "runsWithLaw": 0,
+     "meanLawNights": 0,
+     "meanReach": 0,
+     "apSpentMean": 0,
+     "apUnspentMean": 33,
+     "passDayShare": 1,
+     "actionMix": {
+      "PICK_STARTER": 1
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 3
+     },
+     "rivalActionsPerRun": 0,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 52.2,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 1000
+     },
+     "duration": {
+      "medianMs": 8,
+      "p95Ms": 18,
+      "maxMs": 103
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 18,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 17,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 16,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 14,
+       "food": 13,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 14,
+       "food": 10,
+       "believers": 0,
+       "lawsOn": 0
+      }
+     ],
+     "distinctOutcomes": 1
+    },
+    "random": {
+     "n": 1000,
+     "wins": 80,
+     "winRate": 8,
+     "ci": [
+      6.5,
+      9.8
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 518.8,
+     "meanScoreWins": 688.4,
+     "meanAlive": 10.6,
+     "meanHomes": 6,
+     "firstBeliefDay": 4,
+     "firstLawDay": 7,
+     "runsWithLaw": 10.3,
+     "meanLawNights": 1.5,
+     "meanReach": 0.376,
+     "apSpentMean": 21,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.054,
+      "RITUAL": 0.17,
+      "SEED": 0.545,
+      "MESSENGER": 0.095,
+      "COUNTER": 0.003,
+      "GATHER": 0.134
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 2.814,
+      "BEACON_OUT": 1.554,
+      "FIRE_STARTED": 0.773,
+      "FIELD_BURNED": 0.186,
+      "LAW_DISCREDITED": 0.029,
+      "FAMINE": 0.001
+     },
+     "rivalActionsPerRun": 1.138,
+     "rivalCounteredPerRun": 0.01,
+     "causalPct": 56.8,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 864,
+      "survivors+food": 27,
+      "food": 29
+     },
+     "duration": {
+      "medianMs": 230,
+      "p95Ms": 476,
+      "maxMs": 1037
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 920,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 920,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 920,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 17.9,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 13.9,
+       "food": 16.8,
+       "believers": 0.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 13.8,
+       "food": 15.5,
+       "believers": 1.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 13.7,
+       "food": 12.4,
+       "believers": 2.8,
+       "lawsOn": 0.006
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 13.5,
+       "food": 9.3,
+       "believers": 4.1,
+       "lawsOn": 0.044
+      }
+     ],
+     "distinctOutcomes": 24
+    },
+    "threat-aware": {
+     "n": 1000,
+     "wins": 819,
+     "winRate": 81.9,
+     "ci": [
+      79.4,
+      84.2
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 7,
+     "meanScore": 686.8,
+     "meanScoreWins": 703,
+     "meanAlive": 12.7,
+     "meanHomes": 9.8,
+     "firstBeliefDay": 3,
+     "firstLawDay": 6,
+     "runsWithLaw": 100,
+     "meanLawNights": 2.3,
+     "meanReach": 0.641,
+     "apSpentMean": 18,
+     "apUnspentMean": 8.5,
+     "passDayShare": 0.035,
+     "actionMix": {
+      "PICK_STARTER": 0.067,
+      "GATHER": 0.073,
+      "SEED": 0.258,
+      "RITUAL": 0.254,
+      "MESSENGER": 0.281,
+      "COUNTER": 0.067
+     },
+     "sideEffectsPerRun": {
+      "FIRE_STARTED": 1.358,
+      "FIELD_FLOODED": 3,
+      "BEACON_OUT": 1.999,
+      "LAW_DISCREDITED": 1.004
+     },
+     "rivalActionsPerRun": 2.089,
+     "rivalCounteredPerRun": 1.001,
+     "causalPct": 37.2,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 102,
+      "food": 79
+     },
+     "duration": {
+      "medianMs": 310,
+      "p95Ms": 590,
+      "maxMs": 920
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 181,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 181,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 181,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 14,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 14,
+       "food": 19,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 14,
+       "food": 18,
+       "believers": 0.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 14,
+       "food": 17,
+       "believers": 4.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 14,
+       "food": 15.9,
+       "believers": 6.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 13.8,
+       "food": 12.7,
+       "believers": 8.2,
+       "lawsOn": 0.27
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 13.5,
+       "food": 9,
+       "believers": 8.9,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 17
+    }
+   },
+   "pairs": [
+    {
+     "a": "bridge-builder",
+     "b": "broadcaster",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 995,
+     "bOnly": 0,
+     "neither": 5,
+     "p": 0,
+     "mixDistance": 0.192,
+     "disagree": 0.995,
+     "aliveGap": 4,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 995,
+     "aOnly": 0,
+     "bOnly": 5,
+     "neither": 0,
+     "p": 0.063,
+     "mixDistance": 0.238,
+     "disagree": 0.005,
+     "aliveGap": 0,
+     "separated": false
+    },
+    {
+     "a": "bridge-builder",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 648,
+     "aOnly": 347,
+     "bOnly": 3,
+     "neither": 2,
+     "p": 0,
+     "mixDistance": 0.158,
+     "disagree": 0.35,
+     "aliveGap": 2.4,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 816,
+     "aOnly": 179,
+     "bOnly": 3,
+     "neither": 2,
+     "p": 0,
+     "mixDistance": 0.213,
+     "disagree": 0.182,
+     "aliveGap": 1.3,
+     "separated": false
+    },
+    {
+     "a": "broadcaster",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 1000,
+     "neither": 0,
+     "p": 0,
+     "mixDistance": 0.327,
+     "disagree": 1,
+     "aliveGap": 4,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 651,
+     "neither": 349,
+     "p": 0,
+     "mixDistance": 0.28,
+     "disagree": 0.651,
+     "aliveGap": 1.6,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 819,
+     "neither": 181,
+     "p": 0,
+     "mixDistance": 0.342,
+     "disagree": 0.819,
+     "aliveGap": 2.7,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 651,
+     "aOnly": 349,
+     "bOnly": 0,
+     "neither": 0,
+     "p": 0,
+     "mixDistance": 0.362,
+     "disagree": 0.349,
+     "aliveGap": 2.4,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 819,
+     "aOnly": 181,
+     "bOnly": 0,
+     "neither": 0,
+     "p": 0,
+     "mixDistance": 0.342,
+     "disagree": 0.181,
+     "aliveGap": 1.3,
+     "separated": true
+    },
+    {
+     "a": "greedy",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 599,
+     "aOnly": 52,
+     "bOnly": 220,
+     "neither": 129,
+     "p": 0,
+     "mixDistance": 0.105,
+     "disagree": 0.272,
+     "aliveGap": 1.1,
+     "separated": true
+    }
+   ],
+   "regret": {
+    "bridge-builder": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 5,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "broadcaster": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 1000,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "evidence-first": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 0,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "exploit-seeker": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 587,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "greedy": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 349,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "noop": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 1000,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "random": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 920,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "threat-aware": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 181,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    }
+   },
+   "claimUse": {
+    "bridge_stands_watched": {
+     "runsWithLaw": 2000,
+     "wins": 1995,
+     "winRate": 99.8,
+     "shareOfWins": 51.4
+    },
+    "river_fears_fire": {
+     "runsWithLaw": 3287,
+     "wins": 1882,
+     "winRate": 57.3,
+     "shareOfWins": 48.5
+    }
+   },
+   "commonFailure": {
+    "cause": "survivors",
+    "runs": 2028
+   },
+   "verdicts": [
+    {
+     "level": "ok",
+     "text": "The no-op control wins 0 of 1000."
+    },
+    {
+     "level": "ok",
+     "text": "The best thoughtful policy (evidence-first, 100%) beats random-legal (8%)."
+    },
+    {
+     "level": "warn",
+     "text": "bridge-builder, evidence-first win 95% or more of seeds: close to a trivially winning route."
+    },
+    {
+     "level": "ok",
+     "text": "4 distinct thoughtful policies win at least 10% of seeds (bridge-builder, evidence-first, greedy, threat-aware)."
+    },
+    {
+     "level": "ok",
+     "text": "6 of 10 thoughtful pairs win some of the same seeds and also some different ones."
+    },
+    {
+     "level": "ok",
+     "text": "8 of 10 thoughtful pairs play materially differently (action mix distance >= 0.25 or different winners on >= 20% of seeds)."
+    },
+    {
+     "level": "ok",
+     "text": "The exploit-seeker recorded 0 engine violations (no free Influence through undo, no invalid actions accepted, no double-telling)."
+    },
+    {
+     "level": "ok",
+     "text": "No timeouts, softlocks or crashes in any run."
+    },
+    {
+     "level": "ok",
+     "text": "Determinism: 96 runs repeated, identical state and event hashes every time."
+    }
+   ]
+  },
+  "harvest": {
+   "scenario": "harvest",
+   "seeds": 1000,
+   "policies": {
+    "bridge-builder": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 719.6,
+     "meanScoreWins": 0,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 3,
+     "firstLawDay": 8,
+     "runsWithLaw": 97.5,
+     "meanLawNights": 1.7,
+     "meanReach": 0.847,
+     "apSpentMean": 24.8,
+     "apUnspentMean": 2.2,
+     "passDayShare": 0.077,
+     "actionMix": {
+      "PICK_STARTER": 0.043,
+      "SEED": 0.275,
+      "GATHER": 0.043,
+      "RITUAL": 0.076,
+      "MESSENGER": 0.476,
+      "COUNTER": 0.087
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 8,
+      "NIGHT_LABOR": 1.704,
+      "FAMINE": 3
+     },
+     "rivalActionsPerRun": 2,
+     "rivalCounteredPerRun": 2,
+     "causalPct": 65.3,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed+food": 1000
+     },
+     "duration": {
+      "medianMs": 330,
+      "p95Ms": 649,
+      "maxMs": 1391
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 1.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 4.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 8.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 9.9,
+       "lawsOn": 0
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 10.6,
+       "lawsOn": 0.039
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 11.2,
+       "lawsOn": 0.69
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "broadcaster": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 707.9,
+     "meanScoreWins": 0,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 4,
+     "firstLawDay": 9,
+     "runsWithLaw": 69.7,
+     "meanLawNights": 1.2,
+     "meanReach": 0.71,
+     "apSpentMean": 26.6,
+     "apUnspentMean": 0.4,
+     "passDayShare": 0.014,
+     "actionMix": {
+      "PICK_STARTER": 0.04,
+      "GATHER": 0.114,
+      "SEED": 0.13,
+      "MESSENGER": 0.635,
+      "COUNTER": 0.081
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 8,
+      "NIGHT_LABOR": 0.821,
+      "FAMINE": 3
+     },
+     "rivalActionsPerRun": 2.99,
+     "rivalCounteredPerRun": 2,
+     "causalPct": 60.3,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed+food": 1000
+     },
+     "duration": {
+      "medianMs": 300,
+      "p95Ms": 588,
+      "maxMs": 1089
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 0.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 3.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 7.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 8.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 9,
+       "lawsOn": 0
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 9.6,
+       "lawsOn": 0.124
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "evidence-first": {
+     "n": 1000,
+     "wins": 141,
+     "winRate": 14.1,
+     "ci": [
+      12.1,
+      16.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 787.1,
+     "meanScoreWins": 966,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 2,
+     "firstLawDay": 6,
+     "runsWithLaw": 100,
+     "meanLawNights": 4,
+     "meanReach": 0.927,
+     "apSpentMean": 18.4,
+     "apUnspentMean": 12.5,
+     "passDayShare": 0.299,
+     "actionMix": {
+      "PICK_STARTER": 0.069,
+      "RITUAL": 0.346,
+      "SEED": 0.113,
+      "MESSENGER": 0.378,
+      "COUNTER": 0.094
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 7.122,
+      "NIGHT_LABOR": 3.959,
+      "FAMINE": 2.279
+     },
+     "rivalActionsPerRun": 1.304,
+     "rivalCounteredPerRun": 1.349,
+     "causalPct": 55.5,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "food": 579,
+      "fed+food": 280
+     },
+     "duration": {
+      "medianMs": 182,
+      "p95Ms": 375,
+      "maxMs": 791
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 859,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 859,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 859,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 1.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 4,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 6.9,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 10.1,
+       "lawsOn": 0.017
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.3,
+       "lawsOn": 0.942
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.7,
+       "lawsOn": 1
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.9,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "exploit-seeker": {
+     "n": 1000,
+     "wins": 73,
+     "winRate": 7.3,
+     "ci": [
+      5.8,
+      9.1
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 759.9,
+     "meanScoreWins": 941.9,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 2,
+     "firstLawDay": 6,
+     "runsWithLaw": 100,
+     "meanLawNights": 3.9,
+     "meanReach": 0.874,
+     "apSpentMean": 27,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.047,
+      "RITUAL": 0.283,
+      "SEED": 0.131,
+      "MESSENGER": 0.52,
+      "GATHER": 0.019
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 7.439,
+      "NIGHT_LABOR": 3.947,
+      "FAMINE": 2.536
+     },
+     "rivalActionsPerRun": 2.161,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 60.9,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed+food": 542,
+      "food": 385
+     },
+     "duration": {
+      "medianMs": 662,
+      "p95Ms": 1262,
+      "maxMs": 2715
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 927,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 927,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 927,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 1.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 5.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 8.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 10.1,
+       "lawsOn": 0.03
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 11.3,
+       "lawsOn": 0.924
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 11.5,
+       "lawsOn": 0.994
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 11.9,
+       "lawsOn": 0.999
+      }
+     ],
+     "distinctOutcomes": 3
+    },
+    "greedy": {
+     "n": 1000,
+     "wins": 718,
+     "winRate": 71.8,
+     "ci": [
+      68.9,
+      74.5
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 914,
+     "meanScoreWins": 969.5,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 2,
+     "firstLawDay": 6,
+     "runsWithLaw": 100,
+     "meanLawNights": 4.3,
+     "meanReach": 0.919,
+     "apSpentMean": 17.9,
+     "apUnspentMean": 13.8,
+     "passDayShare": 0.271,
+     "actionMix": {
+      "PICK_STARTER": 0.069,
+      "RITUAL": 0.258,
+      "SEED": 0.092,
+      "GATHER": 0.048,
+      "MESSENGER": 0.395,
+      "COUNTER": 0.138
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 5.96,
+      "NIGHT_LABOR": 4.333,
+      "FAMINE": 1.929
+     },
+     "rivalActionsPerRun": 1.991,
+     "rivalCounteredPerRun": 1.993,
+     "causalPct": 54.7,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "food": 270,
+      "fed+food": 12
+     },
+     "duration": {
+      "medianMs": 194,
+      "p95Ms": 397,
+      "maxMs": 735
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 282,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 282,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 282,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 1.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 6.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 9.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 11.3,
+       "lawsOn": 0.334
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.4,
+       "lawsOn": 0.999
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.5,
+       "lawsOn": 1
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0.1,
+       "believers": 12.7,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "noop": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 680,
+     "meanScoreWins": 0,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": null,
+     "firstLawDay": null,
+     "runsWithLaw": 0,
+     "meanLawNights": 0,
+     "meanReach": 0,
+     "apSpentMean": 0,
+     "apUnspentMean": 43,
+     "passDayShare": 1,
+     "actionMix": {
+      "PICK_STARTER": 1
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 8,
+      "FAMINE": 3
+     },
+     "rivalActionsPerRun": 0,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 0,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed+food": 1000
+     },
+     "duration": {
+      "medianMs": 8,
+      "p95Ms": 17,
+      "maxMs": 96
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 0,
+       "lawsOn": 0
+      }
+     ],
+     "distinctOutcomes": 1
+    },
+    "random": {
+     "n": 1000,
+     "wins": 1,
+     "winRate": 0.1,
+     "ci": [
+      0,
+      0.6
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 686.3,
+     "meanScoreWins": 929,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 5,
+     "firstLawDay": 9,
+     "runsWithLaw": 16.4,
+     "meanLawNights": 1.7,
+     "meanReach": 0.576,
+     "apSpentMean": 27,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.041,
+      "RITUAL": 0.181,
+      "SEED": 0.515,
+      "MESSENGER": 0.163,
+      "GATHER": 0.091,
+      "COUNTER": 0.009,
+      "TRADE": 0
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 7.992,
+      "FAMINE": 2.999,
+      "NIGHT_LABOR": 0.237
+     },
+     "rivalActionsPerRun": 1.505,
+     "rivalCounteredPerRun": 0.042,
+     "causalPct": 59.4,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed+food": 999
+     },
+     "duration": {
+      "medianMs": 256,
+      "p95Ms": 516,
+      "maxMs": 1046
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 999,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 999,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 999,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 0.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 1.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 2.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 4.2,
+       "lawsOn": 0.002
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 5.8,
+       "lawsOn": 0.027
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 7.1,
+       "lawsOn": 0.082
+      }
+     ],
+     "distinctOutcomes": 4
+    },
+    "threat-aware": {
+     "n": 1000,
+     "wins": 387,
+     "winRate": 38.7,
+     "ci": [
+      35.7,
+      41.8
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 9,
+     "meanScore": 836.1,
+     "meanScoreWins": 966.1,
+     "meanAlive": 14,
+     "meanHomes": 9,
+     "firstBeliefDay": 2,
+     "firstLawDay": 6,
+     "runsWithLaw": 100,
+     "meanLawNights": 4.3,
+     "meanReach": 0.909,
+     "apSpentMean": 21.8,
+     "apUnspentMean": 11.2,
+     "passDayShare": 0.019,
+     "actionMix": {
+      "PICK_STARTER": 0.057,
+      "RITUAL": 0.197,
+      "SEED": 0.21,
+      "GATHER": 0.096,
+      "MESSENGER": 0.322,
+      "COUNTER": 0.117
+     },
+     "sideEffectsPerRun": {
+      "FIELD_PARCHED": 6.519,
+      "NIGHT_LABOR": 4.333,
+      "FAMINE": 2.157
+     },
+     "rivalActionsPerRun": 2.062,
+     "rivalCounteredPerRun": 2.062,
+     "causalPct": 56.4,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed+food": 240,
+      "food": 373
+     },
+     "duration": {
+      "medianMs": 312,
+      "p95Ms": 605,
+      "maxMs": 1147
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 613,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 613,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 613,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 14,
+       "homes": 9,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 14,
+       "homes": 9,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 14,
+       "homes": 9,
+       "food": 16,
+       "believers": 1.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 14,
+       "homes": 9,
+       "food": 12,
+       "believers": 6.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 14,
+       "homes": 9,
+       "food": 8,
+       "believers": 9.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 14,
+       "homes": 9,
+       "food": 4,
+       "believers": 11.3,
+       "lawsOn": 0.334
+      },
+      {
+       "day": 7,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.1,
+       "lawsOn": 0.999
+      },
+      {
+       "day": 8,
+       "alive": 14,
+       "homes": 9,
+       "food": 0,
+       "believers": 12.3,
+       "lawsOn": 1
+      },
+      {
+       "day": 9,
+       "alive": 14,
+       "homes": 9,
+       "food": 0.1,
+       "believers": 12.5,
+       "lawsOn": 1
+      }
+     ],
+     "distinctOutcomes": 2
+    }
+   },
+   "pairs": [
+    {
+     "a": "bridge-builder",
+     "b": "broadcaster",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.23,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": false
+    },
+    {
+     "a": "bridge-builder",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 141,
+     "neither": 859,
+     "p": 0,
+     "mixDistance": 0.303,
+     "disagree": 0.141,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 718,
+     "neither": 282,
+     "p": 0,
+     "mixDistance": 0.264,
+     "disagree": 0.718,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 387,
+     "neither": 613,
+     "p": 0,
+     "mixDistance": 0.219,
+     "disagree": 0.387,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 141,
+     "neither": 859,
+     "p": 0,
+     "mixDistance": 0.388,
+     "disagree": 0.141,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 718,
+     "neither": 282,
+     "p": 0,
+     "mixDistance": 0.344,
+     "disagree": 0.718,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 387,
+     "neither": 613,
+     "p": 0,
+     "mixDistance": 0.331,
+     "disagree": 0.387,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 138,
+     "aOnly": 3,
+     "bOnly": 580,
+     "neither": 279,
+     "p": 0,
+     "mixDistance": 0.109,
+     "disagree": 0.583,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 103,
+     "aOnly": 38,
+     "bOnly": 284,
+     "neither": 575,
+     "p": 0,
+     "mixDistance": 0.216,
+     "disagree": 0.322,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "greedy",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 387,
+     "aOnly": 331,
+     "bOnly": 0,
+     "neither": 282,
+     "p": 0,
+     "mixDistance": 0.167,
+     "disagree": 0.331,
+     "aliveGap": 0,
+     "separated": true
+    }
+   ],
+   "regret": {
+    "bridge-builder": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 721,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "broadcaster": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 721,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "evidence-first": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 580,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "exploit-seeker": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 648,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "greedy": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 3,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "noop": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 721,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "random": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 720,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "threat-aware": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 334,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    }
+   },
+   "claimUse": {
+    "moonlight_ripens_grain": {
+     "runsWithLaw": 5672,
+     "wins": 1319,
+     "winRate": 23.3,
+     "shareOfWins": 100
+    },
+    "rain_follows_bells": {
+     "runsWithLaw": 1,
+     "wins": 0,
+     "winRate": 0,
+     "shareOfWins": 0
+    }
+   },
+   "commonFailure": {
+    "cause": "fed+food",
+    "runs": 3074
+   },
+   "verdicts": [
+    {
+     "level": "ok",
+     "text": "The no-op control wins 0 of 1000."
+    },
+    {
+     "level": "ok",
+     "text": "The best thoughtful policy (greedy, 71.8%) beats random-legal (0.1%)."
+    },
+    {
+     "level": "ok",
+     "text": "3 distinct thoughtful policies win at least 10% of seeds (evidence-first, greedy, threat-aware)."
+    },
+    {
+     "level": "ok",
+     "text": "3 of 10 thoughtful pairs win some of the same seeds and also some different ones."
+    },
+    {
+     "level": "ok",
+     "text": "9 of 10 thoughtful pairs play materially differently (action mix distance >= 0.25 or different winners on >= 20% of seeds)."
+    },
+    {
+     "level": "ok",
+     "text": "The exploit-seeker recorded 0 engine violations (no free Influence through undo, no invalid actions accepted, no double-telling)."
+    },
+    {
+     "level": "ok",
+     "text": "No timeouts, softlocks or crashes in any run."
+    },
+    {
+     "level": "ok",
+     "text": "Determinism: 96 runs repeated, identical state and event hashes every time."
+    }
+   ]
+  },
+  "ashwood": {
+   "scenario": "ashwood",
+   "seeds": 1000,
+   "policies": {
+    "bridge-builder": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 722,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 4,
+     "firstLawDay": 8,
+     "runsWithLaw": 60,
+     "meanLawNights": 1.2,
+     "meanReach": 0.738,
+     "apSpentMean": 23.5,
+     "apUnspentMean": 0.5,
+     "passDayShare": 0.019,
+     "actionMix": {
+      "PICK_STARTER": 0.049,
+      "GATHER": 0.049,
+      "SEED": 0.203,
+      "RITUAL": 0.149,
+      "MESSENGER": 0.452,
+      "COUNTER": 0.098
+     },
+     "sideEffectsPerRun": {
+      "BEACON_OUT": 2.355,
+      "LIVESTOCK_KILLED": 5
+     },
+     "rivalActionsPerRun": 2,
+     "rivalCounteredPerRun": 2,
+     "causalPct": 55.4,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 1000
+     },
+     "duration": {
+      "medianMs": 365,
+      "p95Ms": 699,
+      "maxMs": 1099
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 1.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 2.7,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 5.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 7.9,
+       "lawsOn": 0.005
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 9,
+       "lawsOn": 0.166
+      }
+     ],
+     "distinctOutcomes": 8
+    },
+    "broadcaster": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 700.2,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 6,
+     "firstLawDay": 8,
+     "runsWithLaw": 8,
+     "meanLawNights": 1.1,
+     "meanReach": 0.323,
+     "apSpentMean": 24,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.046,
+      "GATHER": 0.14,
+      "SEED": 0.325,
+      "MESSENGER": 0.41,
+      "COUNTER": 0.079
+     },
+     "sideEffectsPerRun": {
+      "LIVESTOCK_KILLED": 5
+     },
+     "rivalActionsPerRun": 2.734,
+     "rivalCounteredPerRun": 1.728,
+     "causalPct": 43.8,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 1000
+     },
+     "duration": {
+      "medianMs": 302,
+      "p95Ms": 608,
+      "maxMs": 1133
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 0.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 1.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 2.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 3.4,
+       "lawsOn": 0.004
+      }
+     ],
+     "distinctOutcomes": 2
+    },
+    "evidence-first": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 738,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 2,
+     "firstLawDay": 3,
+     "runsWithLaw": 100,
+     "meanLawNights": 4,
+     "meanReach": 0.805,
+     "apSpentMean": 9.7,
+     "apUnspentMean": 22.2,
+     "passDayShare": 0.551,
+     "actionMix": {
+      "PICK_STARTER": 0.13,
+      "RITUAL": 0.391,
+      "SEED": 0.13,
+      "MESSENGER": 0.155,
+      "COUNTER": 0.194
+     },
+     "sideEffectsPerRun": {
+      "BEACON_OUT": 3.009,
+      "LIVESTOCK_KILLED": 5
+     },
+     "rivalActionsPerRun": 1.493,
+     "rivalCounteredPerRun": 1.493,
+     "causalPct": 53.2,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 1000
+     },
+     "duration": {
+      "medianMs": 74,
+      "p95Ms": 169,
+      "maxMs": 472
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 4.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 5.4,
+       "lawsOn": 0.944
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 6.7,
+       "lawsOn": 0.998
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 8,
+       "lawsOn": 1.024
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 9,
+       "lawsOn": 1.165
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 9.9,
+       "lawsOn": 1.54
+      }
+     ],
+     "distinctOutcomes": 4
+    },
+    "exploit-seeker": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 737.8,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 2,
+     "firstLawDay": 3,
+     "runsWithLaw": 99.5,
+     "meanLawNights": 4,
+     "meanReach": 0.874,
+     "apSpentMean": 24,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.049,
+      "RITUAL": 0.149,
+      "SEED": 0.284,
+      "MESSENGER": 0.447,
+      "GATHER": 0.071
+     },
+     "sideEffectsPerRun": {
+      "BEACON_OUT": 3,
+      "LIVESTOCK_KILLED": 5
+     },
+     "rivalActionsPerRun": 1.563,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 55.6,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 1000
+     },
+     "duration": {
+      "medianMs": 750,
+      "p95Ms": 1426,
+      "maxMs": 2930
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 4.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 6.5,
+       "lawsOn": 0.877
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 7.8,
+       "lawsOn": 0.987
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 9.1,
+       "lawsOn": 1.102
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 10.1,
+       "lawsOn": 1.369
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 10.9,
+       "lawsOn": 1.831
+      }
+     ],
+     "distinctOutcomes": 5
+    },
+    "greedy": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 738.1,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 2,
+     "firstLawDay": 5,
+     "runsWithLaw": 100,
+     "meanLawNights": 2.7,
+     "meanReach": 0.888,
+     "apSpentMean": 17.2,
+     "apUnspentMean": 9.8,
+     "passDayShare": 0.221,
+     "actionMix": {
+      "PICK_STARTER": 0.069,
+      "RITUAL": 0.265,
+      "SEED": 0.078,
+      "COUNTER": 0.17,
+      "MESSENGER": 0.417
+     },
+     "sideEffectsPerRun": {
+      "BEACON_OUT": 3.817,
+      "LIVESTOCK_KILLED": 5
+     },
+     "rivalActionsPerRun": 2.448,
+     "rivalCounteredPerRun": 2.448,
+     "causalPct": 60.2,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 1000
+     },
+     "duration": {
+      "medianMs": 256,
+      "p95Ms": 485,
+      "maxMs": 1015
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 2.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 4,
+       "lawsOn": 0.001
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 7,
+       "lawsOn": 0.023
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 9.4,
+       "lawsOn": 0.513
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 10.5,
+       "lawsOn": 1.545
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 11.1,
+       "lawsOn": 2.221
+      }
+     ],
+     "distinctOutcomes": 4
+    },
+    "noop": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 697,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": null,
+     "firstLawDay": null,
+     "runsWithLaw": 0,
+     "meanLawNights": 0,
+     "meanReach": 0,
+     "apSpentMean": 0,
+     "apUnspentMean": 38,
+     "passDayShare": 1,
+     "actionMix": {
+      "PICK_STARTER": 1
+     },
+     "sideEffectsPerRun": {
+      "LIVESTOCK_KILLED": 5
+     },
+     "rivalActionsPerRun": 0,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 0,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 1000
+     },
+     "duration": {
+      "medianMs": 8,
+      "p95Ms": 16,
+      "maxMs": 77
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 0,
+       "lawsOn": 0
+      }
+     ],
+     "distinctOutcomes": 1
+    },
+    "random": {
+     "n": 1000,
+     "wins": 4,
+     "winRate": 0.4,
+     "ci": [
+      0.2,
+      1
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 702.4,
+     "meanScoreWins": 790.3,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 4,
+     "firstLawDay": 7,
+     "runsWithLaw": 14.1,
+     "meanLawNights": 2.1,
+     "meanReach": 0.265,
+     "apSpentMean": 24,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.048,
+      "RITUAL": 0.258,
+      "SEED": 0.487,
+      "GATHER": 0.066,
+      "COUNTER": 0.052,
+      "MESSENGER": 0.089
+     },
+     "sideEffectsPerRun": {
+      "BEACON_OUT": 3.644,
+      "LIVESTOCK_KILLED": 4.988,
+      "PACK_LURED": 0.013
+     },
+     "rivalActionsPerRun": 1.346,
+     "rivalCounteredPerRun": 0.033,
+     "causalPct": 41.5,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 996
+     },
+     "duration": {
+      "medianMs": 299,
+      "p95Ms": 578,
+      "maxMs": 1218
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 996,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 996,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 996,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 0.3,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 0.9,
+       "lawsOn": 0.003
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 1.5,
+       "lawsOn": 0.01
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 2,
+       "lawsOn": 0.019
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 2.4,
+       "lawsOn": 0.044
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 2.8,
+       "lawsOn": 0.088
+      }
+     ],
+     "distinctOutcomes": 12
+    },
+    "threat-aware": {
+     "n": 1000,
+     "wins": 799,
+     "winRate": 79.9,
+     "ci": [
+      77.3,
+      82.3
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 793.6,
+     "meanScoreWins": 807.6,
+     "meanAlive": 13,
+     "meanHomes": 11,
+     "firstBeliefDay": 2,
+     "firstLawDay": 5,
+     "runsWithLaw": 100,
+     "meanLawNights": 2.6,
+     "meanReach": 0.831,
+     "apSpentMean": 17.8,
+     "apUnspentMean": 10.8,
+     "passDayShare": 0.085,
+     "actionMix": {
+      "PICK_STARTER": 0.065,
+      "RITUAL": 0.409,
+      "SEED": 0.074,
+      "COUNTER": 0.16,
+      "MESSENGER": 0.292
+     },
+     "sideEffectsPerRun": {
+      "BEACON_OUT": 5.297,
+      "LIVESTOCK_KILLED": 3.402
+     },
+     "rivalActionsPerRun": 2.455,
+     "rivalCounteredPerRun": 2.455,
+     "causalPct": 58.7,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "livestock": 201
+     },
+     "duration": {
+      "medianMs": 363,
+      "p95Ms": 720,
+      "maxMs": 1546
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 201,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 201,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 201,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 13,
+       "homes": 11,
+       "food": 44,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 13,
+       "homes": 11,
+       "food": 40,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 13,
+       "homes": 11,
+       "food": 36,
+       "believers": 2.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 13,
+       "homes": 11,
+       "food": 32,
+       "believers": 4,
+       "lawsOn": 0.001
+      },
+      {
+       "day": 5,
+       "alive": 13,
+       "homes": 11,
+       "food": 28,
+       "believers": 7,
+       "lawsOn": 0.023
+      },
+      {
+       "day": 6,
+       "alive": 13,
+       "homes": 11,
+       "food": 24,
+       "believers": 8.5,
+       "lawsOn": 0.513
+      },
+      {
+       "day": 7,
+       "alive": 13,
+       "homes": 11,
+       "food": 20,
+       "believers": 9.7,
+       "lawsOn": 1.142
+      },
+      {
+       "day": 8,
+       "alive": 13,
+       "homes": 11,
+       "food": 16,
+       "believers": 10.4,
+       "lawsOn": 1.714
+      }
+     ],
+     "distinctOutcomes": 9
+    }
+   },
+   "pairs": [
+    {
+     "a": "bridge-builder",
+     "b": "broadcaster",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.213,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": false
+    },
+    {
+     "a": "bridge-builder",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.419,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.209,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": false
+    },
+    {
+     "a": "bridge-builder",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 799,
+     "neither": 201,
+     "p": 0,
+     "mixDistance": 0.338,
+     "disagree": 0.799,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.59,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.387,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 799,
+     "neither": 201,
+     "p": 0,
+     "mixDistance": 0.509,
+     "disagree": 0.799,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 0,
+     "neither": 1000,
+     "p": 1,
+     "mixDistance": 0.263,
+     "disagree": 0,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 799,
+     "neither": 201,
+     "p": 0,
+     "mixDistance": 0.155,
+     "disagree": 0.799,
+     "aliveGap": 0,
+     "separated": true
+    },
+    {
+     "a": "greedy",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 0,
+     "aOnly": 0,
+     "bOnly": 799,
+     "neither": 201,
+     "p": 0,
+     "mixDistance": 0.144,
+     "disagree": 0.799,
+     "aliveGap": 0,
+     "separated": true
+    }
+   ],
+   "regret": {
+    "bridge-builder": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 799,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "broadcaster": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 799,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "evidence-first": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 799,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "exploit-seeker": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 799,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "greedy": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 799,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "noop": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 799,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "random": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 796,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "threat-aware": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 0,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    }
+   },
+   "claimUse": {
+    "wolves_fear_smoke": {
+     "runsWithLaw": 4672,
+     "wins": 799,
+     "winRate": 17.1,
+     "shareOfWins": 100
+    },
+    "wolves_follow_smoke": {
+     "runsWithLaw": 3,
+     "wins": 0,
+     "winRate": 0,
+     "shareOfWins": 0
+    }
+   },
+   "commonFailure": {
+    "cause": "livestock",
+    "runs": 5201
+   },
+   "verdicts": [
+    {
+     "level": "ok",
+     "text": "The no-op control wins 0 of 1000."
+    },
+    {
+     "level": "ok",
+     "text": "The best thoughtful policy (threat-aware, 79.9%) beats random-legal (0.4%)."
+    },
+    {
+     "level": "warn",
+     "text": "Only 1 thoughtful policy win at least 10% of seeds (threat-aware)."
+    },
+    {
+     "level": "warn",
+     "text": "0 of 10 thoughtful pairs win some of the same seeds and also some different ones."
+    },
+    {
+     "level": "ok",
+     "text": "8 of 10 thoughtful pairs play materially differently (action mix distance >= 0.25 or different winners on >= 20% of seeds)."
+    },
+    {
+     "level": "ok",
+     "text": "The exploit-seeker recorded 0 engine violations (no free Influence through undo, no invalid actions accepted, no double-telling)."
+    },
+    {
+     "level": "ok",
+     "text": "No timeouts, softlocks or crashes in any run."
+    },
+    {
+     "level": "ok",
+     "text": "Determinism: 96 runs repeated, identical state and event hashes every time."
+    }
+   ]
+  },
+  "expedition": {
+   "scenario": "expedition",
+   "seeds": 1000,
+   "policies": {
+    "bridge-builder": {
+     "n": 1000,
+     "wins": 226,
+     "winRate": 22.6,
+     "ci": [
+      20.1,
+      25.3
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 722.9,
+     "meanScoreWins": 853.3,
+     "meanAlive": 14,
+     "meanHomes": 11.3,
+     "firstBeliefDay": 3,
+     "firstLawDay": 7,
+     "runsWithLaw": 91.4,
+     "meanLawNights": 2.8,
+     "meanReach": 0.871,
+     "apSpentMean": 20.3,
+     "apUnspentMean": 6.9,
+     "passDayShare": 0.182,
+     "actionMix": {
+      "PICK_STARTER": 0.056,
+      "SEED": 0.278,
+      "RITUAL": 0.152,
+      "MESSENGER": 0.407,
+      "GATHER": 0.042,
+      "COUNTER": 0.065
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.112,
+      "FIRE_STARTED": 0.031,
+      "BEACON_OUT": 0.995,
+      "FIELD_PARCHED": 1.884,
+      "NIGHT_LABOR": 1.102,
+      "FAMINE": 1.012,
+      "LIVESTOCK_KILLED": 1.564,
+      "FIELD_BURNED": 0.012,
+      "LAW_DISCREDITED": 0.006,
+      "FIRE_SPREAD": 0.015
+     },
+     "rivalActionsPerRun": 1.127,
+     "rivalCounteredPerRun": 1.162,
+     "causalPct": 57.8,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 117,
+      "survivors+fed+food": 42,
+      "livestock": 321,
+      "fed+food": 142,
+      "fed": 18,
+      "food": 67,
+      "collapse": 65,
+      "survivors+fed": 2
+     },
+     "duration": {
+      "medianMs": 328,
+      "p95Ms": 684,
+      "maxMs": 1519
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 774,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 774,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 774,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 23.2,
+       "believers": 2.6,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 20.9,
+       "believers": 6.9,
+       "lawsOn": 0.005
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 18.5,
+       "believers": 9.4,
+       "lawsOn": 0.123
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 15.9,
+       "believers": 11.4,
+       "lawsOn": 0.512
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.1,
+       "food": 12.7,
+       "believers": 12.5,
+       "lawsOn": 0.993
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.8,
+       "food": 9.3,
+       "believers": 13.4,
+       "lawsOn": 1.176
+      }
+     ],
+     "distinctOutcomes": 283
+    },
+    "broadcaster": {
+     "n": 1000,
+     "wins": 2,
+     "winRate": 0.2,
+     "ci": [
+      0.1,
+      0.7
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 622.3,
+     "meanScoreWins": 760,
+     "meanAlive": 13,
+     "meanHomes": 11.3,
+     "firstBeliefDay": 5,
+     "firstLawDay": 8,
+     "runsWithLaw": 13.8,
+     "meanLawNights": 1.6,
+     "meanReach": 0.372,
+     "apSpentMean": 25.2,
+     "apUnspentMean": 0.1,
+     "passDayShare": 0.004,
+     "actionMix": {
+      "PICK_STARTER": 0.045,
+      "SEED": 0.389,
+      "GATHER": 0.176,
+      "MESSENGER": 0.36,
+      "COUNTER": 0.03
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.124,
+      "FIELD_PARCHED": 1.884,
+      "FAMINE": 1.101,
+      "LIVESTOCK_KILLED": 1.628,
+      "NIGHT_LABOR": 0.058,
+      "LAW_DISCREDITED": 0.001
+     },
+     "rivalActionsPerRun": 1.78,
+     "rivalCounteredPerRun": 0.666,
+     "causalPct": 55,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 200,
+      "collapse": 165,
+      "survivors+fed+food": 57,
+      "livestock": 332,
+      "fed+food": 179,
+      "food": 65
+     },
+     "duration": {
+      "medianMs": 330,
+      "p95Ms": 635,
+      "maxMs": 1184
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 998,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 998,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 998,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 23.2,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 21,
+       "believers": 0.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 18.6,
+       "believers": 1.6,
+       "lawsOn": 0.001
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 16.1,
+       "believers": 2.9,
+       "lawsOn": 0.004
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.2,
+       "food": 12.9,
+       "believers": 4.2,
+       "lawsOn": 0.019
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.8,
+       "food": 9.5,
+       "believers": 5.3,
+       "lawsOn": 0.084
+      }
+     ],
+     "distinctOutcomes": 270
+    },
+    "evidence-first": {
+     "n": 1000,
+     "wins": 486,
+     "winRate": 48.6,
+     "ci": [
+      45.5,
+      51.7
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 797,
+     "meanScoreWins": 906,
+     "meanAlive": 14.5,
+     "meanHomes": 11.3,
+     "firstBeliefDay": 2,
+     "firstLawDay": 4,
+     "runsWithLaw": 95,
+     "meanLawNights": 4.5,
+     "meanReach": 0.895,
+     "apSpentMean": 14.5,
+     "apUnspentMean": 16.4,
+     "passDayShare": 0.414,
+     "actionMix": {
+      "PICK_STARTER": 0.086,
+      "RITUAL": 0.323,
+      "MESSENGER": 0.379,
+      "SEED": 0.138,
+      "COUNTER": 0.074
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.083,
+      "FIRE_STARTED": 0.12,
+      "BEACON_OUT": 1.491,
+      "FIELD_PARCHED": 1.855,
+      "NIGHT_LABOR": 1.851,
+      "FAMINE": 0.501,
+      "LIVESTOCK_KILLED": 1.525,
+      "FIELD_BURNED": 0.04,
+      "LAW_DISCREDITED": 0.012,
+      "FIRE_SPREAD": 0.09
+     },
+     "rivalActionsPerRun": 0.778,
+     "rivalCounteredPerRun": 0.859,
+     "causalPct": 54.3,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 98,
+      "fed": 10,
+      "livestock": 316,
+      "fed+food": 16,
+      "collapse": 35,
+      "food": 38,
+      "survivors+fed+food": 1
+     },
+     "duration": {
+      "medianMs": 171,
+      "p95Ms": 396,
+      "maxMs": 1356
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 514,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 514,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 514,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 4.6,
+       "lawsOn": 0.001
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 23.1,
+       "believers": 8,
+       "lawsOn": 0.13
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 20.7,
+       "believers": 10.6,
+       "lawsOn": 0.591
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 18.1,
+       "believers": 11.9,
+       "lawsOn": 1.064
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 15.6,
+       "believers": 12.7,
+       "lawsOn": 1.256
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.1,
+       "food": 13.3,
+       "believers": 13.3,
+       "lawsOn": 1.467
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.7,
+       "food": 12.2,
+       "believers": 13.8,
+       "lawsOn": 1.347
+      }
+     ],
+     "distinctOutcomes": 264
+    },
+    "exploit-seeker": {
+     "n": 1000,
+     "wins": 373,
+     "winRate": 37.3,
+     "ci": [
+      34.4,
+      40.3
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 754.9,
+     "meanScoreWins": 876.1,
+     "meanAlive": 14.2,
+     "meanHomes": 11.3,
+     "firstBeliefDay": 2,
+     "firstLawDay": 5,
+     "runsWithLaw": 86,
+     "meanLawNights": 4.1,
+     "meanReach": 0.845,
+     "apSpentMean": 25.3,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.048,
+      "RITUAL": 0.224,
+      "MESSENGER": 0.472,
+      "SEED": 0.21,
+      "GATHER": 0.047
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.071,
+      "BEACON_OUT": 1.705,
+      "FIELD_PARCHED": 1.874,
+      "NIGHT_LABOR": 1.805,
+      "FAMINE": 0.585,
+      "LIVESTOCK_KILLED": 1.559,
+      "FIRE_STARTED": 0.148,
+      "FIELD_BURNED": 0.053,
+      "FIRE_SPREAD": 0.048,
+      "LAW_DISCREDITED": 0.008,
+      "PACK_LURED": 0.003
+     },
+     "rivalActionsPerRun": 1.359,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 59.2,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "food": 66,
+      "livestock": 317,
+      "fed+food": 44,
+      "survivors": 130,
+      "collapse": 54,
+      "fed": 10,
+      "survivors+fed+food": 5,
+      "survivors+food": 1
+     },
+     "duration": {
+      "medianMs": 777,
+      "p95Ms": 1444,
+      "maxMs": 3316
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 627,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 627,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 627,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0.5,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 4.5,
+       "lawsOn": 0.001
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 23.1,
+       "believers": 7.2,
+       "lawsOn": 0.082
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 20.8,
+       "believers": 8.9,
+       "lawsOn": 0.384
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 18.2,
+       "believers": 10.2,
+       "lawsOn": 0.615
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 15.8,
+       "believers": 11.3,
+       "lawsOn": 0.772
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.1,
+       "food": 13.3,
+       "believers": 12.2,
+       "lawsOn": 0.965
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.7,
+       "food": 11,
+       "believers": 13.3,
+       "lawsOn": 1.056
+      }
+     ],
+     "distinctOutcomes": 347
+    },
+    "greedy": {
+     "n": 1000,
+     "wins": 443,
+     "winRate": 44.3,
+     "ci": [
+      41.2,
+      47.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 784.7,
+     "meanScoreWins": 912.9,
+     "meanAlive": 14.3,
+     "meanHomes": 11.3,
+     "firstBeliefDay": 2,
+     "firstLawDay": 4,
+     "runsWithLaw": 97,
+     "meanLawNights": 4.4,
+     "meanReach": 0.874,
+     "apSpentMean": 14.8,
+     "apUnspentMean": 15.9,
+     "passDayShare": 0.393,
+     "actionMix": {
+      "PICK_STARTER": 0.081,
+      "RITUAL": 0.273,
+      "MESSENGER": 0.434,
+      "GATHER": 0.012,
+      "SEED": 0.112,
+      "COUNTER": 0.088
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.069,
+      "FIRE_STARTED": 0.179,
+      "BEACON_OUT": 1.572,
+      "FIELD_PARCHED": 1.849,
+      "NIGHT_LABOR": 1.879,
+      "FAMINE": 0.47,
+      "LIVESTOCK_KILLED": 1.534,
+      "FIELD_BURNED": 0.054,
+      "LAW_DISCREDITED": 0.083,
+      "FIRE_SPREAD": 0.081
+     },
+     "rivalActionsPerRun": 1.069,
+     "rivalCounteredPerRun": 1.075,
+     "causalPct": 54.7,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 129,
+      "fed": 10,
+      "livestock": 315,
+      "food": 38,
+      "fed+food": 12,
+      "collapse": 51,
+      "survivors+food": 1,
+      "survivors+fed+food": 1
+     },
+     "duration": {
+      "medianMs": 204,
+      "p95Ms": 483,
+      "maxMs": 1158
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 557,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 557,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 557,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 4.5,
+       "lawsOn": 0.002
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 23.1,
+       "believers": 7.9,
+       "lawsOn": 0.102
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 20.7,
+       "believers": 10.5,
+       "lawsOn": 0.579
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 18,
+       "believers": 11.8,
+       "lawsOn": 1.055
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 15.4,
+       "believers": 12.5,
+       "lawsOn": 1.307
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.1,
+       "food": 13.2,
+       "believers": 13.2,
+       "lawsOn": 1.533
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.7,
+       "food": 12.5,
+       "believers": 13.4,
+       "lawsOn": 1.391
+      }
+     ],
+     "distinctOutcomes": 267
+    },
+    "noop": {
+     "n": 1000,
+     "wins": 0,
+     "winRate": 0,
+     "ci": [
+      0,
+      0.4
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 618.5,
+     "meanScoreWins": 0,
+     "meanAlive": 13,
+     "meanHomes": 11.3,
+     "firstBeliefDay": 4,
+     "firstLawDay": 8,
+     "runsWithLaw": 6.2,
+     "meanLawNights": 2,
+     "meanReach": 0.031,
+     "apSpentMean": 0,
+     "apUnspentMean": 40.2,
+     "passDayShare": 1,
+     "actionMix": {
+      "PICK_STARTER": 1
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.124,
+      "FIELD_PARCHED": 1.884,
+      "FAMINE": 1.101,
+      "LIVESTOCK_KILLED": 1.628
+     },
+     "rivalActionsPerRun": 0,
+     "rivalCounteredPerRun": 0,
+     "causalPct": 44.4,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 200,
+      "collapse": 167,
+      "survivors+fed+food": 57,
+      "livestock": 332,
+      "fed+food": 179,
+      "food": 65
+     },
+     "duration": {
+      "medianMs": 22,
+      "p95Ms": 59,
+      "maxMs": 142
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 1000,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 23.2,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 21,
+       "believers": 0.2,
+       "lawsOn": 0
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 18.6,
+       "believers": 0.2,
+       "lawsOn": 0.002
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 16.2,
+       "believers": 0.3,
+       "lawsOn": 0.003
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.2,
+       "food": 13,
+       "believers": 0.4,
+       "lawsOn": 0.019
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.8,
+       "food": 9.8,
+       "believers": 0.3,
+       "lawsOn": 0.059
+      }
+     ],
+     "distinctOutcomes": 205
+    },
+    "random": {
+     "n": 1000,
+     "wins": 24,
+     "winRate": 2.4,
+     "ci": [
+      1.6,
+      3.5
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 630.7,
+     "meanScoreWins": 853.1,
+     "meanAlive": 13.1,
+     "meanHomes": 11.2,
+     "firstBeliefDay": 4,
+     "firstLawDay": 7,
+     "runsWithLaw": 19.6,
+     "meanLawNights": 2.5,
+     "meanReach": 0.352,
+     "apSpentMean": 25.3,
+     "apUnspentMean": 0,
+     "passDayShare": 0,
+     "actionMix": {
+      "PICK_STARTER": 0.044,
+      "RITUAL": 0.194,
+      "SEED": 0.531,
+      "GATHER": 0.087,
+      "MESSENGER": 0.119,
+      "COUNTER": 0.025,
+      "TRADE": 0.001
+     },
+     "sideEffectsPerRun": {
+      "FIRE_STARTED": 0.319,
+      "FIELD_FLOODED": 1.046,
+      "BEACON_OUT": 1.797,
+      "FIELD_PARCHED": 1.884,
+      "FAMINE": 1.073,
+      "LIVESTOCK_KILLED": 1.598,
+      "FIRE_SPREAD": 0.366,
+      "NIGHT_LABOR": 0.193,
+      "FIELD_BURNED": 0.078,
+      "LAW_DISCREDITED": 0.014,
+      "PACK_LURED": 0.036
+     },
+     "rivalActionsPerRun": 1.131,
+     "rivalCounteredPerRun": 0.014,
+     "causalPct": 56,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "survivors": 205,
+      "survivors+fed+food": 52,
+      "livestock": 326,
+      "collapse": 151,
+      "fed+food": 172,
+      "food": 68,
+      "survivors+food": 2
+     },
+     "duration": {
+      "medianMs": 308,
+      "p95Ms": 633,
+      "maxMs": 1587
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 976,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 976,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 976,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0.1,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 0.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 23.1,
+       "believers": 0.8,
+       "lawsOn": 0.001
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 20.8,
+       "believers": 1.6,
+       "lawsOn": 0.006
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 18.3,
+       "believers": 2.3,
+       "lawsOn": 0.027
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.5,
+       "food": 15.8,
+       "believers": 3.2,
+       "lawsOn": 0.059
+      },
+      {
+       "day": 8,
+       "alive": 15.1,
+       "homes": 13.1,
+       "food": 12.7,
+       "believers": 4.3,
+       "lawsOn": 0.119
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.7,
+       "food": 9.4,
+       "believers": 5.1,
+       "lawsOn": 0.188
+      }
+     ],
+     "distinctOutcomes": 271
+    },
+    "threat-aware": {
+     "n": 1000,
+     "wins": 600,
+     "winRate": 60,
+     "ci": [
+      56.9,
+      63
+     ],
+     "timeouts": 0,
+     "crashes": 0,
+     "medianEndDay": 8,
+     "meanScore": 798.6,
+     "meanScoreWins": 888.9,
+     "meanAlive": 14.3,
+     "meanHomes": 11.4,
+     "firstBeliefDay": 2,
+     "firstLawDay": 4,
+     "runsWithLaw": 95.1,
+     "meanLawNights": 4.4,
+     "meanReach": 0.862,
+     "apSpentMean": 18.6,
+     "apUnspentMean": 13.5,
+     "passDayShare": 0.101,
+     "actionMix": {
+      "PICK_STARTER": 0.065,
+      "RITUAL": 0.314,
+      "MESSENGER": 0.36,
+      "SEED": 0.158,
+      "GATHER": 0.033,
+      "COUNTER": 0.07
+     },
+     "sideEffectsPerRun": {
+      "FIELD_FLOODED": 1.072,
+      "FIRE_STARTED": 0.172,
+      "BEACON_OUT": 2.13,
+      "LAW_DISCREDITED": 0.072,
+      "FIELD_PARCHED": 1.851,
+      "NIGHT_LABOR": 1.879,
+      "FAMINE": 0.474,
+      "LIVESTOCK_KILLED": 0.997,
+      "FIELD_BURNED": 0.052,
+      "FIRE_SPREAD": 0.083
+     },
+     "rivalActionsPerRun": 1.071,
+     "rivalCounteredPerRun": 1.076,
+     "causalPct": 53.6,
+     "noPhysicalChangePct": 0,
+     "lossCauses": {
+      "fed": 10,
+      "livestock": 156,
+      "fed+food": 14,
+      "survivors": 127,
+      "collapse": 51,
+      "food": 41,
+      "survivors+fed+food": 1
+     },
+     "duration": {
+      "medianMs": 380,
+      "p95Ms": 714,
+      "maxMs": 1416
+     },
+     "determinism": {
+      "checked": 12,
+      "mismatches": 0
+     },
+     "auditViolations": 0,
+     "rescue": {
+      "1": {
+       "lost": 400,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "2": {
+       "lost": 400,
+       "checked": 0,
+       "rescuable": 0
+      },
+      "3": {
+       "lost": 400,
+       "checked": 0,
+       "rescuable": 0
+      }
+     },
+     "density": null,
+     "curve": [
+      {
+       "day": 1,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 29.8,
+       "believers": 0,
+       "lawsOn": 0
+      },
+      {
+       "day": 2,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 27.6,
+       "believers": 0.4,
+       "lawsOn": 0
+      },
+      {
+       "day": 3,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 25.4,
+       "believers": 4.5,
+       "lawsOn": 0.002
+      },
+      {
+       "day": 4,
+       "alive": 15.3,
+       "homes": 13.7,
+       "food": 23.1,
+       "believers": 7.9,
+       "lawsOn": 0.102
+      },
+      {
+       "day": 5,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 20.7,
+       "believers": 10.4,
+       "lawsOn": 0.577
+      },
+      {
+       "day": 6,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 18.1,
+       "believers": 11.6,
+       "lawsOn": 1.047
+      },
+      {
+       "day": 7,
+       "alive": 15.3,
+       "homes": 13.6,
+       "food": 15.6,
+       "believers": 12.3,
+       "lawsOn": 1.265
+      },
+      {
+       "day": 8,
+       "alive": 15.2,
+       "homes": 13.1,
+       "food": 13.3,
+       "believers": 13,
+       "lawsOn": 1.493
+      },
+      {
+       "day": 9,
+       "alive": 15.1,
+       "homes": 12.7,
+       "food": 12.4,
+       "believers": 13.4,
+       "lawsOn": 1.372
+      }
+     ],
+     "distinctOutcomes": 285
+    }
+   },
+   "pairs": [
+    {
+     "a": "bridge-builder",
+     "b": "broadcaster",
+     "seeds": 1000,
+     "both": 2,
+     "aOnly": 224,
+     "bOnly": 0,
+     "neither": 774,
+     "p": 0,
+     "mixDistance": 0.245,
+     "disagree": 0.224,
+     "aliveGap": 1,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 202,
+     "aOnly": 24,
+     "bOnly": 284,
+     "neither": 490,
+     "p": 0,
+     "mixDistance": 0.21,
+     "disagree": 0.308,
+     "aliveGap": 0.5,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 168,
+     "aOnly": 58,
+     "bOnly": 275,
+     "neither": 499,
+     "p": 0,
+     "mixDistance": 0.196,
+     "disagree": 0.333,
+     "aliveGap": 0.7,
+     "separated": true
+    },
+    {
+     "a": "bridge-builder",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 176,
+     "aOnly": 50,
+     "bOnly": 424,
+     "neither": 350,
+     "p": 0,
+     "mixDistance": 0.176,
+     "disagree": 0.474,
+     "aliveGap": 0.6,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "evidence-first",
+     "seeds": 1000,
+     "both": 2,
+     "aOnly": 0,
+     "bOnly": 484,
+     "neither": 514,
+     "p": 0,
+     "mixDistance": 0.427,
+     "disagree": 0.484,
+     "aliveGap": 1.5,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 2,
+     "aOnly": 0,
+     "bOnly": 441,
+     "neither": 557,
+     "p": 0,
+     "mixDistance": 0.441,
+     "disagree": 0.441,
+     "aliveGap": 1.3,
+     "separated": true
+    },
+    {
+     "a": "broadcaster",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 2,
+     "aOnly": 0,
+     "bOnly": 598,
+     "neither": 400,
+     "p": 0,
+     "mixDistance": 0.374,
+     "disagree": 0.598,
+     "aliveGap": 1.3,
+     "separated": true
+    },
+    {
+     "a": "evidence-first",
+     "b": "greedy",
+     "seeds": 1000,
+     "both": 416,
+     "aOnly": 70,
+     "bOnly": 27,
+     "neither": 487,
+     "p": 0,
+     "mixDistance": 0.081,
+     "disagree": 0.097,
+     "aliveGap": 0.3,
+     "separated": false
+    },
+    {
+     "a": "evidence-first",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 424,
+     "aOnly": 62,
+     "bOnly": 176,
+     "neither": 338,
+     "p": 0,
+     "mixDistance": 0.053,
+     "disagree": 0.238,
+     "aliveGap": 0.3,
+     "separated": true
+    },
+    {
+     "a": "greedy",
+     "b": "threat-aware",
+     "seeds": 1000,
+     "both": 432,
+     "aOnly": 11,
+     "bOnly": 168,
+     "neither": 389,
+     "p": 0,
+     "mixDistance": 0.108,
+     "disagree": 0.179,
+     "aliveGap": 0.1,
+     "separated": false
+    }
+   ],
+   "regret": {
+    "bridge-builder": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 455,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "broadcaster": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 679,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "evidence-first": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 195,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "exploit-seeker": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 317,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "greedy": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 238,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "noop": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 681,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "random": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 659,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    },
+    "threat-aware": {
+     "seeds": 1000,
+     "lostWhenSomeFairPolicyWon": 81,
+     "lostWhenOracleWon": null,
+     "oracleSeeds": 0
+    }
+   },
+   "claimUse": {
+    "bridge_stands_watched": {
+     "runsWithLaw": 1046,
+     "wins": 777,
+     "winRate": 74.3,
+     "shareOfWins": 36.5
+    },
+    "river_fears_fire": {
+     "runsWithLaw": 389,
+     "wins": 43,
+     "winRate": 11.1,
+     "shareOfWins": 2
+    },
+    "moonlight_ripens_grain": {
+     "runsWithLaw": 1702,
+     "wins": 1074,
+     "winRate": 63.1,
+     "shareOfWins": 50.4
+    },
+    "wolves_fear_smoke": {
+     "runsWithLaw": 1560,
+     "wins": 235,
+     "winRate": 15.1,
+     "shareOfWins": 11
+    },
+    "wolves_follow_smoke": {
+     "runsWithLaw": 78,
+     "wins": 0,
+     "winRate": 0,
+     "shareOfWins": 0
+    },
+    "moon_sours_grain": {
+     "runsWithLaw": 27,
+     "wins": 0,
+     "winRate": 0,
+     "shareOfWins": 0
+    },
+    "river_courts_fire": {
+     "runsWithLaw": 10,
+     "wins": 0,
+     "winRate": 0,
+     "shareOfWins": 0
+    },
+    "rain_follows_bells": {
+     "runsWithLaw": 3,
+     "wins": 3,
+     "winRate": 100,
+     "shareOfWins": 0.1
+    }
+   },
+   "commonFailure": {
+    "cause": "livestock",
+    "runs": 1757
+   },
+   "verdicts": [
+    {
+     "level": "ok",
+     "text": "The no-op control wins 0 of 1000."
+    },
+    {
+     "level": "ok",
+     "text": "The best thoughtful policy (threat-aware, 60%) beats random-legal (2.4%)."
+    },
+    {
+     "level": "ok",
+     "text": "4 distinct thoughtful policies win at least 10% of seeds (bridge-builder, evidence-first, greedy, threat-aware)."
+    },
+    {
+     "level": "ok",
+     "text": "10 of 10 thoughtful pairs win some of the same seeds and also some different ones."
+    },
+    {
+     "level": "ok",
+     "text": "8 of 10 thoughtful pairs play materially differently (action mix distance >= 0.25 or different winners on >= 20% of seeds)."
+    },
+    {
+     "level": "ok",
+     "text": "The exploit-seeker recorded 0 engine violations (no free Influence through undo, no invalid actions accepted, no double-telling)."
+    },
+    {
+     "level": "ok",
+     "text": "No timeouts, softlocks or crashes in any run."
+    },
+    {
+     "level": "ok",
+     "text": "Determinism: 96 runs repeated, identical state and event hashes every time."
+    }
+   ]
+  }
+ }
+}

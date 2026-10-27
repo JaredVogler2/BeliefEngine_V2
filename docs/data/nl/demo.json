@@ -1,0 +1,649 @@
+{
+ "village": "redbank",
+ "seed": 1,
+ "results": [
+  {
+   "text": "The river turns aside from lit lanterns.",
+   "status": "ok",
+   "title": "Lanterns turn the river",
+   "structure": "river repel powered by lit beacon in east",
+   "composedOnDay": 1,
+   "activatedOnDay": 5,
+   "support": "81% (needed 60%), 8 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 73,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 0,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 21,
+   "replay": {
+    "stateHash": "1205b7ef4e0ebc",
+    "eventHash": "1103d088dbcdb6",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_0c6b5a0514",
+      "text": "The river turns aside from lit lanterns.",
+      "short": "Lanterns turn the river",
+      "icon": "flame",
+      "spec": {
+       "id": "custom_0c6b5a0514",
+       "version": 1,
+       "subject": "river",
+       "effect": "repel",
+       "trigger": {
+        "kind": "lit_beacon"
+       },
+       "radius": 2,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 58,
+        "decay": 25
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "ignition"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "river"
+       ]
+      },
+      "regions": [
+       "east"
+      ],
+      "ritual": "light_beacon",
+      "contradicts": [
+       "river_courts_fire"
+      ],
+      "benefit": "While Eastbank believes it, each powered lit beacon raises the ground by up to 2 within 2 tiles, so floodwater stays out of that ground.",
+      "risk": "Stray sparks: lit fires near dry fields or trees may start a blaze",
+      "flavor": "The river turns aside from lit lanterns.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "The river turns aside from lit lanterns.",
+       "astHash": "0c6b5a05149a78",
+       "parser": "offline-lexicon-1",
+       "balance": 338021517,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "river",
+          "effect": "repel",
+          "trigger": "lit_beacon",
+          "radius": 2,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "east"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_0c6b5a0514",
+     "site": "green_e"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_0c6b5a0514",
+     "target": "pip"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_0c6b5a0514",
+     "target": "ivo"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_0c6b5a0514",
+     "target": "tilly"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_0c6b5a0514",
+     "target": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_e",
+     "claim": "custom_0c6b5a0514"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_c",
+     "claim": "custom_0c6b5a0514"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0c6b5a0514",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0c6b5a0514",
+     "from": "mara",
+     "to": "nell"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0c6b5a0514",
+     "from": "harl",
+     "to": "wren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0c6b5a0514",
+     "from": "dunn",
+     "to": "bram"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0c6b5a0514",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_s",
+     "claim": "custom_0c6b5a0514"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0c6b5a0514",
+     "from": "bram",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "No flood can break a bridge that is watched.",
+   "status": "ok",
+   "title": "A watched bridge holds",
+   "structure": "bridge strengthen powered by watchers in river",
+   "composedOnDay": 1,
+   "activatedOnDay": 5,
+   "support": "81% (needed 60%), 13 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "70%",
+    "crop growth boost (% per night)": 0,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 22,
+   "replay": {
+    "stateHash": "0d5cba1d349dbd",
+    "eventHash": "1c3c0a843cf8cb",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_0504310b6e",
+      "text": "No flood can break a bridge that is watched.",
+      "short": "A watched bridge holds",
+      "icon": "eye",
+      "spec": {
+       "id": "custom_0504310b6e",
+       "version": 1,
+       "subject": "bridge",
+       "effect": "strengthen",
+       "trigger": {
+        "kind": "watchers",
+        "min": 1
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 62,
+        "decay": 23
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "labor_drain"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "bridge"
+       ]
+      },
+      "regions": [
+       "river"
+      ],
+      "electorate": {
+       "river": [
+        "east",
+        "west"
+       ]
+      },
+      "ritual": "keep_vigil",
+      "contradicts": [
+       "crowds_break_bridges"
+      ],
+      "benefit": "With at least 1 watcher on the deck at night, the bridge takes up to 70% less flood damage.",
+      "risk": "Night labour: workers who keep the law lose energy and health",
+      "flavor": "No flood can break a bridge that is watched.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "No flood can break a bridge that is watched.",
+       "astHash": "0504310b6ee827",
+       "parser": "offline-lexicon-1",
+       "balance": 6240687,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "bridge",
+          "effect": "strengthen",
+          "trigger": "watchers",
+          "radius": 0,
+          "intensity": 2,
+          "watchers": 1
+         }
+        ],
+        "regions": [
+         "river"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "custom_0504310b6e"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "custom_0504310b6e"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "hester",
+     "to": "aldous"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "aldous",
+     "to": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "ivo",
+     "to": "tilly"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "elspeth",
+     "to": "nell"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "nell",
+     "to": "pip"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "aldous",
+     "to": "ivo"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "hester",
+     "to": "mara"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "harl",
+     "to": "wren"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "custom_0504310b6e"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_0504310b6e",
+     "from": "dunn",
+     "to": "wren"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "The bridge cannot fall while the bells ring.",
+   "status": "ok",
+   "title": "Bells hold the bridge",
+   "structure": "bridge strengthen powered by bell in river",
+   "composedOnDay": 1,
+   "activatedOnDay": 6,
+   "support": "79% (needed 60%), 13 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "89%",
+    "crop growth boost (% per night)": 0,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 26,
+   "replay": {
+    "stateHash": "0d6aebe9dea1ba",
+    "eventHash": "1e82f0052e4438",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_1b4bcd5053",
+      "text": "The bridge cannot fall while the bells ring.",
+      "short": "Bells hold the bridge",
+      "icon": "eye",
+      "spec": {
+       "id": "custom_1b4bcd5053",
+       "version": 1,
+       "subject": "bridge",
+       "effect": "strengthen",
+       "trigger": {
+        "kind": "bell"
+       },
+       "radius": 0,
+       "intensity": 3,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 60,
+        "decay": 24
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [],
+       "tags": [
+        "custom",
+        "inventor",
+        "bridge"
+       ]
+      },
+      "regions": [
+       "river"
+      ],
+      "electorate": {
+       "river": [
+        "east",
+        "west"
+       ]
+      },
+      "ritual": "ring_bells",
+      "contradicts": [
+       "crowds_break_bridges"
+      ],
+      "benefit": "On nights the bells ring, the bridge takes up to 90% less flood damage.",
+      "risk": "No side effects, but it only works while its trigger is met.",
+      "flavor": "The bridge cannot fall while the bells ring.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "The bridge cannot fall while the bells ring.",
+       "astHash": "1b4bcd5053a11c",
+       "parser": "offline-lexicon-1",
+       "balance": 461748303,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "bridge",
+          "effect": "strengthen",
+          "trigger": "bell",
+          "radius": 0,
+          "intensity": 3
+         }
+        ],
+        "regions": [
+         "river"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_1b4bcd5053",
+     "site": "green_e"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "custom_1b4bcd5053"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1b4bcd5053",
+     "target": "pip"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1b4bcd5053",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "ivo",
+     "to": "tilly"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "pip",
+     "to": "nell"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "nell",
+     "to": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "custom_1b4bcd5053"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "hester",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "harl",
+     "to": "wren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "hester",
+     "to": "elspeth"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "elspeth",
+     "to": "hester"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "custom_1b4bcd5053"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "hester",
+     "to": "osric"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1b4bcd5053",
+     "from": "harl",
+     "to": "wren"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  }
+ ]
+}

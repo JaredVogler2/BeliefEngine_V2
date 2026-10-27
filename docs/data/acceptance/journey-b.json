@@ -1,0 +1,177 @@
+{
+ "about": "Written by scripts/acceptance-b.ts: Journey B over the real local MCP server with the official SDK client.",
+ "date": "2026-10-27",
+ "result": "PASS",
+ "stateHash": "1fd91495f0ef6e",
+ "eventHash": "0067ab92df806f",
+ "checks": [
+  {
+   "step": "1 launch",
+   "claim": "a real MCP server answered the SDK client over stdio",
+   "pass": true,
+   "detail": "belief-engine 0.1.0"
+  },
+  {
+   "step": "1 launch",
+   "claim": "it exposes the play tools with schemas",
+   "pass": true,
+   "detail": "21 tools"
+  },
+  {
+   "step": "1 launch",
+   "claim": "the rules resource is served",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "1 launch",
+   "claim": "three story chapters are listed",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "2 inspect",
+   "claim": "a game starts with day 1, Influence and the legal first moves",
+   "pass": true,
+   "detail": "run r_8b86b9…"
+  },
+  {
+   "step": "2 inspect",
+   "claim": "the map shows landmarks, villagers and coordinates",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "2 inspect",
+   "claim": "the state shows objectives, tonight's danger and the story hand",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "2 inspect",
+   "claim": "a villager shows who they trust, how much, and whether they can be reached (the social graph)",
+   "pass": true,
+   "detail": "7 ties"
+  },
+  {
+   "step": "2 inspect",
+   "claim": "their private convictions are hidden until scouted",
+   "pass": true,
+   "detail": "Ivo Thatcher, Storyteller. Their private convictions are hidden (scout them or speak to th"
+  },
+  {
+   "step": "3 play",
+   "claim": "every action the agent took was in the server's list of legal actions",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "3 play",
+   "claim": "each cost charged equals the engine's own cost, and Influence fell by exactly that",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "3 play",
+   "claim": "days were ended one at a time and resolved",
+   "pass": true,
+   "detail": "7 nights"
+  },
+  {
+   "step": "4 rival",
+   "claim": "the rival's move was visible in the state and the agent answered it with a COUNTER",
+   "pass": true,
+   "detail": "1 counter(s); rival visible: true"
+  },
+  {
+   "step": "5 finish",
+   "claim": "the run ended in victory with a debrief (headline, story, score, causal chains)",
+   "pass": true,
+   "detail": "The village endures — 14 of 14 saved; score 820"
+  },
+  {
+   "step": "5 finish",
+   "claim": "the server reports the state and event hashes",
+   "pass": true,
+   "detail": "1fd91495f0ef6e / 0067ab92df806f"
+  },
+  {
+   "step": "6 replay",
+   "claim": "the exported action log replays in the engine with nothing rejected",
+   "pass": true,
+   "detail": "21 actions"
+  },
+  {
+   "step": "6 replay",
+   "claim": "state hash identical to the server's",
+   "pass": true,
+   "detail": "1fd91495f0ef6e"
+  },
+  {
+   "step": "6 replay",
+   "claim": "event hash identical to the server's (every event, in order)",
+   "pass": true,
+   "detail": "0067ab92df806f"
+  },
+  {
+   "step": "6 replay",
+   "claim": "the recorded browser trace produces the same final state",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "6 replay",
+   "claim": "the replay names what it was recorded under (rules, save schema, generator, belief language, opening-state fingerprint), so an engine update cannot silently rewrite it",
+   "pass": true,
+   "detail": "{\"rules\":\"1.0.0\",\"schema\":1,\"generator\":1,\"beliefLanguage\":1,\"start\":\"0c38d1b48858c2\"}"
+  },
+  {
+   "step": "7 refuse",
+   "claim": "a stale revision is refused (STALE_REVISION) and the state is unchanged",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "7 refuse",
+   "claim": "a duplicate call (same idempotency key) does not act twice",
+   "pass": true,
+   "detail": "revision 2 both times"
+  },
+  {
+   "step": "7 refuse",
+   "claim": "an illegal action is refused with the reason and alternatives, and changes nothing",
+   "pass": true,
+   "detail": "BAD_TARGET"
+  },
+  {
+   "step": "7 refuse",
+   "claim": "an action the player cannot pay for is refused with the reason, and changes nothing",
+   "pass": true,
+   "detail": "NO_INFLUENCE: NO_INFLUENCE: This needs 1 Influence; you have 0. Try: Spend Influence on someth"
+  },
+  {
+   "step": "7 refuse",
+   "claim": "an agent without control (coach mode) cannot act: READ_ONLY, state unchanged",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "7 refuse",
+   "claim": "another run id is not guessable and a path-shaped id is refused",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "7 refuse",
+   "claim": "a malformed action is refused by the schema before the game sees it",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "step": "7 refuse",
+   "claim": "results are not available before the run ends",
+   "pass": true,
+   "detail": ""
+  }
+ ]
+}

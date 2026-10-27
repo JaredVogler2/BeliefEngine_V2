@@ -1,0 +1,974 @@
+{
+ "village": "harvest",
+ "seed": 1,
+ "results": [
+  {
+   "text": "Crops ripen faster when the moon is up.",
+   "status": "ok",
+   "title": "Night ripens the crops",
+   "structure": "grain grow powered by night in valley",
+   "composedOnDay": 1,
+   "activatedOnDay": 5,
+   "support": "77% (needed 60%), 12 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 19,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 21,
+   "replay": {
+    "stateHash": "0d86f394add068",
+    "eventHash": "1a4391c1889976",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_14693e4d7c",
+      "text": "Crops ripen faster when the moon is up.",
+      "short": "Night ripens the crops",
+      "icon": "moon",
+      "spec": {
+       "id": "custom_14693e4d7c",
+       "version": 1,
+       "subject": "grain",
+       "effect": "grow",
+       "trigger": {
+        "kind": "night"
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 63,
+        "decay": 23
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "labor_drain"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "grain"
+       ]
+      },
+      "regions": [
+       "valley"
+      ],
+      "ritual": "moonlit_work",
+      "contradicts": [
+       "moon_sours_grain"
+      ],
+      "benefit": "Crops in The Valley ripen about 20% faster each night.",
+      "risk": "Night labour: workers who keep the law lose energy and health",
+      "flavor": "Crops ripen faster when the moon is up.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "Crops ripen faster when the moon is up.",
+       "astHash": "14693e4d7c4300",
+       "parser": "offline-lexicon-1",
+       "balance": 443243511,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "grain",
+          "effect": "grow",
+          "trigger": "night",
+          "radius": 0,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "valley"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "custom_14693e4d7c"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_14693e4d7c",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_14693e4d7c",
+     "site": "hall"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_14693e4d7c",
+     "target": "pim"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "custom_14693e4d7c"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "custom_14693e4d7c"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "esk",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "wilma",
+     "to": "tobias"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "custom_14693e4d7c"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "marta",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_14693e4d7c",
+     "from": "nessa",
+     "to": "dalia"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "The clouds gather wherever the bells ring.",
+   "status": "ok",
+   "title": "Bells gather the clouds",
+   "structure": "rain attract powered by bell in valley",
+   "composedOnDay": 1,
+   "activatedOnDay": 6,
+   "support": "72% (needed 60%), 11 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 0,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 2,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 29,
+   "replay": {
+    "stateHash": "12dd89be5072cb",
+    "eventHash": "181daa061d2c8b",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_07974da8fd",
+      "text": "The clouds gather wherever the bells ring.",
+      "short": "Bells gather the clouds",
+      "icon": "rain",
+      "spec": {
+       "id": "custom_07974da8fd",
+       "version": 1,
+       "subject": "rain",
+       "effect": "attract",
+       "trigger": {
+        "kind": "bell"
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 64,
+        "decay": 22
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "rain_displace"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "rain"
+       ]
+      },
+      "regions": [
+       "valley"
+      ],
+      "ritual": "ring_bells",
+      "contradicts": [],
+      "benefit": "On nights the bells ring, the fields of The Valley drink 2 extra steps of rain, so crops grow faster. The water drawn in is taken from somewhere else.",
+      "risk": "Displaced rain: the water you push away pools elsewhere",
+      "flavor": "The clouds gather wherever the bells ring.",
+      "startsAvailable": true,
+      "params": {
+       "sink": "hillside"
+      },
+      "custom": {
+       "text": "The clouds gather wherever the bells ring.",
+       "astHash": "07974da8fd18c9",
+       "parser": "offline-lexicon-1",
+       "balance": 123429131,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "rain",
+          "effect": "attract",
+          "trigger": "bell",
+          "radius": 0,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "valley"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_07974da8fd",
+     "site": "hall"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "nessa"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "odo"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "anselm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "nessa",
+     "to": "wilma"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_07974da8fd",
+     "target": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "custom_07974da8fd"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "pim",
+     "to": "odo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "marta",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "hobb",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "marta",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "nessa",
+     "to": "hobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "imre",
+     "to": "ferris"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_07974da8fd",
+     "from": "dalia",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "The crops grow faster when the bells ring.",
+   "status": "ok",
+   "title": "Bells ripen the crops",
+   "structure": "grain grow powered by bell in valley",
+   "composedOnDay": 1,
+   "activatedOnDay": 6,
+   "support": "72% (needed 60%), 11 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 17,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 29,
+   "replay": {
+    "stateHash": "0778be5c2a99fc",
+    "eventHash": "0abe432b8b0f55",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_1074897aed",
+      "text": "The crops grow faster when the bells ring.",
+      "short": "Bells ripen the crops",
+      "icon": "moon",
+      "spec": {
+       "id": "custom_1074897aed",
+       "version": 1,
+       "subject": "grain",
+       "effect": "grow",
+       "trigger": {
+        "kind": "bell"
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 64,
+        "decay": 22
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [],
+       "tags": [
+        "custom",
+        "inventor",
+        "grain"
+       ]
+      },
+      "regions": [
+       "valley"
+      ],
+      "ritual": "ring_bells",
+      "contradicts": [
+       "moon_sours_grain"
+      ],
+      "benefit": "On nights the bells ring, crops in The Valley ripen about 20% faster.",
+      "risk": "No side effects, but it only works while its trigger is met.",
+      "flavor": "The crops grow faster when the bells ring.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "The crops grow faster when the bells ring.",
+       "astHash": "1074897aedd4d1",
+       "parser": "offline-lexicon-1",
+       "balance": 311126191,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "grain",
+          "effect": "grow",
+          "trigger": "bell",
+          "radius": 0,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "valley"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_1074897aed",
+     "site": "hall"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "nessa"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "odo"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "anselm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "nessa",
+     "to": "wilma"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1074897aed",
+     "target": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "custom_1074897aed"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "pim",
+     "to": "odo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "marta",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "hobb",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "marta",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "nessa",
+     "to": "hobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "imre",
+     "to": "ferris"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1074897aed",
+     "from": "dalia",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "The crops thrive everywhere.",
+   "status": "ok",
+   "title": "The crops thrive",
+   "structure": "grain grow powered by always in valley",
+   "composedOnDay": 1,
+   "activatedOnDay": 8,
+   "support": "70% (needed 60%), 11 firm believers (needed 4)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 16,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 39,
+   "replay": {
+    "stateHash": "09ed0cc5b98f53",
+    "eventHash": "0ee1a5259b14fa",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_1c80718854",
+      "text": "The crops thrive everywhere.",
+      "short": "The crops thrive",
+      "icon": "moon",
+      "spec": {
+       "id": "custom_1c80718854",
+       "version": 1,
+       "subject": "grain",
+       "effect": "grow",
+       "trigger": {
+        "kind": "always"
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 4,
+        "ramp": 59,
+        "decay": 24
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "labor_drain"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "grain"
+       ]
+      },
+      "regions": [
+       "valley"
+      ],
+      "contradicts": [
+       "moon_sours_grain"
+      ],
+      "benefit": "Crops in The Valley ripen about 20% faster each night.",
+      "risk": "Night labour: workers who keep the law lose energy and health",
+      "flavor": "The crops thrive everywhere.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "The crops thrive everywhere.",
+       "astHash": "1c807188544b3b",
+       "parser": "offline-lexicon-1",
+       "balance": 228729782,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "grain",
+          "effect": "grow",
+          "trigger": "always",
+          "radius": 0,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "valley"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_1c80718854",
+     "site": "hall"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "nessa"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "pim"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "odo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "nessa"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1c80718854",
+     "target": "pim"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "pim",
+     "to": "wilma"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "anselm",
+     "to": "nessa"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "pim",
+     "to": "lark"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "wilma",
+     "to": "odo"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "esk",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "anselm",
+     "to": "hobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "nessa",
+     "to": "hobb"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "hobb",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "nessa",
+     "to": "dalia"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "esk",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "marta",
+     "to": "ferris"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "nessa",
+     "to": "dalia"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "hobb",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "marta",
+     "to": "ferris"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "hobb",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "wilma",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1c80718854",
+     "from": "nessa",
+     "to": "dalia"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  }
+ ]
+}

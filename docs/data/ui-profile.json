@@ -1,0 +1,25 @@
+{
+ "machine": "4 cpus",
+ "chromium": "153.0.8010.12",
+ "runs": 5,
+ "result": {
+  "titleVisible": 180,
+  "domContentLoaded": 83.69999999925494,
+  "loadEvent": 83.80000000074506,
+  "beginToMapPainted": 116,
+  "firstActionToConfirmed": 285,
+  "endDayToDigest": 130,
+  "fpsDuringResolution": 59.531684085167115,
+  "heapMb": 11.348724365234375
+ },
+ "bundle": {
+  "js": {
+   "raw": 708074,
+   "gz": 201781
+  },
+  "css": {
+   "raw": 21254,
+   "gz": 5889
+  }
+ }
+}

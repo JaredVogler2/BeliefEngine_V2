@@ -1,0 +1,131 @@
+{
+ "options": {
+  "scenarioId": "redbank",
+  "seed": 11,
+  "difficulty": "normal",
+  "mode": "story"
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "bridge_stands_watched"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "mara"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "ivo"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "harl"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "keep_vigil",
+   "landmark": "br",
+   "claim": "bridge_stands_watched"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "pip"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "keep_vigil",
+   "landmark": "br",
+   "claim": "bridge_stands_watched"
+  },
+  {
+   "type": "COUNTER",
+   "claim": "bridge_stands_watched",
+   "against": "crowds_break_bridges",
+   "target": "hester"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "aldous"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "wren"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "dunn"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "keep_vigil",
+   "landmark": "br",
+   "claim": "bridge_stands_watched"
+  },
+  {
+   "type": "SEED",
+   "claim": "bridge_stands_watched",
+   "target": "ivo"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "keep_vigil",
+   "landmark": "br",
+   "claim": "bridge_stands_watched"
+  },
+  {
+   "type": "COUNTER",
+   "claim": "bridge_stands_watched",
+   "against": "crowds_break_bridges",
+   "target": "hester"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "rain_heeds_bells"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ],
+ "replay": {
+  "stateHash": "1d8a7d2f937c36",
+  "eventHash": "14b630185952e4",
+  "result": "defeat",
+  "score": 534,
+  "rejected": []
+ },
+ "reported": {
+  "stateHash": "1d8a7d2f937c36",
+  "eventHash": "14b630185952e4",
+  "rulesVersion": "1.0.0",
+  "actions": 23
+ },
+ "about": "Actions the real Claude Code session took through the MCP server (persisted by the server), and the browser engine replay of them."
+}

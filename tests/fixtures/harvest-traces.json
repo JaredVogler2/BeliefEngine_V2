@@ -1,0 +1,408 @@
+{
+ "scenarioId": "harvest",
+ "canonicalSeed": 1,
+ "moonlight": {
+  "seed": 1,
+  "result": "victory",
+  "alive": 14,
+  "homes": 9,
+  "food": 8,
+  "score": 961,
+  "lawsActivated": [
+   "moonlight_ripens_grain"
+  ],
+  "stateHash": "01da9958b05854",
+  "eventHash": "1fa7673d8752f5",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_c",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "SEED",
+    "claim": "moonlight_ripens_grain",
+    "target": "lark"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "GATHER",
+    "claim": "moonlight_ripens_grain",
+    "site": "hall"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "lark",
+    "to": "esk"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_b",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "odo",
+    "to": "tobias"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "moonlight_ripens_grain",
+    "against": "moon_sours_grain",
+    "target": "nessa"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "nessa",
+    "to": "anselm"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "imre",
+    "to": "ferris"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_d",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "dalia",
+    "to": "marta"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_c",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "ferris",
+    "to": "imre"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "moonlight_ripens_grain",
+    "against": "moon_sours_grain",
+    "target": "marta"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "caravans": {
+  "seed": 1,
+  "result": "victory",
+  "alive": 14,
+  "homes": 9,
+  "food": 8,
+  "score": 924,
+  "lawsActivated": [],
+  "stateHash": "0153ec06ad5b9c",
+  "eventHash": "1aef6c247b554d",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_d",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "SEED",
+    "claim": "moonlight_ripens_grain",
+    "target": "dalia"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "moonlight_ripens_grain",
+    "target": "dalia"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_d",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "ferris",
+    "to": "dalia"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_d",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "ferris",
+    "to": "dalia"
+   },
+   {
+    "type": "TRADE",
+    "deal": "caravan",
+    "target": "dalia"
+   },
+   {
+    "type": "SEED",
+    "claim": "moonlight_ripens_grain",
+    "target": "dalia"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "moonlight_ripens_grain",
+    "against": "moon_sours_grain",
+    "target": "dalia"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_d",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "TRADE",
+    "deal": "caravan",
+    "target": "dalia"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "noop": {
+  "seed": 1,
+  "result": "defeat",
+  "alive": 14,
+  "homes": 9,
+  "food": 0,
+  "stateHash": "02ca78b03702fc",
+  "eventHash": "0319b513a49f21",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "failedAttempt": {
+  "seed": 2,
+  "policy": "moonlight",
+  "result": "defeat",
+  "alive": 14,
+  "stateHash": "096b659292d537",
+  "eventHash": "13d77ce62c9378",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_c",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "SEED",
+    "claim": "moonlight_ripens_grain",
+    "target": "lark"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "GATHER",
+    "claim": "moonlight_ripens_grain",
+    "site": "hall"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "nessa",
+    "to": "wilma"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_b",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "odo",
+    "to": "pim"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "moonlight_ripens_grain",
+    "against": "moon_sours_grain",
+    "target": "marta"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "nessa",
+    "to": "esk"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "imre",
+    "to": "ferris"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_d",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "dalia",
+    "to": "marta"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "moonlit_work",
+    "landmark": "f_c",
+    "claim": "moonlight_ripens_grain"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "moonlight_ripens_grain",
+    "from": "marta",
+    "to": "hobb"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "moonlight_ripens_grain",
+    "against": "moon_sours_grain",
+    "target": "nessa"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ }
+}

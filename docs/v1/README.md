@@ -1,0 +1,113 @@
+# Belief Engine
+
+> **Make the village believe it, and reality obeys.** A 2D browser strategy roguelite where shared belief rewrites the physical laws of a
+> small living region. You are the Keeper of Stories: you cannot move the river, but you can change what people believe, and enough belief
+> becomes law.
+
+Client-only TypeScript (React + Canvas2D + Web Audio, no assets to download), free to run, no accounts, no analytics, no backend. Saves and settings
+stay in your browser. The simulation is a pure, deterministic engine: the same seed and the same actions always give the same world, which is what
+makes replays, the bot tournaments and an AI-agent interface possible.
+
+**Status, honestly:** the browser game, the local MCP server and the offline belief composer are built and tested end to end ([`docs/FINAL_ACCEPTANCE.md`](docs/FINAL_ACCEPTANCE.md) has the table of tracks, commands and proof). **Not deployed anywhere**, so there is no live URL. **No human playtest has been run**: difficulty and fun have been measured on bots, scripts and AI-driven reviews only ([`docs/PLAYTEST_PROTOCOL.md`](docs/PLAYTEST_PROTOCOL.md) is the script). **Remote MCP is not built** and the **online (language-model) interpreter has never run against a live provider**; both are optional and neither is needed to play. Known limits: [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md). Build log: [`docs/PROGRESS.md`](docs/PROGRESS.md). Adversarial review: [`docs/FUN_REVIEW.md`](docs/FUN_REVIEW.md).
+
+**Next, not started:** the repository's `main` branch now carries a playbook for a premium 3D rebuild of the presentation layer ([`prompts/3d-rebuild/README.md`](prompts/3d-rebuild/README.md)), which supersedes the earlier 2D renderer instructions in `prompts/`. This branch implements the original 18 phases with the Canvas2D renderer; **none of the 3D work has been done here**, and the simulation, saves and MCP interface it would have to preserve are described in this repository's docs.
+
+## Play it
+
+```bash
+npm ci
+npm run dev                          # http://127.0.0.1:5173
+npm run build && npm run preview     # production build on http://127.0.0.1:4173
+```
+
+Needs Node >= 22.12. Once loaded the game makes no network requests.
+
+### A three-minute first game
+1. **Play**, choose **Flood at Redbank**, **Begin**. Read the briefing, begin day 1.
+2. Tap the story card **River fears fire** (or **Bridge stands watched**), tap a villager on the map (try **Ivo Thatcher**), press **Tell Ivo Thatcher** (1 Influence). Undo is free until you end the day.
+3. Spend the rest, press **End Day** and read the night digest. Watch the **Laws** tab: support climbs towards the white line.
+4. On a good-omen night, pick a landmark (a beacon, the bridge) in **Village > Places** and stage it as proof: people who *see* something change their minds far more than people who only hear.
+5. The surge comes on day 7. Check **Tonight** (the forecast) before you end each day, and keep an eye on food.
+6. After the debrief, **Retry this seed**, **New seed**, **Try another approach**, or **Share this seed**.
+
+### Controls
+| Action | Mouse / touch | Keyboard |
+|---|---|---|
+| Select a villager or place | click / tap | Village tab list (Tab, Enter) |
+| Pan / zoom the map | drag / wheel, pinch, +/- buttons | arrows or WASD / `+` `-`, `0` fits |
+| Choose a story | click a card | `1`-`9` |
+| Tell the selected villager the chosen story | the Tell button | `T` |
+| Undo the last action | Undo button | `U` or Ctrl+Z |
+| Social lens (trust ties) | lens button | `L` |
+| End the day | End Day (asks to confirm) | `Enter` (asks to confirm) |
+| Close / deselect | close button | `Esc` |
+
+## What is in the game
+* **Three hand-made chapters**, each won in more than one way: *Flood at Redbank* (7 days: fire wall, witnessed bridge, bells), *The Harvest That Refused to Grow* (9 days: moonlight work, or a grain caravan that needs a trader's trust) and *The Wolves of Ashwood* (8 days: smoke fires around the pens, or a decoy fire deep in the wood).
+* **Expeditions:** a generated village from any seed (river, drought or wolves), with 1-3 run modifiers (e.g. *Stubborn elders*, *Silent bells*, *Restless wolves*). The catalog behind "another village" and the **Daily village** holds only villages that a scripted planner has verified winnable; typed-in seeds still work and are labelled unverified.
+* **Share links** carry only the mode, seed and versions (never state or code) and are validated on open.
+* **A morning report that says what your story did** (who carried it, who it reached, or why it stalled) and, after a defeat, **what would have changed it**: the run is replayed from each day with other plans and the last day it could still have been saved is named.
+* **Rivals and factions** that announce their moves a day ahead and can be answered; villagers who weigh a post on the bridge against their own children; laws that lose credibility when they visibly fail.
+* **Inventor mode (optional, unranked):** write a belief of your own in one sentence ("The river turns aside from lit lanterns."). The game reads it into a bounded rule with an offline reader, shows what it would really do, what it needs and what it costs, runs a three-night safety test, and only then lets you pay for it. It still has to be told, spread and powered like any story, and a stronger belief asks more of the village. Sentences the village cannot model (immortality, free food, controlling minds, instructions to the game) are refused with the reason. How it works, what it can and cannot read, and the measured accuracy: [`docs/NL_BELIEFS.md`](docs/NL_BELIEFS.md).
+* **The Atlas of Belief:** laws you have seen take hold, lore, postcards, 20 badges (plus one for Inventor runs), unlocks that add *choices* (pledges, a draft, twists), your stats, and an export/import of the archive. Nothing in it is needed to win a scenario.
+* **Save files:** Settings > Download this game / Load a game file.
+* **Accessibility and platforms:** keyboard play, screen-reader text for everything on the map, reduced motion, text size, high contrast, 320 px layouts ([`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md)). Tested in Chromium, Firefox and WebKit builds; no real device has been tested.
+
+Rules (authoritative, matching the code): [`docs/GAME_RULES.md`](docs/GAME_RULES.md). Procedural generation and modifiers: [`docs/EXPEDITIONS.md`](docs/EXPEDITIONS.md).
+
+## Let an AI play it (optional)
+A local MCP server (stdio, no network, no key) lets Claude Code or another MCP client play real runs with tools, through the same engine as the browser: same costs, same randomness, same hashes. It is optional and the browser needs none of it.
+```bash
+claude mcp add belief-engine -- npx tsx mcp/server.ts     # from the repository root; verified with Claude Code 2.1.311
+npm run mcp:demo                                          # a scripted agent plays a chapter and checks the run against the engine
+npm run acceptance:mcp                                    # Journey B: the official MCP SDK client plays a whole game and checks 28 guarantees
+```
+Other clients: any that can launch a stdio server, with `npx tsx mcp/server.ts` as the command and the repository as the working directory (examples in [`docs/MCP.md`](docs/MCP.md)). Then ask: *"Start a normal Flood at Redbank game. Inspect the bridgekeeper. Try to win without lighting beacons. Explain each day before acting."* Tools, the coach / delegate / co-op patterns, security, and what is **not** built: [`docs/MCP.md`](docs/MCP.md). A real Claude Code session played and lost a chapter this way and its run replays identically in the browser engine: [`docs/data/mcp/`](docs/data/mcp/claude-code-session-redbank-seed11.md).
+
+**Remote MCP: not built, unavailable.** There is no hosted endpoint, no HTTP transport, no authentication and no shared run store. The local server is not a substitute and is not presented as one. What it would need is listed in [`docs/FINAL_ACCEPTANCE.md`](docs/FINAL_ACCEPTANCE.md).
+
+## Write your own belief (Inventor mode, optional, unranked)
+Tick **Inventor mode** in a chapter's briefing, then **Write a belief** and type one sentence: *"The river turns away from lantern flames."* or *"The watched bridge cannot break."*. Previewing is free. An **offline** reader (a fixed vocabulary of seven things the village models, 40 combinations; no model, no network, works with the network off) turns the sentence into a bounded rule, shows what it would really do here, what it needs and what it costs, and runs a three-night safety test; only then can you pay for it. It still has to be told, spread and powered (lit beacons, a vigil, the bell) like any story, and only then does the river or the bridge behave differently. Things the village cannot model (everyone survives forever, free food, controlling minds, instructions to the game) are refused with the reason. Same-sentence replays need no model. Accuracy, limits and the measured numbers (31 of 36 on an untuned final set): [`docs/NL_BELIEFS.md`](docs/NL_BELIEFS.md).
+
+**Online (language-model) interpreter: optional, off, unverified.** A bounded proxy (`server/interpreter.ts`) and an opt-in checkbox exist, but the site ships with no interpreter URL, nothing is deployed, no provider key was ever supplied, and it has only been tested against a mocked provider. If someone turns it on: the sentence and the names of the village's features leave the device for that server and, through it, a provider; every sentence read that way is a paid request billed to whoever runs the server; the key lives only in the server's environment and never in the browser build. Details and the exact next steps: [`docs/NL_BELIEFS.md`](docs/NL_BELIEFS.md).
+
+## An example seed and replay
+Flood at Redbank, seed 1, the *Fire Wall* route (tell a story, light beacons on the right night): 22 actions over 7 days, victory, score 722, state hash `11ec6d73416e26`. Rebuild it from nothing, with no browser, model or network:
+```bash
+npm run replay:example                       # prints the result and hashes, exits non-zero unless they match the recorded run
+npm run replay:example -- witnessBridge      # the other winning route on the same seed (score 820, gold)
+```
+In the browser, a seed is typed in the briefing, a run can be shared as a link (`/?mode=expedition&seed=424242&gen=1&rules=1.0.0`, which carries only the mode, seed and versions), and **Settings > Download this game** saves the run including its action log. In an MCP run, `export_replay` returns the action list and the versions it was recorded under; `npm run mcp:verify -- <run file>` replays it and compares.
+
+## Develop and test
+| Command | What it does |
+|---|---|
+| `npm run typecheck` / `npm run lint` | strict TypeScript; ESLint (the engine forbids `Math.random` and `Date.now`) |
+| `npm test` | Vitest: determinism and replay, social mechanics, laws and physics, scenarios, generator, progression, factions, exploit probes, audio, performance, saved tournament traces, the belief composer (balance, compose, corpora, model mode with a mocked provider), the MCP server over real stdio, source guards for unsafe code and keys |
+| `npm run test:e2e` | Playwright (builds and serves production): desktop and phone, real-click winning traces for every chapter and a generated village, Journeys A and C, Inventor mode, persistence and recovery, 5 viewport sizes, axe audits |
+| `npm run test:e2e:browsers` | smoke tests in Chromium, Firefox, WebKit and an iPhone-14 profile (needs `npx playwright install firefox webkit`) |
+| `npm run test:sim` / `npm run test:sim:smoke` | headless bot tournaments (paired seeds, JSON/CSV/Markdown reports) / a one-minute CI benchmark |
+| `npm run gen:verify` | verify generated villages offline and refresh the catalog (after any generator or rules change) |
+| `npm run build && npm run size` | production build and bundle budget |
+| `npm run verify:hosting` | serve `dist/` with `vercel.json`'s headers and check the Content-Security-Policy in a real browser |
+| `npm run profile` / `npx tsx scripts/capture-states.ts` | cold-start and interaction timings / screenshots of real engine states |
+| `npm run mcp` / `npm run mcp:demo` / `npm run mcp:verify -- <run file>` | the MCP server on stdio / a scripted agent plays a chapter through it / replay a persisted run and compare |
+| `npx tsx scripts/nl-corpus.ts <corpus.json>` / `npx tsx scripts/nl-demo.ts --village redbank` | score the offline belief reader on a corpus (with every miss listed) / play sentences from words to a measured effect on the map, with a no-model replay |
+| `npm run monkey` | random clicking, keys, reloads and composer fuzzing against the production build, checking that every state replays and every game finishes |
+| `npm run acceptance:mcp` / `npm run acceptance:fun` / `npm run acceptance:novice` | phase 18: Journey B over the real MCP server / ten varied runs, two written beliefs and an exploit hunt over every offered belief / a scripted newcomer through the real UI (needs the preview server) |
+| `npm run replay:example` | rebuild the example run from nothing and compare its hashes |
+
+`src/`: `engine/` pure deterministic simulation (core, social, laws, world, content, ai, gen, progress, save, nl), `render/` Canvas2D observer, `ui/` React, `audio/` procedural Web Audio.
+Decisions: [`docs/DECISIONS.md`](docs/DECISIONS.md). Content schema: [`docs/CONTENT_SCHEMA.md`](docs/CONTENT_SCHEMA.md). Balance evidence: [`docs/BALANCE_REPORT.md`](docs/BALANCE_REPORT.md).
+Developer flag: `?debug=1` exposes `window.__belief` (state, hashes) for tests; debug runs earn nothing.
+
+## Privacy
+No cookies, no analytics, no accounts, no third-party requests. `localStorage` holds your autosave, settings and Atlas archive. The shipped page's Content-Security-Policy
+(`vercel.json`) allows only same-origin scripts and connections.
+
+## Deploying
+Static build in `dist/`. Vercel: framework preset *Vite*, build `npm run build`, output `dist`; `vercel.json` carries the headers and the single-page fallback.
+**Nothing has been deployed by this repository's automation, so no live URL is claimed.** Exact steps and the release checklist: [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md).
+
+## Licence
+MIT ([`LICENSE`](LICENSE)). No third-party art, music or fonts ([`docs/ASSETS.md`](docs/ASSETS.md)); runtime dependencies are `react` and `react-dom` (MIT).

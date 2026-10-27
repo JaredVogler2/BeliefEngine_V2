@@ -1,0 +1,209 @@
+{
+ "note": "Accepted actions of real Claude Code session 6 (Ashwood, Inventor). Replays with replayRun to state hash 1dda4ce6483da6 at the commit that added it.",
+ "runId": "r_0c2509429b3f94076012e0bdf3f1a03a",
+ "options": {
+  "scenarioId": "ashwood",
+  "seed": 3,
+  "difficulty": "normal",
+  "mode": "story",
+  "inventor": true
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "wolves_fear_smoke"
+  },
+  {
+   "type": "COMPOSE",
+   "claim": {
+    "id": "custom_1ad5785247",
+    "text": "Fever weakens beside smoke fires.",
+    "short": "Smoke weakens fever",
+    "icon": "skull",
+    "spec": {
+     "id": "custom_1ad5785247",
+     "version": 1,
+     "subject": "illness",
+     "effect": "weaken",
+     "trigger": {
+      "kind": "smoke_fire"
+     },
+     "radius": 0,
+     "intensity": 2,
+     "thresholds": {
+      "on": 0.6,
+      "off": 0.45,
+      "minSupporters": 3,
+      "ramp": 64,
+      "decay": 22
+     },
+     "upkeep": {
+      "fuel": 0
+     },
+     "side": [
+      "smoke_sickness",
+      "cold"
+     ],
+     "tags": [
+      "custom",
+      "inventor",
+      "illness"
+     ]
+    },
+    "regions": [
+     "ash",
+     "mill",
+     "north"
+    ],
+    "ritual": "burn_smoke",
+    "contradicts": [],
+    "benefit": "People in Ashfold and Millbrook and Northwatch take 50% less harm from smoke.",
+    "risk": "Smoke lungs: people near the smoke grow ill Cold drafts: open doors let in the cold; the weak lose health",
+    "flavor": "Fever weakens beside smoke fires.",
+    "startsAvailable": true,
+    "custom": {
+     "text": "Fever weakens beside smoke fires.",
+     "astHash": "1ad57852473c20",
+     "parser": "offline-lexicon-1",
+     "balance": 392130398,
+     "ast": {
+      "version": 1,
+      "clauses": [
+       {
+        "subject": "illness",
+        "effect": "weaken",
+        "trigger": "smoke_fire",
+        "radius": 0,
+        "intensity": 2
+       }
+      ],
+      "regions": [
+       "ash",
+       "mill",
+       "north"
+      ]
+     },
+     "source": "offline",
+     "nl": 1
+    }
+   }
+  },
+  {
+   "type": "SEED",
+   "claim": "wolves_fear_smoke",
+   "target": "brann"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1ad5785247",
+   "target": "ysolde"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "burn_smoke",
+   "landmark": "c_n1",
+   "claim": "wolves_fear_smoke"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1ad5785247",
+   "target": "ysolde"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "COUNTER",
+   "claim": "wolves_fear_smoke",
+   "against": "wolves_follow_smoke",
+   "target": "brann"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "burn_smoke",
+   "landmark": "c_m1",
+   "claim": "wolves_fear_smoke"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "GATHER",
+   "claim": "wolves_fear_smoke",
+   "site": "market"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1ad5785247",
+   "target": "ysolde"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "burn_smoke",
+   "landmark": "c_a1",
+   "claim": "wolves_fear_smoke"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1ad5785247",
+   "target": "pia"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "wolves_fear_smoke",
+   "from": "brann",
+   "to": "gorm"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "burn_smoke",
+   "landmark": "c_n1"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "wolves_fear_smoke",
+   "from": "bess",
+   "to": "hale"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "wolves_fear_smoke",
+   "from": "garrick",
+   "to": "gorm"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "burn_smoke",
+   "landmark": "c_n1"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "wolves_fear_smoke",
+   "from": "brann",
+   "to": "rook"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "burn_smoke",
+   "landmark": "c_m2"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ]
+}

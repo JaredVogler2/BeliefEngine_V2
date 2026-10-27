@@ -1,0 +1,414 @@
+{
+ "scenarioId": "ashwood",
+ "canonicalSeed": 6,
+ "smokeRing": {
+  "seed": 6,
+  "result": "victory",
+  "alive": 13,
+  "homes": 11,
+  "food": 12,
+  "score": 812,
+  "lawsActivated": [
+   "wolves_fear_smoke"
+  ],
+  "stateHash": "1a11f396dded81",
+  "eventHash": "1d39909f299175",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_m1",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "SEED",
+    "claim": "wolves_fear_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "wolves_fear_smoke",
+    "against": "wolves_follow_smoke",
+    "target": "bess"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_a1",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "linnet",
+    "to": "maren"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "rook",
+    "to": "linnet"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "linnet",
+    "to": "rook"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "maren",
+    "to": "cobb"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "wolves_fear_smoke",
+    "against": "wolves_follow_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "bess",
+    "to": "hale"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "linnet",
+    "to": "maren"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_a1"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "wolves_fear_smoke",
+    "against": "wolves_follow_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_a1"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "decoy": {
+  "seed": 6,
+  "result": "victory",
+  "alive": 13,
+  "homes": 11,
+  "food": 12,
+  "score": 813,
+  "lawsActivated": [
+   "wolves_follow_smoke"
+  ],
+  "stateHash": "03101d19861028",
+  "eventHash": "1494e8e2036ede",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "wolves_follow_smoke"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_m1",
+    "claim": "wolves_follow_smoke"
+   },
+   {
+    "type": "SEED",
+    "claim": "wolves_follow_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "wolves_follow_smoke",
+    "target": "tam"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_m2",
+    "claim": "wolves_follow_smoke"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "garrick",
+    "to": "gorm"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "hale",
+    "to": "rook"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "rook",
+    "to": "linnet"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "linnet",
+    "to": "maren"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "gorm",
+    "to": "edda"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "garrick",
+    "to": "brann"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_follow_smoke",
+    "from": "hale",
+    "to": "linnet"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_d1"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_d2"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_d1"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_d2"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "noop": {
+  "seed": 6,
+  "result": "defeat",
+  "alive": 13,
+  "homes": 11,
+  "food": 12,
+  "stateHash": "140fe84787a725",
+  "eventHash": "15fbce84aaeeb6",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "failedAttempt": {
+  "seed": 1,
+  "policy": "smokeRing",
+  "result": "defeat",
+  "alive": 13,
+  "stateHash": "19217bc34eb01f",
+  "eventHash": "1571fbb4da0a61",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_m1",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "SEED",
+    "claim": "wolves_fear_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_a1",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "linnet",
+    "to": "rook"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "wolves_fear_smoke",
+    "against": "wolves_follow_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "rook",
+    "to": "linnet"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "linnet",
+    "to": "maren"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "bess",
+    "to": "hale"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_m2",
+    "claim": "wolves_fear_smoke"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "linnet",
+    "to": "rook"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "wolves_fear_smoke",
+    "against": "wolves_follow_smoke",
+    "target": "linnet"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "ysolde",
+    "to": "maren"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "wolves_fear_smoke",
+    "from": "bess",
+    "to": "hale"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "burn_smoke",
+    "landmark": "c_a1"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ }
+}

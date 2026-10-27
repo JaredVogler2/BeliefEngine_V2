@@ -1,0 +1,233 @@
+{
+ "note": "Accepted actions of real Claude Code session 5 (Harvest, Inventor). Replays with replayRun to state hash 01160f7d802c6b at the commit that added it.",
+ "runId": "r_f69dbb4f1c4744ea4474f89b97d5161c",
+ "options": {
+  "scenarioId": "harvest",
+  "seed": 2,
+  "difficulty": "normal",
+  "mode": "story",
+  "inventor": true
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "rain_follows_bells"
+  },
+  {
+   "type": "COMPOSE",
+   "claim": {
+    "id": "custom_1074897aed",
+    "text": "When the village bells ring, the grain in our fields ripens faster.",
+    "short": "Bells ripen the crops",
+    "icon": "moon",
+    "spec": {
+     "id": "custom_1074897aed",
+     "version": 1,
+     "subject": "grain",
+     "effect": "grow",
+     "trigger": {
+      "kind": "bell"
+     },
+     "radius": 0,
+     "intensity": 2,
+     "thresholds": {
+      "on": 0.6,
+      "off": 0.45,
+      "minSupporters": 4,
+      "ramp": 64,
+      "decay": 22
+     },
+     "upkeep": {
+      "fuel": 0
+     },
+     "side": [],
+     "tags": [
+      "custom",
+      "inventor",
+      "grain"
+     ]
+    },
+    "regions": [
+     "valley"
+    ],
+    "ritual": "ring_bells",
+    "contradicts": [
+     "moon_sours_grain"
+    ],
+    "benefit": "On nights the bells ring, crops in The Valley ripen about 20% faster.",
+    "risk": "No side effects, but it only works while its trigger is met.",
+    "flavor": "When the village bells ring, the grain in our fields ripens faster.",
+    "startsAvailable": true,
+    "custom": {
+     "text": "When the village bells ring, the grain in our fields ripens faster.",
+     "astHash": "1074897aedd4d1",
+     "parser": "offline-lexicon-1",
+     "balance": 311126191,
+     "ast": {
+      "version": 1,
+      "clauses": [
+       {
+        "subject": "grain",
+        "effect": "grow",
+        "trigger": "bell",
+        "radius": 0,
+        "intensity": 2
+       }
+      ],
+      "regions": [
+       "valley"
+      ]
+     },
+     "source": "offline",
+     "nl": 1
+    }
+   }
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "anselm"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "hobb"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "lark"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "pim"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "nessa"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1074897aed"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "tobias"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1074897aed"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "anselm"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "dalia"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "custom_1074897aed",
+   "from": "lark",
+   "to": "esk"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "custom_1074897aed",
+   "from": "pim",
+   "to": "wilma"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "GATHER",
+   "claim": "custom_1074897aed",
+   "site": "hall"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "marta"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1074897aed"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "custom_1074897aed",
+   "from": "pim",
+   "to": "tobias"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "custom_1074897aed",
+   "from": "odo",
+   "to": "marta"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "custom_1074897aed",
+   "from": "wilma",
+   "to": "imre"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "custom_1074897aed",
+   "from": "anselm",
+   "to": "dalia"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "imre"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "marta"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1074897aed",
+   "target": "sedge"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ]
+}

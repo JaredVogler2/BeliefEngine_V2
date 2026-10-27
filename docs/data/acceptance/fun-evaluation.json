@@ -1,0 +1,1242 @@
+{
+ "about": "Written by scripts/acceptance-fun.ts (phase 18).",
+ "date": "2026-10-27",
+ "seeds": 8,
+ "part1": {
+  "wins": 9,
+  "runs": [
+   {
+    "id": "1",
+    "what": "Redbank, seed 1: Fire Wall (belief in Eastbank, beacons lit)",
+    "result": "victory",
+    "score": 722,
+    "medal": "bronze",
+    "firstLawDay": 5,
+    "firstBeliefDay": 5,
+    "homesSpared": 11,
+    "livesSaved": 8,
+    "apSpent": 16,
+    "alive": 13,
+    "of": 14,
+    "laws": [
+     "river_fears_fire"
+    ],
+    "threat": "flood",
+    "twists": []
+   },
+   {
+    "id": "2",
+    "what": "Redbank, seed 1: Witness Bridge (belief on both banks, watchers on the deck)",
+    "result": "victory",
+    "score": 820,
+    "medal": "gold",
+    "firstLawDay": 5,
+    "firstBeliefDay": 2,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 15,
+    "alive": 14,
+    "of": 14,
+    "laws": [
+     "bridge_stands_watched"
+    ],
+    "threat": "flood",
+    "twists": []
+   },
+   {
+    "id": "3",
+    "what": "Redbank, seed 1: no action (control)",
+    "result": "defeat",
+    "score": 493,
+    "medal": "none",
+    "firstLawDay": null,
+    "firstBeliefDay": null,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 0,
+    "alive": 10,
+    "of": 14,
+    "laws": [],
+    "threat": "flood",
+    "twists": []
+   },
+   {
+    "id": "4",
+    "what": "Harvest, seed 1: Moonlight",
+    "result": "victory",
+    "score": 961,
+    "medal": "gold",
+    "firstLawDay": 6,
+    "firstBeliefDay": 2,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 19,
+    "alive": 14,
+    "of": 14,
+    "laws": [
+     "moonlight_ripens_grain"
+    ],
+    "threat": "drought",
+    "twists": []
+   },
+   {
+    "id": "5",
+    "what": "Harvest, seed 1: Caravans (a trader who wants proof)",
+    "result": "victory",
+    "score": 924,
+    "medal": "gold",
+    "firstLawDay": null,
+    "firstBeliefDay": 4,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 16,
+    "alive": 14,
+    "of": 14,
+    "laws": [],
+    "threat": "drought",
+    "twists": []
+   },
+   {
+    "id": "6",
+    "what": "Ashwood: Smoke Ring",
+    "result": "victory",
+    "score": 812,
+    "medal": "silver",
+    "firstLawDay": 5,
+    "firstBeliefDay": 2,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 16,
+    "alive": 13,
+    "of": 13,
+    "laws": [
+     "wolves_fear_smoke"
+    ],
+    "threat": "wolves",
+    "twists": []
+   },
+   {
+    "id": "7",
+    "what": "Ashwood: Decoy Fire",
+    "result": "victory",
+    "score": 813,
+    "medal": "silver",
+    "firstLawDay": 5,
+    "firstBeliefDay": 2,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 17,
+    "alive": 13,
+    "of": 13,
+    "laws": [
+     "wolves_follow_smoke"
+    ],
+    "threat": "wolves",
+    "twists": []
+   },
+   {
+    "id": "8",
+    "what": "Generated expedition (river, seed 1, Flood at Lowcross): witness-bridge",
+    "result": "victory",
+    "score": 727,
+    "medal": "bronze",
+    "firstLawDay": 4,
+    "firstBeliefDay": 1,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 12,
+    "alive": 13,
+    "of": 15,
+    "laws": [
+     "bridge_stands_watched"
+    ],
+    "threat": "flood",
+    "twists": [
+     "doubting_scholars",
+     "busy_harvest"
+    ]
+   },
+   {
+    "id": "9",
+    "what": "Generated expedition (drought, seed 3, Drought at Fenneldale): caravans",
+    "result": "victory",
+    "score": 964,
+    "medal": "gold",
+    "firstLawDay": 6,
+    "firstBeliefDay": 1,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 12,
+    "alive": 16,
+    "of": 16,
+    "laws": [
+     "moonlight_ripens_grain"
+    ],
+    "threat": "drought",
+    "twists": [
+     "low_fuel",
+     "doubting_scholars"
+    ]
+   },
+   {
+    "id": "10",
+    "what": "Generated expedition (wolves, seed 5, Wolves of Embercombe): smoke-ring",
+    "result": "victory",
+    "score": 803,
+    "medal": "silver",
+    "firstLawDay": 3,
+    "firstBeliefDay": 7,
+    "homesSpared": 0,
+    "livesSaved": 0,
+    "apSpent": 13,
+    "alive": 14,
+    "of": 14,
+    "laws": [
+     "wolves_fear_smoke"
+    ],
+    "threat": "wolves",
+    "twists": [
+     "cross_bank_mistrust",
+     "restless_wolves"
+    ]
+   }
+  ],
+  "divergence": [
+   {
+    "biome": "river",
+    "seed": 1,
+    "name": "Flood at Lowcross",
+    "analog": "redbank",
+    "villagers": [
+     15,
+     14
+    ],
+    "days": [
+     9,
+     7
+    ],
+    "modifiers": [
+     "doubting_scholars",
+     "busy_harvest"
+    ],
+    "landmarks": [
+     {
+      "beacon": 3,
+      "belltower": 1,
+      "bridge": 1,
+      "cabin": 1,
+      "chapel": 2,
+      "field": 3,
+      "hall": 1,
+      "home": 18,
+      "market": 1,
+      "mill": 1,
+      "shelter": 2
+     },
+     {
+      "beacon": 4,
+      "belltower": 1,
+      "bridge": 1,
+      "cabin": 1,
+      "chapel": 2,
+      "field": 4,
+      "hall": 1,
+      "home": 14,
+      "market": 1,
+      "mill": 1,
+      "shelter": 2
+     }
+    ],
+    "stories": [
+     [
+      "river_fears_fire",
+      "bridge_stands_watched",
+      "rain_heeds_bells"
+     ],
+     [
+      "river_fears_fire",
+      "bridge_stands_watched",
+      "rain_heeds_bells"
+     ]
+    ],
+    "routes": [
+     {
+      "route": "fire-wall",
+      "result": "defeat",
+      "score": 505,
+      "firstLawDay": null
+     },
+     {
+      "route": "witness-bridge",
+      "result": "victory",
+      "score": 727,
+      "firstLawDay": 4
+     },
+     {
+      "route": "bell-ringer",
+      "result": "defeat",
+      "score": 649,
+      "firstLawDay": 9
+     }
+    ],
+    "verifiedWinningRoutes": [
+     "witness-bridge"
+    ]
+   },
+   {
+    "biome": "drought",
+    "seed": 3,
+    "name": "Drought at Fenneldale",
+    "analog": "harvest",
+    "villagers": [
+     16,
+     14
+    ],
+    "days": [
+     9,
+     9
+    ],
+    "modifiers": [
+     "low_fuel",
+     "doubting_scholars"
+    ],
+    "landmarks": [
+     {
+      "belltower": 1,
+      "cabin": 1,
+      "chapel": 1,
+      "field": 4,
+      "granary": 1,
+      "hall": 1,
+      "home": 11,
+      "market": 1,
+      "mill": 1,
+      "road": 1,
+      "well": 1
+     },
+     {
+      "belltower": 1,
+      "cabin": 1,
+      "chapel": 1,
+      "field": 4,
+      "granary": 1,
+      "hall": 1,
+      "home": 9,
+      "market": 1,
+      "mill": 1,
+      "road": 1,
+      "well": 1
+     }
+    ],
+    "stories": [
+     [
+      "moonlight_ripens_grain",
+      "rain_follows_bells"
+     ],
+     [
+      "moonlight_ripens_grain",
+      "rain_follows_bells"
+     ]
+    ],
+    "routes": [
+     {
+      "route": "moonlight",
+      "result": "defeat",
+      "score": 793,
+      "firstLawDay": 5
+     },
+     {
+      "route": "caravans",
+      "result": "victory",
+      "score": 964,
+      "firstLawDay": 6
+     },
+     {
+      "route": "rain-bells",
+      "result": "defeat",
+      "score": 595,
+      "firstLawDay": 7
+     }
+    ],
+    "verifiedWinningRoutes": [
+     "caravans"
+    ]
+   },
+   {
+    "biome": "wolves",
+    "seed": 5,
+    "name": "Wolves of Embercombe",
+    "analog": "ashwood",
+    "villagers": [
+     14,
+     13
+    ],
+    "days": [
+     9,
+     8
+    ],
+    "modifiers": [
+     "cross_bank_mistrust",
+     "restless_wolves"
+    ],
+    "landmarks": [
+     {
+      "campfire": 8,
+      "chapel": 1,
+      "hall": 1,
+      "home": 12,
+      "market": 1,
+      "pen": 3
+     },
+     {
+      "campfire": 8,
+      "chapel": 1,
+      "hall": 1,
+      "home": 11,
+      "market": 1,
+      "mill": 1,
+      "pen": 3
+     }
+    ],
+    "stories": [
+     [
+      "wolves_fear_smoke",
+      "illness_fears_open_doors"
+     ],
+     [
+      "wolves_fear_smoke",
+      "illness_fears_open_doors"
+     ]
+    ],
+    "routes": [
+     {
+      "route": "smoke-ring",
+      "result": "victory",
+      "score": 803,
+      "firstLawDay": 3
+     },
+     {
+      "route": "decoy",
+      "result": "victory",
+      "score": 803,
+      "firstLawDay": 5
+     }
+    ],
+    "verifiedWinningRoutes": [
+     "smoke-ring",
+     "decoy"
+    ]
+   }
+  ]
+ },
+ "part2": {
+  "none": {
+   "result": "defeat",
+   "score": 493,
+   "medal": "none",
+   "firstLawDay": null,
+   "firstBeliefDay": null,
+   "homesSpared": 0,
+   "livesSaved": 0,
+   "apSpent": 0,
+   "alive": 10,
+   "of": 14
+  },
+  "lantern": {
+   "text": "The river turns away from lantern flames.",
+   "title": "Lanterns turn the river",
+   "wokeOnDay": 6,
+   "nightAfterWaking": {
+    "floodedWith": 172,
+    "floodedWithout": 216,
+    "bridgeHpWith": 0,
+    "bridgeHpWithout": 0,
+    "homesStandingWith": 14,
+    "homesStandingWithout": 14
+   }
+  },
+  "bridge": {
+   "text": "The watched bridge cannot break.",
+   "title": "A watched bridge holds",
+   "wokeOnDay": 7,
+   "nightAfterWaking": {
+    "floodedWith": 337,
+    "floodedWithout": 337,
+    "bridgeHpWith": 17,
+    "bridgeHpWithout": 0,
+    "homesStandingWith": 6,
+    "homesStandingWithout": 6
+   }
+  }
+ },
+ "part3": {
+  "baselineWins": {
+   "redbank": 7,
+   "ashwood": 6,
+   "harvest": 4
+  },
+  "cells": [
+   {
+    "chapter": "ashwood",
+    "belief": "wolf.repel.smoke_fire",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 6,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "wolf.repel.smoke_fire + illness.repel.smoke_fire",
+    "power": 48.4,
+    "apToWrite": 3,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 6,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "wolf.attract.smoke_fire",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 6,
+    "note": ""
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "illness.repel.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 6,
+    "note": ""
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "illness.repel.smoke_fire",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     8
+    ],
+    "baselineWins": 6,
+    "note": ""
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "illness.weaken.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 6,
+    "note": ""
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "illness.weaken.smoke_fire",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     8
+    ],
+    "baselineWins": 6,
+    "note": ""
+   },
+   {
+    "chapter": "ashwood",
+    "belief": "wolf.repel.smoke_fire + illness.repel.always",
+    "power": 53.2,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 6,
+    "note": ""
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.grow.night",
+    "power": 9.2,
+    "apToWrite": 1,
+    "ceilingWins": 8,
+    "botWins": 4,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     6,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 4,
+    "note": "win button that a bot can also make believed"
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.grow.night + rain.attract.bell",
+    "power": 17.2,
+    "apToWrite": 2,
+    "ceilingWins": 8,
+    "botWins": 4,
+    "botWokeBy": [
+     7,
+     8,
+     8,
+     7,
+     8,
+     7,
+     8,
+     7
+    ],
+    "baselineWins": 4,
+    "note": "win button that a bot can also make believed"
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.grow.bell",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     8,
+     7,
+     8,
+     7,
+     8,
+     7,
+     8,
+     8
+    ],
+    "baselineWins": 4,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.grow.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     9,
+     9,
+     9,
+     9,
+     9,
+     9,
+     null,
+     9
+    ],
+    "baselineWins": 4,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.grow.bell + rain.attract.bell",
+    "power": 16,
+    "apToWrite": 2,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     8,
+     8,
+     8,
+     8,
+     8,
+     8,
+     8,
+     8
+    ],
+    "baselineWins": 4,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.grow.always + rain.attract.bell",
+    "power": 20.8,
+    "apToWrite": 2,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     9,
+     null,
+     null
+    ],
+    "baselineWins": 4,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "harvest",
+    "belief": "rain.attract.bell",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     8,
+     7,
+     8,
+     7,
+     8,
+     7,
+     8,
+     8
+    ],
+    "baselineWins": 4,
+    "note": ""
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.weaken.night",
+    "power": 9.2,
+    "apToWrite": 1,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     6,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 4,
+    "note": ""
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.weaken.bell",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     8,
+     7,
+     8,
+     7,
+     8,
+     7,
+     8,
+     8
+    ],
+    "baselineWins": 4,
+    "note": ""
+   },
+   {
+    "chapter": "harvest",
+    "belief": "grain.weaken.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     9,
+     9,
+     9,
+     9,
+     9,
+     9,
+     null,
+     9
+    ],
+    "baselineWins": 4,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "bridge.strengthen.watchers",
+    "power": 15,
+    "apToWrite": 2,
+    "ceilingWins": 3,
+    "botWins": 7,
+    "botWokeBy": [
+     7,
+     7,
+     6,
+     7,
+     7,
+     6,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "bridge.strengthen.watchers + rain.repel.bell",
+    "power": 23,
+    "apToWrite": 2,
+    "ceilingWins": 3,
+    "botWins": 6,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "rain.repel.bell",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 8,
+    "botWins": 4,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "redbank",
+    "belief": "rain.redirect.bell",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.slow.lit_beacon + rain.repel.bell",
+    "power": 48.4,
+    "apToWrite": 3,
+    "ceilingWins": 8,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": "wins if believed; the cost of believing it is what stops it"
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.repel.lit_beacon",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 6,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.redirect.lit_beacon",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 6,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.slow.lit_beacon",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 6,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.repel.lit_beacon + bridge.strengthen.watchers",
+    "power": 55.4,
+    "apToWrite": 3,
+    "ceilingWins": 3,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.repel.bell",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.attract.lit_beacon",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.attract.bell",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.redirect.bell",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "river.slow.bell",
+    "power": 40.4,
+    "apToWrite": 3,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "bridge.strengthen.bell",
+    "power": 12,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "bridge.weaken.watchers",
+    "power": 10,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     6,
+     7,
+     7,
+     6,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "bridge.weaken.bell",
+    "power": 8,
+    "apToWrite": 1,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "fire.weaken.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "fire.strengthen.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   },
+   {
+    "chapter": "redbank",
+    "belief": "fire.slow.always",
+    "power": 12.8,
+    "apToWrite": 2,
+    "ceilingWins": 0,
+    "botWins": 0,
+    "botWokeBy": [
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7
+    ],
+    "baselineWins": 7,
+    "note": ""
+   }
+  ],
+  "exploits": []
+ }
+}

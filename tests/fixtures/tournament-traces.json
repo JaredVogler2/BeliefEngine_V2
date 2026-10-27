@@ -1,0 +1,3257 @@
+{
+ "createdBy": "scripts/tournament.ts --fixtures",
+ "rulesVersion": "1.0.0",
+ "generatorVersion": 1,
+ "seedsFrom": 1,
+ "traces": [
+  {
+   "scenarioId": "redbank",
+   "seed": 2,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 7,
+   "score": 685,
+   "stateHash": "1e5be164b77ed2",
+   "eventHash": "16d68eecb74c4b",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "GATHER",
+     "claim": "river_fears_fire",
+     "site": "green_e"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "pip"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "mara"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_e",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "pip",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "river_fears_fire",
+     "against": "river_courts_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_c",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "harl",
+     "to": "wren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "bram"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_heeds_bells"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 7,
+   "score": 592,
+   "stateHash": "1d326923af9d64",
+   "eventHash": "1e28a02332770e",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "GATHER",
+     "claim": "river_fears_fire",
+     "site": "green_e"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "pip"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "tilly"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_e",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "pip",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "river_fears_fire",
+     "against": "river_courts_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_c",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "bram"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "bram",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_heeds_bells"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "evidence-first",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 7,
+   "score": 838,
+   "stateHash": "09b05667e7e29f",
+   "eventHash": "0a8e253f4387ce",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "wren"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "bridge_stands_watched",
+     "against": "crowds_break_bridges",
+     "target": "hester"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "elspeth",
+     "to": "nell"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "mara"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "dunn"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "cass",
+     "to": "bram"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "aldous"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "bridge-builder",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 7,
+   "score": 823,
+   "stateHash": "0232bc87f14976",
+   "eventHash": "0df0a16ea22605",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "aldous"
+    },
+    {
+     "type": "GATHER",
+     "claim": "bridge_stands_watched",
+     "site": "shelter_e"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "cass"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "hester"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "aldous"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "bridge_stands_watched",
+     "against": "crowds_break_bridges",
+     "target": "ivo"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "elspeth",
+     "to": "nell"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "mara"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "aldous",
+     "to": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "bridge_stands_watched",
+     "against": "crowds_break_bridges",
+     "target": "hester"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "ivo",
+     "to": "aldous"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "aldous",
+     "to": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 5,
+   "difficulty": "normal",
+   "policy": "bridge-builder",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 7,
+   "score": 534,
+   "stateHash": "1f906e0e47790f",
+   "eventHash": "1c371300a75aa9",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "aldous"
+    },
+    {
+     "type": "GATHER",
+     "claim": "bridge_stands_watched",
+     "site": "shelter_e"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "cass"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "hester"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "aldous"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "bridge_stands_watched",
+     "against": "crowds_break_bridges",
+     "target": "ivo"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "cass"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "elspeth",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "aldous"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "bridge_stands_watched",
+     "against": "crowds_break_bridges",
+     "target": "hester"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "elspeth"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "hester"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "harl",
+     "to": "wren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "osric"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 4,
+   "difficulty": "normal",
+   "policy": "greedy",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 7,
+   "score": 684,
+   "stateHash": "1ed2b172917a73",
+   "eventHash": "0bdee4a3a48067",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "GATHER",
+     "claim": "river_fears_fire",
+     "site": "green_e"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "pip"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_e",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "river_fears_fire",
+     "against": "river_courts_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "tilly",
+     "to": "mara"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_c",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "greedy",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 7,
+   "score": 555,
+   "stateHash": "0e8e99ca905955",
+   "eventHash": "05bc0bc84ca950",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "GATHER",
+     "claim": "river_fears_fire",
+     "site": "green_e"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "pip"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "tilly"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_e",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "pip",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "river_fears_fire",
+     "against": "river_courts_fire",
+     "target": "ivo"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "tilly",
+     "to": "mara"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_c",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "mara",
+     "to": "harl"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 8,
+   "difficulty": "normal",
+   "policy": "exploit-seeker",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 7,
+   "score": 659,
+   "stateHash": "038f036096fbd0",
+   "eventHash": "048e70b49f75d5",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "GATHER",
+     "claim": "river_fears_fire",
+     "site": "shelter_e"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "cass"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "aldous"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_heeds_bells"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "light_beacon",
+     "landmark": "b_e",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_heeds_bells"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_heeds_bells",
+     "from": "elspeth",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_heeds_bells",
+     "from": "nell",
+     "to": "pip"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_heeds_bells",
+     "from": "pip",
+     "to": "tilly"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "ivo"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "exploit-seeker",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 7,
+   "score": 488,
+   "stateHash": "171c3c01583954",
+   "eventHash": "164286615702a5",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "river_fears_fire"
+    },
+    {
+     "type": "GATHER",
+     "claim": "river_fears_fire",
+     "site": "shelter_e"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "pip",
+     "to": "nell"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "river_fears_fire",
+     "from": "nell",
+     "to": "pip"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_heeds_bells"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "elspeth",
+     "to": "nell"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "pip"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "nell",
+     "to": "ivo"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_heeds_bells"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "ivo",
+     "to": "tilly"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 9,
+   "score": 952,
+   "stateHash": "04040513c99c91",
+   "eventHash": "0a6f422b182cef",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "moonlight_ripens_grain",
+     "site": "hall"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "odo",
+     "to": "tobias"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "nessa"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "imre",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "ferris",
+     "to": "imre"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "nessa"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "rain_follows_bells",
+     "site": "hall"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "lark"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "pim"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 2,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 9,
+   "score": 721,
+   "stateHash": "1fad318e069e2f",
+   "eventHash": "0686e2d84b2632",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "moonlight_ripens_grain",
+     "site": "hall"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "wilma"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "odo",
+     "to": "pim"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "esk"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "imre",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "nessa"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "nessa"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "rain_follows_bells",
+     "site": "hall"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "lark"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "pim"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 3,
+   "difficulty": "normal",
+   "policy": "evidence-first",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 9,
+   "score": 964,
+   "stateHash": "17cb5f1d17944d",
+   "eventHash": "035379c2fbe415",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "hobb"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "wilma",
+     "to": "nessa"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "nessa"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "ferris",
+     "to": "imre"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "imre",
+     "to": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "evidence-first",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 9,
+   "score": 775,
+   "stateHash": "12a70790bc57ea",
+   "eventHash": "08c0dc399a3b62",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "hobb"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "wilma",
+     "to": "tobias"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "odo",
+     "to": "wilma"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "odo",
+     "to": "tobias"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "imre",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "ferris",
+     "to": "imre"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "bridge-builder",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 9,
+   "score": 721,
+   "stateHash": "06b3952999b06d",
+   "eventHash": "12a22448db46f7",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "sedge"
+    },
+    {
+     "type": "GATHER",
+     "claim": "moonlight_ripens_grain",
+     "site": "hall"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "sedge"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "tobias"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "pim"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "sedge"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "tobias",
+     "to": "sedge"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "sedge"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "esk",
+     "to": "sedge"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "tobias",
+     "to": "sedge"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "esk",
+     "to": "sedge"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "tobias",
+     "to": "sedge"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "sedge"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "esk",
+     "to": "sedge"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "tobias",
+     "to": "sedge"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "dalia"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "nessa"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "tobias",
+     "to": "sedge"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "hobb",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "greedy",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 9,
+   "score": 961,
+   "stateHash": "01da9958b05854",
+   "eventHash": "1fa7673d8752f5",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "moonlight_ripens_grain",
+     "site": "hall"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "odo",
+     "to": "tobias"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "nessa"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "imre",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "ferris",
+     "to": "imre"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 2,
+   "difficulty": "normal",
+   "policy": "greedy",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 9,
+   "score": 775,
+   "stateHash": "096b659292d537",
+   "eventHash": "13d77ce62c9378",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "moonlight_ripens_grain",
+     "site": "hall"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "wilma"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "odo",
+     "to": "pim"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "marta"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "esk"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "imre",
+     "to": "ferris"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "dalia",
+     "to": "marta"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "marta",
+     "to": "hobb"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "nessa"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "harvest",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "exploit-seeker",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 9,
+   "score": 724,
+   "stateHash": "1c6406572ebf6e",
+   "eventHash": "171f94fbb827ea",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "moonlight_ripens_grain",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "lark",
+     "to": "pim"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_d",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_follows_bells"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_c",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "wilma"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_b",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "SEED",
+     "claim": "rain_follows_bells",
+     "target": "lark"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_follows_bells"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "nessa",
+     "to": "wilma"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "wilma",
+     "to": "pim"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "pim",
+     "to": "odo"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "lark",
+     "to": "esk"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "nessa",
+     "to": "anselm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "anselm",
+     "to": "nessa"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "odo",
+     "to": "tobias"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "ashwood",
+   "seed": 2,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 8,
+   "score": 809,
+   "stateHash": "131582236e5f4f",
+   "eventHash": "0263ad7a055cad",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "bess"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "maren",
+     "to": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "tam",
+     "to": "edda"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "edda",
+     "to": "tam"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "linnet",
+     "to": "maren"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "ashwood",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 8,
+   "score": 738,
+   "stateHash": "118c45230a5670",
+   "eventHash": "03755a79d84e01",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "brann"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "rook",
+     "to": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "linnet",
+     "to": "rook"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "edda",
+     "to": "brann"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "linnet",
+     "to": "maren"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "bess",
+     "to": "hale"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "ashwood",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "evidence-first",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 8,
+   "score": 738,
+   "stateHash": "06241ec3e66fb9",
+   "eventHash": "1e948076fae522",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "brann"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m2",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "garrick",
+     "to": "gorm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "bess"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "bess"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "ashwood",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "bridge-builder",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 8,
+   "score": 698,
+   "stateHash": "0ced96f61b4d8a",
+   "eventHash": "02e59d2ab14e81",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "GATHER",
+     "claim": "wolves_fear_smoke",
+     "site": "market"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "pia"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "tam"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "pia"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "ysolde",
+     "to": "maren"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "bess"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "ysolde",
+     "to": "maren"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n2",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "maren",
+     "to": "cobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "ysolde",
+     "to": "rook"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "hale",
+     "to": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "rook",
+     "to": "brann"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "linnet",
+     "to": "hale"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "tam",
+     "to": "edda"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "maren",
+     "to": "cobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "rook",
+     "to": "brann"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "ashwood",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "greedy",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 8,
+   "score": 738,
+   "stateHash": "0d5731f7a44baf",
+   "eventHash": "0c3bb03c7027b9",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "brann"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "rook",
+     "to": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "linnet",
+     "to": "rook"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "edda",
+     "to": "brann"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "linnet",
+     "to": "maren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "bess",
+     "to": "hale"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "brann",
+     "to": "gorm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "wolves_fear_smoke",
+     "against": "wolves_follow_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "maren",
+     "to": "cobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "edda",
+     "to": "tam"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "ashwood",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "exploit-seeker",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 8,
+   "score": 738,
+   "stateHash": "0b34316fc3e3d5",
+   "eventHash": "11e5cb942c2762",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_fear_smoke",
+     "target": "tam"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m2",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "garrick",
+     "to": "gorm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "ysolde",
+     "to": "maren"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "illness_fears_open_doors",
+     "site": "market"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_fear_smoke",
+     "from": "hale",
+     "to": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "garrick",
+     "to": "gorm"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_follow_smoke",
+     "target": "pia"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_follow_smoke",
+     "target": "tam"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "garrick",
+     "to": "rook"
+    },
+    {
+     "type": "SEED",
+     "claim": "illness_fears_open_doors",
+     "target": "pia"
+    },
+    {
+     "type": "SEED",
+     "claim": "illness_fears_open_doors",
+     "target": "tam"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "gorm",
+     "to": "edda"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "garrick",
+     "to": "hale"
+    },
+    {
+     "type": "SEED",
+     "claim": "wolves_follow_smoke",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "garrick",
+     "to": "rook"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "rook",
+     "to": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "wolves_follow_smoke",
+     "from": "linnet",
+     "to": "maren"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "x1.1",
+   "seed": 1,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "victory",
+   "result": "victory",
+   "endDay": 9,
+   "score": 721,
+   "stateHash": "12de529353b72f",
+   "eventHash": "149c56fff1b493",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "kchild",
+     "to": "keeper"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "reeve",
+     "to": "ringer"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "pchild",
+     "to": "elder"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "keeper",
+     "to": "farmer"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "preacher"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "kchild"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "keeper"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "preacher"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "pchild"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "hand"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "parent"
+    },
+    {
+     "type": "SEED",
+     "claim": "river_fears_fire",
+     "target": "preacher"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "scenarioId": "x1.3",
+   "seed": 3,
+   "difficulty": "normal",
+   "policy": "threat-aware",
+   "kind": "defeat",
+   "result": "defeat",
+   "endDay": 9,
+   "score": 794,
+   "stateHash": "0697f676dc3ecb",
+   "eventHash": "1d65dbf95e4286",
+   "actions": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_1",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "healer",
+     "to": "preacher"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_4",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "hand",
+     "to": "parent"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "COUNTER",
+     "claim": "moonlight_ripens_grain",
+     "against": "moon_sours_grain",
+     "target": "reeve"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_3",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_2",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "warden",
+     "to": "reeve"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "moonlight_ripens_grain",
+     "from": "reeve",
+     "to": "miller"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "moonlit_work",
+     "landmark": "f_4",
+     "claim": "moonlight_ripens_grain"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "rain_follows_bells",
+     "site": "market"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "ring_bells",
+     "landmark": "bell",
+     "claim": "rain_follows_bells"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "preacher",
+     "to": "tinker"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "rain_follows_bells",
+     "from": "miller",
+     "to": "trader"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  }
+ ]
+}
