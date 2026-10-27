@@ -1,0 +1,9 @@
+cohort,policy,n,wins,win_pct,ci_lo,ci_hi,median_end_day,mean_score,mean_alive,mean_homes,first_law_day,reach,ap_spent,ap_unspent,median_ms
+redbank,bridge-builder,1000,815,81.5,79,83.8,7,766,13.3,6,6,0.917,18.6,2.4,249
+redbank,broadcaster,1000,0,0,0,0.4,7,525.1,10,6,7,0.612,20.8,0.2,265
+redbank,evidence-first,1000,998,99.8,99.3,99.9,7,830.8,14,6,5,0.928,16.1,6.2,208
+redbank,exploit-seeker,1000,199,19.9,17.5,22.5,7,528.8,10.4,6.4,7,0.66,21,0,576
+redbank,greedy,1000,651,65.1,62.1,68,7,640.3,11.6,8.8,5,0.632,15.5,7.2,166
+redbank,noop,1000,0,0,0,0.4,7,493,10,6,,0,0,33,7
+redbank,random,1000,61,6.1,4.8,7.8,7,510.7,10.5,6,7,0.348,21,0,215
+redbank,threat-aware,1000,819,81.9,79.4,84.2,7,686.8,12.7,9.8,6,0.641,18,8.5,289

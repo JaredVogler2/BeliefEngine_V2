@@ -1,0 +1,1070 @@
+{
+ "about": "Written by mcp/agent-demo.ts. A scripted agent played this run through the real MCP server over stdio with the official SDK client. replay.actions replayed in the browser engine reproduce the final state and event hashes.",
+ "scenario": "redbank",
+ "seed": 7,
+ "passive": false,
+ "result": "defeat",
+ "headline": "The village is lost — 10 of 14 remain",
+ "score": 526,
+ "verification": {
+  "server": {
+   "stateHash": "0ca9a1bd3d54bf",
+   "eventHash": "13018e62cefaee",
+   "rulesVersion": "1.0.0",
+   "actions": 24
+  },
+  "browserEngine": {
+   "stateHash": "0ca9a1bd3d54bf",
+   "eventHash": "13018e62cefaee",
+   "rejected": []
+  },
+  "identical": true
+ },
+ "toolCalls": [
+  {
+   "n": 1,
+   "tool": "create_game",
+   "args": {
+    "scenarioId": "redbank",
+    "seed": 7
+   },
+   "ok": true,
+   "summary": "Started Flood at Redbank (seed 7, normal). Day 1 of 7; 3 Influence. Choose an opening story first.",
+   "revision": 0
+  },
+  {
+   "n": 2,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "PICK_STARTER",
+     "claim": "bridge_stands_watched"
+    },
+    "expectedRevision": 0,
+    "idempotencyKey": "demo-1"
+   },
+   "ok": true,
+   "summary": "You choose to tell: “A bridge never breaks while it is watched.”",
+   "revision": 1
+  },
+  {
+   "n": 3,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 1/7. Influence 3/5. 14/14 alive, 14/14 homes, food 20. Calm brown water.",
+   "revision": 1
+  },
+  {
+   "n": 4,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 1/7. Influence 3/5. 14/14 alive, 14/14 homes, food 20. Calm brown water.",
+   "revision": 1
+  },
+  {
+   "n": 5,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 27 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 1
+  },
+  {
+   "n": 6,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "RITUAL",
+     "ritual": "keep_vigil",
+     "landmark": "br",
+     "claim": "bridge_stands_watched"
+    },
+    "expectedRevision": 1,
+    "idempotencyKey": "demo-2"
+   },
+   "ok": true,
+   "summary": "Watch — Redbank Bridge. Good omen: a calm night. The bridge will stand, and be seen to stand. 5 watch: Mara Wells 0→25, Osric Pell 0→24, Hester Grane 0→24, Dr. Elspeth Voss 0→31, Cass Marlow 0→26. The",
+   "revision": 2
+  },
+  {
+   "n": 7,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 1/7. Influence 1/5. 14/14 alive, 14/14 homes, food 20. Calm brown water.",
+   "revision": 2
+  },
+  {
+   "n": 8,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 19 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 2
+  },
+  {
+   "n": 9,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "SEED",
+     "claim": "bridge_stands_watched",
+     "target": "tilly"
+    },
+    "expectedRevision": 2,
+    "idempotencyKey": "demo-3"
+   },
+   "ok": true,
+   "summary": "You tell Tilly Wells: “Bridge stands watched”. Conviction 0 → 23.",
+   "revision": 3
+  },
+  {
+   "n": 10,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 1/7. Influence 0/5. 14/14 alive, 14/14 homes, food 20. Calm brown water.",
+   "revision": 3
+  },
+  {
+   "n": 11,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 3,
+    "idempotencyKey": "demo-4"
+   },
+   "ok": true,
+   "summary": "Your story is spreading.",
+   "revision": 4
+  },
+  {
+   "n": 12,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 2/7. Influence 3/5. 14/14 alive, 14/14 homes, food 19. Debris on the current.",
+   "revision": 4
+  },
+  {
+   "n": 13,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 2/7. Influence 3/5. 14/14 alive, 14/14 homes, food 19. Debris on the current.",
+   "revision": 4
+  },
+  {
+   "n": 14,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 4
+  },
+  {
+   "n": 15,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "nell"
+    },
+    "expectedRevision": 4,
+    "idempotencyKey": "demo-5"
+   },
+   "ok": true,
+   "summary": "Mara Wells carries “Bridge stands watched” to Nell Carter (trust 65). Conviction 13 → 49.",
+   "revision": 5
+  },
+  {
+   "n": 16,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 2/7. Influence 2/5. 14/14 alive, 14/14 homes, food 19. Debris on the current.",
+   "revision": 5
+  },
+  {
+   "n": 17,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 5
+  },
+  {
+   "n": 18,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "nell",
+     "to": "pip"
+    },
+    "expectedRevision": 5,
+    "idempotencyKey": "demo-6"
+   },
+   "ok": true,
+   "summary": "Nell Carter carries “Bridge stands watched” to Pip Carter (trust 90). Conviction 11 → 51.",
+   "revision": 6
+  },
+  {
+   "n": 19,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 2/7. Influence 1/5. 14/14 alive, 14/14 homes, food 19. Debris on the current.",
+   "revision": 6
+  },
+  {
+   "n": 20,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 6
+  },
+  {
+   "n": 21,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "pip",
+     "to": "tilly"
+    },
+    "expectedRevision": 6,
+    "idempotencyKey": "demo-7"
+   },
+   "ok": true,
+   "summary": "Pip Carter carries “Bridge stands watched” to Tilly Wells (trust 85). Conviction 38 → 66.",
+   "revision": 7
+  },
+  {
+   "n": 22,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 2/7. Influence 0/5. 14/14 alive, 14/14 homes, food 19. Debris on the current.",
+   "revision": 7
+  },
+  {
+   "n": 23,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 7,
+    "idempotencyKey": "demo-8"
+   },
+   "ok": true,
+   "summary": "2 new believers, the rival struck",
+   "revision": 8
+  },
+  {
+   "n": 24,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 3/7. Influence 3/5. 14/14 alive, 14/14 homes, food 17. The water drops back a hand.",
+   "revision": 8
+  },
+  {
+   "n": 25,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 3/7. Influence 3/5. 14/14 alive, 14/14 homes, food 17. The water drops back a hand.",
+   "revision": 8
+  },
+  {
+   "n": 26,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 8
+  },
+  {
+   "n": 27,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "bram"
+    },
+    "expectedRevision": 8,
+    "idempotencyKey": "demo-9"
+   },
+   "ok": true,
+   "summary": "Mara Wells carries “Bridge stands watched” to Bram Ashby (trust 55). Conviction 0 → 27.",
+   "revision": 9
+  },
+  {
+   "n": 28,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 3/7. Influence 2/5. 14/14 alive, 14/14 homes, food 17. The water drops back a hand.",
+   "revision": 9
+  },
+  {
+   "n": 29,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 9
+  },
+  {
+   "n": 30,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "ivo"
+    },
+    "expectedRevision": 9,
+    "idempotencyKey": "demo-10"
+   },
+   "ok": true,
+   "summary": "Tilly Wells carries “Bridge stands watched” to Ivo Thatcher (trust 70). Conviction 13 → 35.",
+   "revision": 10
+  },
+  {
+   "n": 31,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 3/7. Influence 1/5. 14/14 alive, 14/14 homes, food 17. The water drops back a hand.",
+   "revision": 10
+  },
+  {
+   "n": 32,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 10
+  },
+  {
+   "n": 33,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    "expectedRevision": 10,
+    "idempotencyKey": "demo-11"
+   },
+   "ok": true,
+   "summary": "Ivo Thatcher carries “Bridge stands watched” to Dunn Reed (trust 72). Conviction 6 → 41.",
+   "revision": 11
+  },
+  {
+   "n": 34,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 3/7. Influence 0/5. 14/14 alive, 14/14 homes, food 17. The water drops back a hand.",
+   "revision": 11
+  },
+  {
+   "n": 35,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 11,
+    "idempotencyKey": "demo-12"
+   },
+   "ok": true,
+   "summary": "1 new believer",
+   "revision": 12
+  },
+  {
+   "n": 36,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 4/7. Influence 3/5. 14/14 alive, 14/14 homes, food 16. Rain upriver.",
+   "revision": 12
+  },
+  {
+   "n": 37,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 4/7. Influence 3/5. 14/14 alive, 14/14 homes, food 16. Rain upriver.",
+   "revision": 12
+  },
+  {
+   "n": 38,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 12
+  },
+  {
+   "n": 39,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "ivo",
+     "to": "dunn"
+    },
+    "expectedRevision": 12,
+    "idempotencyKey": "demo-13"
+   },
+   "ok": true,
+   "summary": "Ivo Thatcher carries “Bridge stands watched” to Dunn Reed (trust 72). Conviction 59 → 77.",
+   "revision": 13
+  },
+  {
+   "n": 40,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 4/7. Influence 2/5. 14/14 alive, 14/14 homes, food 16. Rain upriver.",
+   "revision": 13
+  },
+  {
+   "n": 41,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 13
+  },
+  {
+   "n": 42,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "mara",
+     "to": "cass"
+    },
+    "expectedRevision": 13,
+    "idempotencyKey": "demo-14"
+   },
+   "ok": true,
+   "summary": "Mara Wells carries “Bridge stands watched” to Cass Marlow (trust 55). Conviction 38 → 53.",
+   "revision": 14
+  },
+  {
+   "n": 43,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 4/7. Influence 1/5. 14/14 alive, 14/14 homes, food 16. Rain upriver.",
+   "revision": 14
+  },
+  {
+   "n": 44,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 14
+  },
+  {
+   "n": 45,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "dunn",
+     "to": "wren"
+    },
+    "expectedRevision": 14,
+    "idempotencyKey": "demo-15"
+   },
+   "ok": true,
+   "summary": "Dunn Reed carries “Bridge stands watched” to Wren Fisher (trust 50). Conviction 0 → 15.",
+   "revision": 15
+  },
+  {
+   "n": 46,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 4/7. Influence 0/5. 14/14 alive, 14/14 homes, food 16. Rain upriver.",
+   "revision": 15
+  },
+  {
+   "n": 47,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 15,
+    "idempotencyKey": "demo-16"
+   },
+   "ok": true,
+   "summary": "1 new believer",
+   "revision": 16
+  },
+  {
+   "n": 48,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 5/7. Influence 3/5. 14/14 alive, 14/14 homes, food 15. A deceptive lull.",
+   "revision": 16
+  },
+  {
+   "n": 49,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 5/7. Influence 3/5. 14/14 alive, 14/14 homes, food 15. A deceptive lull.",
+   "revision": 16
+  },
+  {
+   "n": 50,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 16
+  },
+  {
+   "n": 51,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 16,
+    "idempotencyKey": "demo-17"
+   },
+   "ok": true,
+   "summary": "2 new believers, the rival struck",
+   "revision": 17
+  },
+  {
+   "n": 52,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 6/7. Influence 5/5. 14/14 alive, 14/14 homes, food 12. The bridge groans.",
+   "revision": 17
+  },
+  {
+   "n": 53,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 6/7. Influence 5/5. 14/14 alive, 14/14 homes, food 12. The bridge groans.",
+   "revision": 17
+  },
+  {
+   "n": 54,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 17
+  },
+  {
+   "n": 55,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 17,
+    "idempotencyKey": "demo-18"
+   },
+   "ok": true,
+   "summary": "2 new believers, the bridge fell",
+   "revision": 18
+  },
+  {
+   "n": 56,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 5/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 18
+  },
+  {
+   "n": 57,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 5/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 18
+  },
+  {
+   "n": 58,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 18
+  },
+  {
+   "n": 59,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "bram",
+     "to": "harl"
+    },
+    "expectedRevision": 18,
+    "idempotencyKey": "demo-19"
+   },
+   "ok": true,
+   "summary": "Bram Ashby carries “Bridge stands watched” to Old Harl (trust 60). Conviction 33 → 46.",
+   "revision": 19
+  },
+  {
+   "n": 60,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 4/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 19
+  },
+  {
+   "n": 61,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 19
+  },
+  {
+   "n": 62,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "harl",
+     "to": "wren"
+    },
+    "expectedRevision": 19,
+    "idempotencyKey": "demo-20"
+   },
+   "ok": true,
+   "summary": "Old Harl carries “Bridge stands watched” to Wren Fisher (trust 55). Conviction 19 → 33.",
+   "revision": 20
+  },
+  {
+   "n": 63,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 3/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 20
+  },
+  {
+   "n": 64,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 20
+  },
+  {
+   "n": 65,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "ivo",
+     "to": "bram"
+    },
+    "expectedRevision": 20,
+    "idempotencyKey": "demo-21"
+   },
+   "ok": true,
+   "summary": "Ivo Thatcher carries “Bridge stands watched” to Bram Ashby (trust 50). Conviction 55 → 67.",
+   "revision": 21
+  },
+  {
+   "n": 66,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 2/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 21
+  },
+  {
+   "n": 67,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 40 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 21
+  },
+  {
+   "n": 68,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "tilly",
+     "to": "ivo"
+    },
+    "expectedRevision": 21,
+    "idempotencyKey": "demo-22"
+   },
+   "ok": true,
+   "summary": "Tilly Wells carries “Bridge stands watched” to Ivo Thatcher (trust 70). Conviction 56 → 67.",
+   "revision": 22
+  },
+  {
+   "n": 69,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 1/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 22
+  },
+  {
+   "n": 70,
+   "tool": "compare_possible_actions",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "top": 12
+   },
+   "ok": true,
+   "summary": "Compared 37 actions with exact previews; best first by conviction gained per Influence.",
+   "revision": 22
+  },
+  {
+   "n": 71,
+   "tool": "take_action",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "action": {
+     "type": "MESSENGER",
+     "claim": "bridge_stands_watched",
+     "from": "hester",
+     "to": "aldous"
+    },
+    "expectedRevision": 22,
+    "idempotencyKey": "demo-23"
+   },
+   "ok": true,
+   "summary": "Hester Grane carries “Bridge stands watched” to Brother Aldous (trust 50). Conviction 56 → 66.",
+   "revision": 23
+  },
+  {
+   "n": 72,
+   "tool": "get_game_state",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Flood at Redbank, day 7/7. Influence 0/5. 14/14 alive, 14/14 homes, food 9. THE GREAT SURGE.",
+   "revision": 23
+  },
+  {
+   "n": 73,
+   "tool": "end_day",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "expectedRevision": 23,
+    "idempotencyKey": "demo-24"
+   },
+   "ok": true,
+   "summary": "1 new believer, 1 law activated, 8 homes lost, 4 lost",
+   "revision": 24
+  },
+  {
+   "n": 74,
+   "tool": "get_results",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e",
+    "whatIf": true
+   },
+   "ok": true,
+   "summary": "Defeat: The village is lost — 10 of 14 remain",
+   "revision": 24
+  },
+  {
+   "n": 75,
+   "tool": "export_replay",
+   "args": {
+    "runId": "r_fdf68c0b7cc95a82bada2b868c69e28e"
+   },
+   "ok": true,
+   "summary": "Replay of 24 accepted actions. Feed it to the browser engine or replayRun to reproduce the run exactly.",
+   "revision": 24
+  }
+ ],
+ "replay": {
+  "scenarioId": "redbank",
+  "seed": 7,
+  "difficulty": "normal",
+  "mode": "story",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "bridge_stands_watched"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "keep_vigil",
+    "landmark": "br",
+    "claim": "bridge_stands_watched"
+   },
+   {
+    "type": "SEED",
+    "claim": "bridge_stands_watched",
+    "target": "tilly"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "mara",
+    "to": "nell"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "nell",
+    "to": "pip"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "pip",
+    "to": "tilly"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "mara",
+    "to": "bram"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "tilly",
+    "to": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "mara",
+    "to": "cass"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "dunn",
+    "to": "wren"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "bram",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "harl",
+    "to": "wren"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "ivo",
+    "to": "bram"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "tilly",
+    "to": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "hester",
+    "to": "aldous"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ }
+}

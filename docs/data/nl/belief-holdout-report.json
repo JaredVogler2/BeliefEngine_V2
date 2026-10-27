@@ -1,0 +1,61 @@
+{
+ "file": "tests/fixtures/belief-holdout.json",
+ "summary": {
+  "total": 47,
+  "passed": 45,
+  "byCategory": {
+   "natural": {
+    "n": 24,
+    "pass": 24
+   },
+   "compound": {
+    "n": 2,
+    "pass": 2
+   },
+   "refuse": {
+    "n": 9,
+    "pass": 9
+   },
+   "injection": {
+    "n": 4,
+    "pass": 4
+   },
+   "typo": {
+    "n": 4,
+    "pass": 2
+   },
+   "mismatch": {
+    "n": 4,
+    "pass": 4
+   }
+  },
+  "answerPrecision": {
+   "answered": 29,
+   "correct": 29,
+   "of": 30
+  },
+  "abstentionCorrect": {
+   "correct": 13,
+   "of": 13
+  },
+  "wrongReadings": 1
+ },
+ "failures": [
+  {
+   "category": "typo",
+   "village": "redbank",
+   "text": "The riverr fears fyre.",
+   "expected": "ok",
+   "got": "unsupported",
+   "why": "expected river.repel.lit_beacon as the single reading"
+  },
+  {
+   "category": "typo",
+   "village": "redbank",
+   "text": "The river fears fіre.",
+   "expected": "never_wrong",
+   "got": "ambiguous: river.repel.lit_beacon | river.repel.bell",
+   "why": "offered a reading that is not the one meant"
+  }
+ ]
+}

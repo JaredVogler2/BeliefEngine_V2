@@ -1,0 +1,27 @@
+connected: server belief-engine 0.1.0, 19 tools, rules resource 3181 chars
+run r_03bffc36c0f71eb95cc82a33095211c8: Flood at Redbank, seed 1, 7 days
+opening story: bridge_stands_watched -> You choose to tell: “A bridge never breaks while it is watched.”
+day 1/7: 3 Influence; tonight: Calm brown water
+  Keep a bridge vigil at Redbank Bridge as proof of Bridge stands watched -> Watch — Redbank Bridge. Good omen: a calm night. The bridge will stand, and be seen to stand. 5 watch: Mara Wells 0→25, Osric Pell 0→24, Hester Grane 0→24, Dr. Elspeth Voss 0→31, Cass Marlow 0→26. They saw it with their own eyes.
+  Tell Tilly Wells: Bridge stands watched -> You tell Tilly Wells: “Bridge stands watched”. Conviction 0 → 23.
+  night 1: Your story is spreading. | “Bridge stands watched” travelled along ties of trust and reached Nell (0→17), Hester (24→39), Tilly (23→38) and 9 more. Carried by Cass, Hester and 3 more.
+day 2/7: 3 Influence; tonight: Debris on the current
+  Keep a bridge vigil at Redbank Bridge as proof of Bridge stands watched -> Watch — Redbank Bridge. Good omen: a calm night. The bridge will stand, and be seen to stand. 5 watch: Mara Wells 29→43, Osric Pell 33→46, Hester Grane 39→51, Dr. Elspeth Voss 41→56, Cass Marlow 31→46. They saw it with their own eyes.
+  Hester Grane tells Brother Aldous: Bridge stands watched -> Hester Grane carries “Bridge stands watched” to Brother Aldous (trust 50). Conviction 7 → 41.
+  night 2: 3 new believers, the rival struck | “Bridge stands watched” travelled along ties of trust and reached Ivo (0→19), Bram (0→16), Tilly (38→49) and 4 more. Carried by Dr., Mara and 3 more.
+day 3/7: 3 Influence; tonight: The water drops back a hand
+  night 3: 3 new believers | “Bridge stands watched” travelled along ties of trust and reached Nell (15→42), Old (14→36), Ivo (19→36) and 6 more. Carried by Mara, Hester and 3 more.
+day 4/7: 5 Influence; tonight: Rain upriver
+  Mara Wells tells Dunn Reed: Bridge stands watched -> Mara Wells carries “Bridge stands watched” to Dunn Reed (trust 45). Conviction 10 → 36.
+  night 4: 3 new believers | “Bridge stands watched” travelled along ties of trust and reached Bram (20→38), Tilly (70→85), Brother (60→68) and 7 more. Carried by Cass, Osric and 3 more.
+day 5/7: 5 Influence; tonight: A deceptive lull
+  night 5: 1 new believer, the rival struck | “Bridge stands watched” travelled along ties of trust and reached Mara (61→84), Nell (61→80), Pip (56→73) and 9 more. Carried by Mara, Hester and 3 more.
+day 6/7: 5 Influence; tonight: The bridge groans
+  Ivo Thatcher tells Dunn Reed: Bridge stands watched -> Ivo Thatcher carries “Bridge stands watched” to Dunn Reed (trust 72). Conviction 50 → 69.
+  night 6: 2 new believers, 1 law activated | “Bridge stands watched” travelled along ties of trust and reached Bram (54→68), Pip (73→85), Nell (80→89) and 7 more. Carried by Hester, Dunn and 5 more.
+day 7/7: 5 Influence; tonight: THE GREAT SURGE
+  Mara Wells tells Old Harl: Bridge stands watched -> Mara Wells carries “Bridge stands watched” to Old Harl (trust 70). Conviction 53 → 71.
+  night 7: 8 homes lost | “Bridge stands watched” travelled along ties of trust and reached Ivo (57→72), Wren (2→11), Pip (86→94) and 8 more. Carried by Ivo, Dunn and 7 more.
+result: victory (The village endures — 14 of 14 saved); score 836, 15 accepted actions
+browser engine replay: state 1872b400e4e13b, events 093601714aa854 -> IDENTICAL to the server
+wrote docs/data/mcp/demo-redbank-seed1.json and docs/data/mcp/demo-redbank-seed1.md

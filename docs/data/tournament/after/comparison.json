@@ -1,0 +1,98 @@
+[
+ {
+  "scenario": "redbank",
+  "policy": "bridge-builder",
+  "seeds": 1000,
+  "before": 99.5,
+  "after": 81.5,
+  "gained": 5,
+  "lost": 185,
+  "p": 0,
+  "deltaPts": -18,
+  "scoreDelta": -50.5
+ },
+ {
+  "scenario": "redbank",
+  "policy": "broadcaster",
+  "seeds": 1000,
+  "before": 0,
+  "after": 0,
+  "gained": 0,
+  "lost": 0,
+  "p": 1,
+  "deltaPts": 0,
+  "scoreDelta": 0
+ },
+ {
+  "scenario": "redbank",
+  "policy": "evidence-first",
+  "seeds": 1000,
+  "before": 100,
+  "after": 99.8,
+  "gained": 0,
+  "lost": 2,
+  "p": 0.5,
+  "deltaPts": -0.2,
+  "scoreDelta": -3.5
+ },
+ {
+  "scenario": "redbank",
+  "policy": "exploit-seeker",
+  "seeds": 1000,
+  "before": 41.3,
+  "after": 19.9,
+  "gained": 22,
+  "lost": 236,
+  "p": 0,
+  "deltaPts": -21.4,
+  "scoreDelta": -34.3
+ },
+ {
+  "scenario": "redbank",
+  "policy": "greedy",
+  "seeds": 1000,
+  "before": 65.1,
+  "after": 65.1,
+  "gained": 0,
+  "lost": 0,
+  "p": 1,
+  "deltaPts": 0,
+  "scoreDelta": 0
+ },
+ {
+  "scenario": "redbank",
+  "policy": "noop",
+  "seeds": 1000,
+  "before": 0,
+  "after": 0,
+  "gained": 0,
+  "lost": 0,
+  "p": 1,
+  "deltaPts": 0,
+  "scoreDelta": 0
+ },
+ {
+  "scenario": "redbank",
+  "policy": "random",
+  "seeds": 1000,
+  "before": 8,
+  "after": 6.1,
+  "gained": 4,
+  "lost": 23,
+  "p": 0,
+  "deltaPts": -1.9,
+  "scoreDelta": -8
+ },
+ {
+  "scenario": "redbank",
+  "policy": "threat-aware",
+  "seeds": 1000,
+  "before": 81.9,
+  "after": 81.9,
+  "gained": 0,
+  "lost": 0,
+  "p": 1,
+  "deltaPts": 0,
+  "scoreDelta": 0
+ }
+]

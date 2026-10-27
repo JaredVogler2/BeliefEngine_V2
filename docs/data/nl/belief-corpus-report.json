@@ -1,0 +1,76 @@
+{
+ "file": "tests/fixtures/belief-corpus.json",
+ "summary": {
+  "total": 132,
+  "passed": 132,
+  "byCategory": {
+   "synonym": {
+    "n": 26,
+    "pass": 26
+   },
+   "prompt": {
+    "n": 5,
+    "pass": 5
+   },
+   "ambiguous": {
+    "n": 8,
+    "pass": 8
+   },
+   "negated": {
+    "n": 8,
+    "pass": 8
+   },
+   "metaphor": {
+    "n": 8,
+    "pass": 8
+   },
+   "multi": {
+    "n": 6,
+    "pass": 6
+   },
+   "unsupported": {
+    "n": 22,
+    "pass": 22
+   },
+   "nonsense": {
+    "n": 8,
+    "pass": 8
+   },
+   "unicode": {
+    "n": 9,
+    "pass": 9
+   },
+   "long": {
+    "n": 3,
+    "pass": 3
+   },
+   "injection": {
+    "n": 10,
+    "pass": 10
+   },
+   "contradiction": {
+    "n": 4,
+    "pass": 4
+   },
+   "valid": {
+    "n": 7,
+    "pass": 7
+   },
+   "mismatch": {
+    "n": 8,
+    "pass": 8
+   }
+  },
+  "answerPrecision": {
+   "answered": 65,
+   "correct": 65,
+   "of": 65
+  },
+  "abstentionCorrect": {
+   "correct": 57,
+   "of": 57
+  },
+  "wrongReadings": 0
+ },
+ "failures": []
+}

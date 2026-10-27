@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "belief-engine": {
+      "command": "npx",
+      "args": ["tsx", "mcp/server.ts"],
+      "env": {
+        "BELIEF_ENGINE_HOME": ".belief-engine"
+      }
+    }
+  }
+}

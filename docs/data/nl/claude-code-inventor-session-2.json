@@ -1,0 +1,235 @@
+{
+ "note": "Accepted actions of real Claude Code session 2 (Harvest, Inventor). Recorded before the balance formula was recalibrated: at the commit that recorded it the replay was identical; at later commits it is not (see the .md).",
+ "runId": "r_7eb86671c1cbd1c45f1fdf690f21a065",
+ "options": {
+  "scenarioId": "harvest",
+  "seed": 2,
+  "difficulty": "normal",
+  "mode": "story",
+  "inventor": true
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "moonlight_ripens_grain"
+  },
+  {
+   "type": "COMPOSE",
+   "claim": {
+    "id": "custom_07974da8fd",
+    "text": "The rain is drawn to the fields when the bells ring at night.",
+    "short": "Bells gather the clouds",
+    "icon": "rain",
+    "spec": {
+     "id": "custom_07974da8fd",
+     "version": 1,
+     "subject": "rain",
+     "effect": "attract",
+     "trigger": {
+      "kind": "bell"
+     },
+     "radius": 0,
+     "intensity": 2,
+     "thresholds": {
+      "on": 0.55,
+      "off": 0.4,
+      "minSupporters": 3,
+      "ramp": 68,
+      "decay": 22
+     },
+     "upkeep": {
+      "fuel": 0
+     },
+     "side": [
+      "rain_displace"
+     ],
+     "tags": [
+      "custom",
+      "inventor",
+      "rain"
+     ]
+    },
+    "regions": [
+     "valley"
+    ],
+    "ritual": "ring_bells",
+    "contradicts": [],
+    "benefit": "On nights the bells ring, the fields of The Valley drink 2 extra steps of rain, so crops grow faster. The water drawn in is taken from somewhere else.",
+    "risk": "Displaced rain: the water you push away pools elsewhere",
+    "flavor": "The rain is drawn to the fields when the bells ring at night.",
+    "startsAvailable": true,
+    "params": {
+     "sink": "hillside"
+    },
+    "custom": {
+     "text": "The rain is drawn to the fields when the bells ring at night.",
+     "astHash": "07974da8fd18c9",
+     "parser": "offline-lexicon-1",
+     "balance": 291297030,
+     "ast": {
+      "version": 1,
+      "clauses": [
+       {
+        "subject": "rain",
+        "effect": "attract",
+        "trigger": "bell",
+        "radius": 0,
+        "intensity": 2
+       }
+      ],
+      "regions": [
+       "valley"
+      ]
+     },
+     "source": "offline",
+     "nl": 1
+    }
+   }
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "anselm"
+  },
+  {
+   "type": "SEED",
+   "claim": "moonlight_ripens_grain",
+   "target": "odo"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "anselm"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "dalia"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "nessa"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_07974da8fd"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "lark"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_07974da8fd"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "anselm"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "lark"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "dalia"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "pim"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "lark"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "pim"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "odo"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_07974da8fd"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "wilma"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "marta"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "tobias"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "dalia"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "marta"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_07974da8fd",
+   "target": "tobias"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ]
+}

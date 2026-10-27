@@ -1,0 +1,209 @@
+{
+ "note": "Accepted actions of real Claude Code session 4 (Redbank, Inventor). Replays with replayRun to state hash 143423ece73faa at the commit that added it.",
+ "runId": "r_55cd85927178ec61e335f16b6b67f6e5",
+ "options": {
+  "scenarioId": "redbank",
+  "seed": 5,
+  "difficulty": "normal",
+  "mode": "story",
+  "inventor": true
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "river_fears_fire"
+  },
+  {
+   "type": "COMPOSE",
+   "claim": {
+    "id": "custom_0aca96fd58",
+    "text": "The river flinches from the ringing bells.",
+    "short": "Bells push back the river",
+    "icon": "flame",
+    "spec": {
+     "id": "custom_0aca96fd58",
+     "version": 1,
+     "subject": "river",
+     "effect": "repel",
+     "trigger": {
+      "kind": "bell"
+     },
+     "radius": 2,
+     "intensity": 2,
+     "thresholds": {
+      "on": 0.6,
+      "off": 0.45,
+      "minSupporters": 4,
+      "ramp": 58,
+      "decay": 25
+     },
+     "upkeep": {
+      "fuel": 0
+     },
+     "side": [
+      "rain_displace"
+     ],
+     "tags": [
+      "custom",
+      "inventor",
+      "river"
+     ]
+    },
+    "regions": [
+     "river"
+    ],
+    "electorate": {
+     "river": [
+      "east",
+      "west"
+     ]
+    },
+    "ritual": "ring_bells",
+    "contradicts": [
+     "river_courts_fire"
+    ],
+    "benefit": "While The Redbank believes it, each powered ringing bell raises the ground by up to 2 within 2 tiles, so floodwater stays out of that ground.",
+    "risk": "Displaced rain: the water you push away pools elsewhere",
+    "flavor": "The river flinches from the ringing bells.",
+    "startsAvailable": true,
+    "custom": {
+     "text": "The river flinches from the ringing bells.",
+     "astHash": "0aca96fd58d932",
+     "parser": "offline-lexicon-1",
+     "balance": 525409771,
+     "ast": {
+      "version": 1,
+      "clauses": [
+       {
+        "subject": "river",
+        "effect": "repel",
+        "trigger": "bell",
+        "radius": 2,
+        "intensity": 2
+       }
+      ],
+      "regions": [
+       "river"
+      ]
+     },
+     "source": "offline",
+     "nl": 1
+    }
+   }
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_0aca96fd58",
+   "target": "mara"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_0aca96fd58",
+   "target": "aldous"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_0aca96fd58",
+   "target": "hester"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_0aca96fd58",
+   "target": "cass"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "light_beacon",
+   "landmark": "b_c",
+   "claim": "river_fears_fire"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_0aca96fd58",
+   "target": "osric"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "river_fears_fire",
+   "from": "tilly",
+   "to": "pip"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "harl"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "nell"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "COUNTER",
+   "claim": "river_fears_fire",
+   "against": "river_courts_fire",
+   "target": "ivo"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "river_fears_fire",
+   "from": "mara",
+   "to": "harl"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "river_fears_fire",
+   "from": "ivo",
+   "to": "dunn"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "river_fears_fire",
+   "from": "nell",
+   "to": "ivo"
+  },
+  {
+   "type": "MESSENGER",
+   "claim": "river_fears_fire",
+   "from": "mara",
+   "to": "bram"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "harl"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_0aca96fd58"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_0aca96fd58",
+   "target": "aldous"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ]
+}

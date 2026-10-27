@@ -1,0 +1,31 @@
+# claude CLI 2.1.311 (Claude Code) registering and health-checking the Belief Engine MCP server
+# date: 2026-10-27T05:05:59Z, cwd: repo root, scope: local
+
+$ claude mcp add belief-engine -- npx tsx mcp/server.ts
+Added stdio MCP server belief-engine with command: npx tsx mcp/server.ts to local config
+File modified: /root/.claude.json [project: /home/user/BeliefEngine]
+
+$ claude mcp list   (this connects to every configured server and reports its health)
+Checking MCP server health…
+belief-engine: npx tsx mcp/server.ts - √ Connected
+
+$ claude mcp get belief-engine
+belief-engine:
+  Scope: Local config (private to you in this project)
+  Status: √ Connected
+  Type: stdio
+  Command: npx
+  Args: tsx mcp/server.ts
+  Environment:
+
+To remove this server, run: claude mcp remove belief-engine -s local
+
+$ cd <some other directory>   (not the repository)
+$ claude mcp add belief-engine-abs -- npm --prefix /home/user/BeliefEngine run --silent mcp
+Added stdio MCP server belief-engine-abs with command: npm --prefix /home/user/BeliefEngine run --silent mcp to local config
+File modified: /root/.claude.json [project: /tmp/claude-0/-home-user-BeliefEngine/12ac6d05-21be-590b-9a8a-92b123a45cbb/scratchpad/cli-check]
+$ claude mcp list
+belief-engine-abs: npm --prefix /home/user/BeliefEngine run --silent mcp - √ Connected
+$ claude mcp remove belief-engine-abs
+Removed MCP server belief-engine-abs from local config
+File modified: /root/.claude.json [project: /tmp/claude-0/-home-user-BeliefEngine/12ac6d05-21be-590b-9a8a-92b123a45cbb/scratchpad/cli-check]

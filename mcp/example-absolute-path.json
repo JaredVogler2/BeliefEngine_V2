@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "belief-engine": {
+      "command": "npm",
+      "args": ["--prefix", "/absolute/path/to/BeliefEngine", "run", "--silent", "mcp"]
+    }
+  }
+}

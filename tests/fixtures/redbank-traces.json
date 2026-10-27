@@ -1,0 +1,382 @@
+{
+ "scenarioId": "redbank",
+ "canonicalSeed": 1,
+ "fireWall": {
+  "seed": 1,
+  "result": "victory",
+  "alive": 13,
+  "homes": 11,
+  "food": 6,
+  "score": 722,
+  "lawsActivated": [
+   "river_fears_fire"
+  ],
+  "stateHash": "11ec6d73416e26",
+  "eventHash": "1786c582e48ec0",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "GATHER",
+    "claim": "river_fears_fire",
+    "site": "green_e"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "pip"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "tilly"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "pip",
+    "to": "nell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "river_fears_fire",
+    "against": "river_courts_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "tilly",
+    "to": "mara"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_s"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "witnessBridge": {
+  "seed": 1,
+  "result": "victory",
+  "alive": 14,
+  "homes": 6,
+  "food": 4,
+  "score": 820,
+  "lawsActivated": [
+   "bridge_stands_watched"
+  ],
+  "stateHash": "1fd91495f0ef6e",
+  "eventHash": "0067ab92df806f",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "bridge_stands_watched"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "keep_vigil",
+    "landmark": "br",
+    "claim": "bridge_stands_watched"
+   },
+   {
+    "type": "SEED",
+    "claim": "bridge_stands_watched",
+    "target": "ivo"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "bridge_stands_watched",
+    "against": "crowds_break_bridges",
+    "target": "hester"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "keep_vigil",
+    "landmark": "br",
+    "claim": "bridge_stands_watched"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "mara",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "elspeth",
+    "to": "nell"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "nell",
+    "to": "pip"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "nell",
+    "to": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "hester",
+    "to": "mara"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "aldous",
+    "to": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "mara",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "bridge_stands_watched",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "noop": {
+  "seed": 1,
+  "result": "defeat",
+  "alive": 10,
+  "homes": 6,
+  "food": 7,
+  "stateHash": "13bf62980eac01",
+  "eventHash": "19202cc7e371cb",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "failedAttempt": {
+  "seed": 2,
+  "policy": "fireWall",
+  "result": "defeat",
+  "alive": 14,
+  "stateHash": "04c4dd763956bc",
+  "eventHash": "093260344e1500",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "GATHER",
+    "claim": "river_fears_fire",
+    "site": "green_e"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "pip"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "mara"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "pip",
+    "to": "nell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "river_fears_fire",
+    "against": "river_courts_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "harl",
+    "to": "mara"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "tilly",
+    "to": "mara"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_s"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ }
+}

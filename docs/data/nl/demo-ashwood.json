@@ -1,0 +1,658 @@
+{
+ "village": "ashwood",
+ "seed": 1,
+ "results": [
+  {
+   "text": "The wolves flee the smoke of the hearths.",
+   "status": "ok",
+   "title": "Wolves fear smoke",
+   "structure": "wolf repel powered by smoke fire in ash, mill, north",
+   "composedOnDay": 1,
+   "activatedOnDay": 6,
+   "support": "79% (needed 65%), 5 firm believers (needed 3)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 0,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 60,
+    "people shielded from smoke harm (regions)": 0
+   },
+   "actions": 24,
+   "replay": {
+    "stateHash": "164b4a0ea37ae8",
+    "eventHash": "05859607d8dca3",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_016de0fb40",
+      "text": "The wolves flee the smoke of the hearths.",
+      "short": "Wolves fear smoke",
+      "icon": "wolf",
+      "spec": {
+       "id": "custom_016de0fb40",
+       "version": 1,
+       "subject": "wolf",
+       "effect": "repel",
+       "trigger": {
+        "kind": "smoke_fire"
+       },
+       "radius": 3,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.65,
+        "off": 0.5,
+        "minSupporters": 3,
+        "ramp": 45,
+        "decay": 31
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "smoke_sickness"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "wolf"
+       ]
+      },
+      "regions": [
+       "ash",
+       "mill",
+       "north"
+      ],
+      "ritual": "burn_smoke",
+      "contradicts": [],
+      "benefit": "Wolves will not step within 3 tiles of a powered smoke fire, so animals inside are safe.",
+      "risk": "Smoke lungs: people near the smoke grow ill",
+      "flavor": "The wolves flee the smoke of the hearths.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "The wolves flee the smoke of the hearths.",
+       "astHash": "016de0fb40ba2a",
+       "parser": "offline-lexicon-1",
+       "balance": 285772828,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "wolf",
+          "effect": "repel",
+          "trigger": "smoke_fire",
+          "radius": 3,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "ash",
+         "mill",
+         "north"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "custom_016de0fb40"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "custom_016de0fb40"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1",
+     "claim": "custom_016de0fb40"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a2",
+     "claim": "custom_016de0fb40"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m2",
+     "claim": "custom_016de0fb40"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "rook",
+     "to": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "garrick",
+     "to": "gorm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "gorm",
+     "to": "brann"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "brann",
+     "to": "edda"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "edda",
+     "to": "tam"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "rook",
+     "to": "brann"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "maren",
+     "to": "cobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "bess",
+     "to": "hale"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "rook",
+     "to": "garrick"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_016de0fb40",
+     "from": "hale",
+     "to": "garrick"
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_016de0fb40",
+     "site": "market"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "Sickness flees the open doors.",
+   "status": "partial",
+   "title": "Sickness flees",
+   "structure": "illness repel powered by always in ash, mill, north",
+   "composedOnDay": 1,
+   "activatedOnDay": null,
+   "support": "never woke; at the end 59% (needed 60%), 3 firm believers (needed 3)",
+   "physical": {},
+   "actions": 34,
+   "replay": {
+    "stateHash": "17535b5bdc6d8d",
+    "eventHash": "0b7d53a5c5a091",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_1e865e4b37",
+      "text": "Sickness flees the open doors.",
+      "short": "Sickness flees",
+      "icon": "skull",
+      "spec": {
+       "id": "custom_1e865e4b37",
+       "version": 1,
+       "subject": "illness",
+       "effect": "repel",
+       "trigger": {
+        "kind": "always"
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 3,
+        "ramp": 59,
+        "decay": 24
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "cold"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "illness"
+       ]
+      },
+      "regions": [
+       "ash",
+       "mill",
+       "north"
+      ],
+      "contradicts": [],
+      "benefit": "People in Ashfold and Millbrook and Northwatch take 50% less harm from smoke.",
+      "risk": "Cold drafts: open doors let in the cold; the weak lose health",
+      "flavor": "Sickness flees the open doors.",
+      "startsAvailable": true,
+      "unlockDay": 3,
+      "custom": {
+       "text": "Sickness flees the open doors.",
+       "astHash": "1e865e4b3723e1",
+       "parser": "offline-lexicon-1",
+       "balance": 497140361,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "illness",
+          "effect": "repel",
+          "trigger": "always",
+          "radius": 0,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "ash",
+         "mill",
+         "north"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "GATHER",
+     "claim": "custom_1e865e4b37",
+     "site": "market"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "tam"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "linnet"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "pia"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "brann"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "linnet"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "tam"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "tam",
+     "to": "brann"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "linnet",
+     "to": "hale"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "tam",
+     "to": "edda"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "edda",
+     "to": "tam"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_1e865e4b37",
+     "target": "pia"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "edda",
+     "to": "brann"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "linnet",
+     "to": "hale"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "hale",
+     "to": "bess"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "pia",
+     "to": "bess"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "rook",
+     "to": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "linnet",
+     "to": "rook"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "tam",
+     "to": "edda"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "edda",
+     "to": "gorm"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "rook",
+     "to": "maren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "linnet",
+     "to": "maren"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "maren",
+     "to": "cobb"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_1e865e4b37",
+     "from": "hale",
+     "to": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  },
+  {
+   "text": "Sickness shuns smoke fires.",
+   "status": "ok",
+   "title": "Smoke shuns sickness",
+   "structure": "illness repel powered by smoke fire in ash, mill, north",
+   "composedOnDay": 1,
+   "activatedOnDay": 4,
+   "support": "69% (needed 60%), 5 firm believers (needed 3)",
+   "physical": {
+    "ground raised against floodwater (tiles)": 0,
+    "bridge damage cut": "0%",
+    "crop growth boost (% per night)": 0,
+    "river drawn off (steps)": 0,
+    "rain added to fields (steps)": 0,
+    "ground wolves will not enter (tiles)": 0,
+    "people shielded from smoke harm (regions)": 3
+   },
+   "actions": 16,
+   "replay": {
+    "stateHash": "17b64137ce700e",
+    "eventHash": "0953b9e64f6ea0",
+    "identical": true,
+    "rejected": 0
+   },
+   "log": [
+    {
+     "type": "PICK_STARTER",
+     "claim": "wolves_fear_smoke"
+    },
+    {
+     "type": "COMPOSE",
+     "claim": {
+      "id": "custom_06c5c3e239",
+      "text": "Sickness shuns smoke fires.",
+      "short": "Smoke shuns sickness",
+      "icon": "skull",
+      "spec": {
+       "id": "custom_06c5c3e239",
+       "version": 1,
+       "subject": "illness",
+       "effect": "repel",
+       "trigger": {
+        "kind": "smoke_fire"
+       },
+       "radius": 0,
+       "intensity": 2,
+       "thresholds": {
+        "on": 0.6,
+        "off": 0.45,
+        "minSupporters": 3,
+        "ramp": 64,
+        "decay": 22
+       },
+       "upkeep": {
+        "fuel": 0
+       },
+       "side": [
+        "smoke_sickness",
+        "cold"
+       ],
+       "tags": [
+        "custom",
+        "inventor",
+        "illness"
+       ]
+      },
+      "regions": [
+       "ash",
+       "mill",
+       "north"
+      ],
+      "ritual": "burn_smoke",
+      "contradicts": [],
+      "benefit": "People in Ashfold and Millbrook and Northwatch take 50% less harm from smoke.",
+      "risk": "Smoke lungs: people near the smoke grow ill Cold drafts: open doors let in the cold; the weak lose health",
+      "flavor": "Sickness shuns smoke fires.",
+      "startsAvailable": true,
+      "custom": {
+       "text": "Sickness shuns smoke fires.",
+       "astHash": "06c5c3e2398344",
+       "parser": "offline-lexicon-1",
+       "balance": 148523401,
+       "ast": {
+        "version": 1,
+        "clauses": [
+         {
+          "subject": "illness",
+          "effect": "repel",
+          "trigger": "smoke_fire",
+          "radius": 0,
+          "intensity": 2
+         }
+        ],
+        "regions": [
+         "ash",
+         "mill",
+         "north"
+        ]
+       },
+       "source": "offline",
+       "nl": 1
+      }
+     }
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m1",
+     "claim": "custom_06c5c3e239"
+    },
+    {
+     "type": "SEED",
+     "claim": "custom_06c5c3e239",
+     "target": "linnet"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n1",
+     "claim": "custom_06c5c3e239"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_a1",
+     "claim": "custom_06c5c3e239"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_m2",
+     "claim": "custom_06c5c3e239"
+    },
+    {
+     "type": "RITUAL",
+     "ritual": "burn_smoke",
+     "landmark": "c_n2",
+     "claim": "custom_06c5c3e239"
+    },
+    {
+     "type": "END_DAY"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_06c5c3e239",
+     "from": "rook",
+     "to": "linnet"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_06c5c3e239",
+     "from": "garrick",
+     "to": "gorm"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_06c5c3e239",
+     "from": "linnet",
+     "to": "rook"
+    },
+    {
+     "type": "MESSENGER",
+     "claim": "custom_06c5c3e239",
+     "from": "edda",
+     "to": "brann"
+    },
+    {
+     "type": "END_DAY"
+    }
+   ]
+  }
+ ]
+}

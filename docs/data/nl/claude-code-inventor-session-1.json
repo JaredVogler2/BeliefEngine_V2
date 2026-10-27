@@ -1,0 +1,192 @@
+{
+ "note": "Accepted actions of real Claude Code session 1 (Redbank, Inventor). Recorded before the balance formula was recalibrated: at the commit that recorded it the replay was identical (state 082ec1a52fce54); at later commits it is not (see the .md).",
+ "runId": "r_b31b201da765d46eb629aceb9f361bf4",
+ "options": {
+  "scenarioId": "redbank",
+  "seed": 3,
+  "difficulty": "normal",
+  "mode": "story",
+  "inventor": true
+ },
+ "actions": [
+  {
+   "type": "PICK_STARTER",
+   "claim": "river_fears_fire"
+  },
+  {
+   "type": "COMPOSE",
+   "claim": {
+    "id": "custom_1c46657e0d",
+    "text": "The river turns aside from ringing bells.",
+    "short": "Bells push back the river",
+    "icon": "flame",
+    "spec": {
+     "id": "custom_1c46657e0d",
+     "version": 1,
+     "subject": "river",
+     "effect": "repel",
+     "trigger": {
+      "kind": "bell"
+     },
+     "radius": 2,
+     "intensity": 2,
+     "thresholds": {
+      "on": 0.55,
+      "off": 0.4,
+      "minSupporters": 3,
+      "ramp": 62,
+      "decay": 25
+     },
+     "upkeep": {
+      "fuel": 0
+     },
+     "side": [
+      "rain_displace"
+     ],
+     "tags": [
+      "custom",
+      "inventor",
+      "river"
+     ]
+    },
+    "regions": [
+     "west"
+    ],
+    "ritual": "ring_bells",
+    "contradicts": [],
+    "benefit": "While Westbank believes it, each powered ringing bell raises the ground by up to 2 within 2 tiles, so floodwater stays out of that ground.",
+    "risk": "Displaced rain: the water you push away pools elsewhere",
+    "flavor": "The river turns aside from ringing bells.",
+    "startsAvailable": true,
+    "custom": {
+     "text": "The river turns aside from ringing bells.",
+     "astHash": "1c46657e0da83f",
+     "parser": "offline-lexicon-1",
+     "balance": 24314739,
+     "ast": {
+      "version": 1,
+      "clauses": [
+       {
+        "subject": "river",
+        "effect": "repel",
+        "trigger": "bell",
+        "radius": 2,
+        "intensity": 2
+       }
+      ],
+      "regions": [
+       "west"
+      ]
+     },
+     "source": "offline",
+     "nl": 1
+    }
+   }
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1c46657e0d",
+   "target": "aldous"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1c46657e0d",
+   "target": "hester"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1c46657e0d",
+   "target": "cass"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1c46657e0d",
+   "target": "elspeth"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "light_beacon",
+   "landmark": "b_e",
+   "claim": "river_fears_fire"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1c46657e0d",
+   "target": "osric"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "bram"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "dunn"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "harl"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "light_beacon",
+   "landmark": "b_e",
+   "claim": "river_fears_fire"
+  },
+  {
+   "type": "COUNTER",
+   "claim": "river_fears_fire",
+   "against": "river_courts_fire",
+   "target": "ivo"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "light_beacon",
+   "landmark": "b_c"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "light_beacon",
+   "landmark": "b_s"
+  },
+  {
+   "type": "SEED",
+   "claim": "river_fears_fire",
+   "target": "wren"
+  },
+  {
+   "type": "END_DAY"
+  },
+  {
+   "type": "RITUAL",
+   "ritual": "ring_bells",
+   "landmark": "bell",
+   "claim": "custom_1c46657e0d"
+  },
+  {
+   "type": "SEED",
+   "claim": "custom_1c46657e0d",
+   "target": "osric"
+  },
+  {
+   "type": "END_DAY"
+  }
+ ]
+}

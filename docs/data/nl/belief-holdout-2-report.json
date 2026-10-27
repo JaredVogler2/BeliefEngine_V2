@@ -1,0 +1,81 @@
+{
+ "file": "tests/fixtures/belief-holdout-2.json",
+ "summary": {
+  "total": 36,
+  "passed": 31,
+  "byCategory": {
+   "natural": {
+    "n": 18,
+    "pass": 14
+   },
+   "compound": {
+    "n": 2,
+    "pass": 1
+   },
+   "refuse": {
+    "n": 8,
+    "pass": 8
+   },
+   "injection": {
+    "n": 4,
+    "pass": 4
+   },
+   "mismatch": {
+    "n": 4,
+    "pass": 4
+   }
+  },
+  "answerPrecision": {
+   "answered": 14,
+   "correct": 13,
+   "of": 18
+  },
+  "abstentionCorrect": {
+   "correct": 12,
+   "of": 12
+  },
+  "wrongReadings": 1
+ },
+ "failures": [
+  {
+   "category": "natural",
+   "village": "redbank",
+   "text": "Any house with a lantern burning outside stays dry when the water rises.",
+   "expected": "ok",
+   "got": "unsupported",
+   "why": "expected river.repel.lit_beacon as the single reading"
+  },
+  {
+   "category": "natural",
+   "village": "redbank",
+   "text": "Rainwater is steered away whenever the bells toll.",
+   "expected": "ok",
+   "got": "unsupported",
+   "why": "expected rain.redirect.bell as the single reading"
+  },
+  {
+   "category": "natural",
+   "village": "redbank",
+   "text": "No spark can harm a house in this village.",
+   "expected": "ok",
+   "got": "unsupported",
+   "why": "expected fire.weaken.always as the single reading"
+  },
+  {
+   "category": "natural",
+   "village": "harvest",
+   "text": "Anything planted at midnight rots in the ground.",
+   "expected": "ok",
+   "got": "unsupported",
+   "why": "expected grain.weaken.night as the single reading"
+  },
+  {
+   "category": "compound",
+   "village": "ashwood",
+   "text": "The wolves flee the hearth smoke while fevers fade at open doors.",
+   "expected": "ambiguous",
+   "got": "ambiguous: wolf.repel.smoke_fire | illness.repel.smoke_fire",
+   "why": "expected illness.weaken.always+wolf.repel.smoke_fire or illness.repel.always+wolf.repel.smoke_fire among the readings"
+  }
+ ]
+}

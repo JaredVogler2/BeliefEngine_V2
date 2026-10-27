@@ -1,0 +1,173 @@
+{
+ "seeds": 40,
+ "results": {
+  "firstNight": {
+   "redbank": {
+    "runs": 40,
+    "digestHasNoLines": 40,
+    "sharePct": 100,
+    "nightsWhereSomeoneChangedTheirMind_oldTutorialTarget": 40,
+    "nightsWhereSomeoneChangedTheirMind_newTutorialTarget": 40,
+    "nightsWhereTheReportNamesTheStoryOrWhyItStalled": 40
+   },
+   "harvest": {
+    "runs": 40,
+    "digestHasNoLines": 40,
+    "sharePct": 100,
+    "nightsWhereSomeoneChangedTheirMind_oldTutorialTarget": 0,
+    "nightsWhereSomeoneChangedTheirMind_newTutorialTarget": 38,
+    "nightsWhereTheReportNamesTheStoryOrWhyItStalled": 40
+   },
+   "ashwood": {
+    "runs": 40,
+    "digestHasNoLines": 40,
+    "sharePct": 100,
+    "nightsWhereSomeoneChangedTheirMind_oldTutorialTarget": 37,
+    "nightsWhereSomeoneChangedTheirMind_newTutorialTarget": 37,
+    "nightsWhereTheReportNamesTheStoryOrWhyItStalled": 40
+   },
+   "expedition": {
+    "runs": 40,
+    "digestHasNoLines": 40,
+    "sharePct": 100,
+    "nightsWhereSomeoneChangedTheirMind_oldTutorialTarget": 32,
+    "nightsWhereSomeoneChangedTheirMind_newTutorialTarget": 35,
+    "nightsWhereTheReportNamesTheStoryOrWhyItStalled": 40
+   }
+  },
+  "boredPlayer": {
+   "redbank": {
+    "winningRunsAnalysed": 49,
+    "medianLongestQuietStreakDays": 0,
+    "maxQuietStreakDays": 1,
+    "meanShareOfQuietDays": 0.06,
+    "medianFirstDramaticDay": 1,
+    "medianFirstLawDay": 5,
+    "medianFirstLawAwakeningOrActivationDay": 4,
+    "medianFirstProofStagedDay": 3,
+    "runsWithoutAnyProofStaged": 0,
+    "meanShareOfDaysWithNoInfluenceSpent": 0.17,
+    "meanShareOfActionsThatAreTheSingleMostCommonMove": 0.46,
+    "medianRunLengthDays": 7
+   },
+   "harvest": {
+    "winningRunsAnalysed": 20,
+    "medianLongestQuietStreakDays": 0,
+    "maxQuietStreakDays": 1,
+    "meanShareOfQuietDays": 0.05,
+    "medianFirstDramaticDay": 1,
+    "medianFirstLawDay": 6,
+    "medianFirstLawAwakeningOrActivationDay": 5,
+    "medianFirstProofStagedDay": 1,
+    "runsWithoutAnyProofStaged": 0,
+    "meanShareOfDaysWithNoInfluenceSpent": 0.2,
+    "meanShareOfActionsThatAreTheSingleMostCommonMove": 0.4,
+    "medianRunLengthDays": 9
+   },
+   "ashwood": {
+    "winningRunsAnalysed": 13,
+    "medianLongestQuietStreakDays": 0,
+    "maxQuietStreakDays": 0,
+    "meanShareOfQuietDays": 0,
+    "medianFirstDramaticDay": 1,
+    "medianFirstLawDay": 5,
+    "medianFirstLawAwakeningOrActivationDay": 4,
+    "medianFirstProofStagedDay": 1,
+    "runsWithoutAnyProofStaged": 0,
+    "meanShareOfDaysWithNoInfluenceSpent": 0.08,
+    "meanShareOfActionsThatAreTheSingleMostCommonMove": 0.45,
+    "medianRunLengthDays": 8
+   },
+   "expedition": {
+    "winningRunsAnalysed": 33,
+    "medianLongestQuietStreakDays": 1,
+    "maxQuietStreakDays": 2,
+    "meanShareOfQuietDays": 0.12,
+    "medianFirstDramaticDay": 1,
+    "medianFirstLawDay": 5,
+    "medianFirstLawAwakeningOrActivationDay": 4,
+    "medianFirstProofStagedDay": 1,
+    "runsWithoutAnyProofStaged": 0,
+    "meanShareOfDaysWithNoInfluenceSpent": 0.31,
+    "meanShareOfActionsThatAreTheSingleMostCommonMove": 0.49,
+    "medianRunLengthDays": 9
+   }
+  },
+  "centrality": {
+   "note": "Total conviction in the Keeper's story across the whole village after one Tell and one night, by the target's influence rank (Redbank, river_fears_fire; every villager tried as the target on 40 seeds)",
+   "top3": {
+    "telling": 120,
+    "meanTotalConviction": 28.49
+   },
+   "middle": {
+    "telling": 320,
+    "meanTotalConviction": 17.86
+   },
+   "bottom3": {
+    "telling": 120,
+    "meanTotalConviction": 24.82
+   }
+  },
+  "generatedVariety": {
+   "river": {
+    "verified": 273,
+    "distinctWinnerSets": 7,
+    "mostCommon": [
+     "witness-bridge (121)",
+     "bell-ringer+witness-bridge (44)",
+     "fire-wall+witness-bridge (41)"
+    ],
+    "shareOfVillagesWithOnlyOneWinningPlan": 57.5,
+    "pairsSharingAWinningPlanPct": 78.5
+   },
+   "drought": {
+    "verified": 328,
+    "distinctWinnerSets": 3,
+    "mostCommon": [
+     "caravans+moonlight (269)",
+     "caravans (53)",
+     "moonlight (6)"
+    ],
+    "shareOfVillagesWithOnlyOneWinningPlan": 18,
+    "pairsSharingAWinningPlanPct": 99.5
+   },
+   "wolves": {
+    "verified": 252,
+    "distinctWinnerSets": 3,
+    "mostCommon": [
+     "decoy+smoke-ring (133)",
+     "smoke-ring (75)",
+     "decoy (44)"
+    ],
+    "shareOfVillagesWithOnlyOneWinningPlan": 47.2,
+    "pairsSharingAWinningPlanPct": 89.6
+   }
+  },
+  "lossDebrief": {
+   "redbank": {
+    "idleLosses": 40,
+    "debriefNamesWhoDied": 40,
+    "debriefOffersOnlyAGenericRetryLine": 0,
+    "meanStoryChains": 1
+   },
+   "harvest": {
+    "idleLosses": 40,
+    "debriefNamesWhoDied": 0,
+    "debriefOffersOnlyAGenericRetryLine": 0,
+    "meanStoryChains": 0
+   },
+   "ashwood": {
+    "idleLosses": 40,
+    "debriefNamesWhoDied": 0,
+    "debriefOffersOnlyAGenericRetryLine": 0,
+    "meanStoryChains": 1
+   },
+   "expedition": {
+    "idleLosses": 40,
+    "debriefNamesWhoDied": 20,
+    "debriefOffersOnlyAGenericRetryLine": 0,
+    "meanStoryChains": 1
+   }
+  }
+ }
+}
