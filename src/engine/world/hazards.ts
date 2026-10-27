@@ -91,7 +91,7 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
   // ---- bridge
   const bridge = w.landmarks.find((l) => l.kind === 'bridge' && l.hp > 0);
   if (bridge && floodActive && s.scn.features.bridge) {
-    const raw = Math.max(0, L - 1) * (s.scn.consts.dmgBridge ?? 11);
+    const raw = Math.max(0, L - 1 - (mods.bridgeFlow ?? 0)) * (s.scn.consts.dmgBridge ?? 11);
     const watched = (bridge.data.watchers ?? 0) > 0 ? mods.bridgeShield : 0;
     const dmg = mods.bridgeHardness === undefined ? Math.round(raw * (1 - watched)) : Math.round(raw * (1 - watched) * (1 - mods.bridgeHardness));
     const saved = raw - dmg;

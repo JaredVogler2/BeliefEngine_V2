@@ -747,7 +747,7 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       }
       if (d.problem === 'no_mechanic' || d.problem === 'no_target') addReason('no_mechanic', wordsOf(d.senseM));
     }
-    if (!reasons.some((r) => blockIds.has(r.id) || r.id === 'instruction')) addReason('no_mechanic', kindsSeen.map((m) => wordsOf(m)).join(', ') || text.slice(0, 60));
+    if (!reasons.some((r) => blockIds.has(r.id) || r.id === 'instruction' || r.id === 'not_here')) addReason('no_mechanic', kindsSeen.map((m) => wordsOf(m)).join(', ') || text.slice(0, 60));
     const order = [...reasons.filter((r) => blockIds.has(r.id) && r.id !== 'no_mechanic'), ...reasons.filter((r) => r.id === 'no_mechanic'), ...reasons.filter((r) => !blockIds.has(r.id))];
     // alternatives only where they are honestly related: never for "nothing changes", a contradiction or a forbidden concept
     const honest = !hardBlock && !reasons.some((r) => r.id === 'no_change' || r.id === 'instruction');
@@ -805,6 +805,11 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
         break;
       }
     }
+  // a reading this village cannot hold anywhere (nobody here works fields; no wolves to hide from) is not offered as understood
+  if (!cand.build.ok) {
+    addReason('not_here', use.map((c) => wordsOf(c.d.senseM)).join(', '), (cand.build.issues[0] ?? cand.build.message).replace(/^clause \d+: /, ''));
+    return unsupported();
+  }
   const leftOut = reasons.filter((r) => r.id !== 'narrative');
   if (leftOut.length) return { ...base, kind: 'partial', candidates: [cand], reasons: dedupe(leftOut) };
   return { ...base, kind: 'supported', candidates: [cand] };

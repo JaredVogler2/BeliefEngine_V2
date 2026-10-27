@@ -201,6 +201,13 @@ export function realityDawn(ctx: Ctx, plan: RealityPlan): void {
     }
     if (hatched) emit(ctx, { step: 'dawn', code: 'CHICKS_HATCHED', importance: 1, tile: [coop.x, coop.y], text: `${hatched} chick${hatched === 1 ? '' : 's'} hatched at ${coopId} (${hatched} food spent).` });
   }
+  for (const [fid, n] of Object.entries(plan.intents.yield).sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    const f = w.landmarks.find((l) => l.id === fid && l.kind === 'field' && !l.data.ruined);
+    if (!f || n <= 0) continue;
+    w.stocks.food = (w.stocks.food ?? 0) + n;
+    const by = plan.intents.by[fid];
+    emit(ctx, { step: 'dawn', code: 'FIELD_TENDED', importance: 1, tile: [f.x, f.y], ...(by ? { law: by.law, claim: by.claim } : {}), text: `Tireless hands bring in ${n} more food from ${f.name}.` });
+  }
   const bridgeUp = w.landmarks.some((l) => l.kind === 'bridge' && l.hp > 0);
   let home = 0;
   for (const c of v2.chickens) {

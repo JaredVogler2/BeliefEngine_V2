@@ -90,6 +90,7 @@ export function groundAst(s: RunState, ast: RealityAst): Grounding {
     if ((e.op === 'GROW_ENTITY' || e.op === 'DECAY_ENTITY') && !s.scn.features.crops) issues.push(`${at}the fields here are not grown night by night, so nothing would change`);
     if ((e.op === 'ALTER_TEMPERATURE' || (e.op === 'MODIFY_MOVEMENT' && c.target.kind === 'fire')) && !s.scn.features.fire) issues.push(`${at}fire does not spread in this village, so nothing would change`);
     if (e.op === 'MODIFY_VISIBILITY' && !s.scn.features.wolves) issues.push(`${at}there are no wolves here to hide anything from`);
+    if (e.op === 'INFLUENCE_MOTIVATION' && e.motive === 'diligence' && !kinds.has('field')) issues.push(`${at}nobody here works the fields, so working without tiring would change nothing`);
     if ((e.op === 'REDIRECT_FLOW' || ((e.op === 'MOVE_AWAY' || e.op === 'MOVE_TOWARD') && c.target.kind !== 'chicken')) && !events.some((x) => POSITIONAL.includes(x)) && !c.target.near)
       issues.push(`${at}moving water or wolves needs a place to act from: a lantern, a bell, a fire, the bridge, or "near" something`);
     if ((e.op === 'WEATHER_MODIFIER' && e.toward && !regionIds.has(e.toward)) || (e.op === 'RELOCATE_RESOURCE' && !regionIds.has(e.toward))) issues.push(`${at}there is no region to send the water to by that name`);
@@ -104,6 +105,8 @@ export function groundAst(s: RunState, ast: RealityAst): Grounding {
       if (c.target.kind === 'stone' && !v2.stones.some((x) => x.state === 'loose' && regionAt(s.world, x.x, x.y) === r)) none('loose stones');
       if (c.target.kind === 'livestock' && !s.world.landmarks.some((l) => l.kind === 'pen' && l.district === r)) none('pens');
       if (c.target.kind === 'field' && !s.world.landmarks.some((l) => l.kind === 'field' && l.district === r)) none('fields');
+      if (e.op === 'INFLUENCE_MOTIVATION' && e.motive === 'diligence' && !s.villagers.some((v) => v.status !== 'dead' && v.district === r && s.world.landmarks.some((l) => l.id === v.workId && l.kind === 'field')))
+        none('field workers');
     }
     if (c.target.kind === 'stone' && v2.stones.filter((x) => x.state === 'loose').length === 0) notes.push(`${at}no loose stones are left`);
     if (conditionTests(c.where).includes('blue') && !s.villagers.some((v) => v.status !== 'dead' && v.look.hue >= 190 && v.look.hue <= 260)) notes.push(`${at}nobody here wears blue right now`);

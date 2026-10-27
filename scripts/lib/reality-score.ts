@@ -1,7 +1,10 @@
 import type { RunState } from '../../src/engine/core/types.ts';
+import { interpretBelief } from '../../src/engine/nl/interpret.ts';
 import { triggerEvents } from '../../src/engine/reality/ast.ts';
+import { buildRealityClaim } from '../../src/engine/reality/build.ts';
 import { READER_ID } from '../../src/engine/reality/lexicon.ts';
 import { readBelief, type ReadCandidate, type Reading } from '../../src/engine/reality/read.ts';
+import { astFromV1 } from '../../src/engine/reality/v1.ts';
 
 /** Scoring of a reader against the labelled corpus; shared by `npm run reality:corpus` and the unit test that keeps its floors. */
 
@@ -39,7 +42,25 @@ export function candidatesOf(r: Reading): ReadCandidate[] {
   return r.kind === 'supported' || r.kind === 'partial' ? r.candidates : r.kind === 'ambiguous' ? r.choices : [];
 }
 
-export function scoreCorpus(cases: CorpusCase[], stateFor: (scenario: string) => RunState, read: (s: RunState, text: string) => Reading = (s, t) => readBelief(s, t)) {
+/**
+ * The baseline: V1's offline composer (`nl/interpret.ts`) on the same sentence, each of its claims carried into AST v2 by
+ * `astFromV1` and built by the v2 engine. Its refusals carry V1's message, not a v2 reason id, so "reason named" does not apply.
+ */
+export function v1Reading(s: RunState, text: string): Reading {
+  const it = interpretBelief(s, text);
+  const candidates: ReadCandidate[] = it.drafts.flatMap((d) => {
+    const t = astFromV1(d.claim);
+    return t ? [{ ast: t.ast, map: [], confidence: 'medium' as const, assumed: [], build: buildRealityClaim(s, t.ast) }] : [];
+  });
+  const base = { text: it.text, reader: it.parser, notes: [] };
+  const why = [{ id: 'v1', words: '', why: it.message }];
+  if (!candidates.length || it.status === 'unsupported' || it.status === 'rejected') return { ...base, kind: 'unsupported', reasons: why, alternatives: [] };
+  if (it.status === 'ambiguous') return { ...base, kind: 'ambiguous', question: it.message, choices: candidates.slice(0, 2) };
+  if (it.status === 'partial') return { ...base, kind: 'partial', candidates: candidates.slice(0, 1), reasons: why };
+  return { ...base, kind: 'supported', candidates: candidates.slice(0, 1) };
+}
+
+export function scoreCorpus(cases: CorpusCase[], stateFor: (scenario: string) => RunState, read: (s: RunState, text: string) => Reading = (s, t) => readBelief(s, t), readerId = READER_ID) {
   const out: CaseResult[] = [];
   const m = { labelOk: 0, supported: 0, faithful: 0, unsupported: 0, abstained: 0, reasonOk: 0, hallucinated: 0, partial: 0, partialNamed: 0, ambiguous: 0, ambiguousOk: 0, compound: 0, clausesKept: 0, injection: 0, injectionObeyed: 0, readings: 0, grounded: 0 };
   const byCategory: Record<string, { n: number; ok: number }> = {};
@@ -104,5 +125,5 @@ export function scoreCorpus(cases: CorpusCase[], stateFor: (scenario: string) =>
     b.n++;
     if (ok) b.ok++;
   }
-  return { reader: READER_ID, cases: out, metrics: m, byCategory };
+  return { reader: readerId, cases: out, metrics: m, byCategory };
 }

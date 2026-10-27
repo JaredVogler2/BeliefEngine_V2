@@ -9,7 +9,7 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 02 Migration and baseline | **VERIFIED** | [`MIGRATION.md`](MIGRATION.md), [`BASELINE.md`](BASELINE.md), `tests/unit/v2-migration.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
 | 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
 | 04 Generative belief language | **VERIFIED (gate: typed, validated, deterministic, V1-compatible, three novel executable claims, property tests); the interactive preview UI arrives with phase 05's composer** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md), `tests/unit/reality-language.test.ts`, `tests/unit/reality-properties.test.ts`, `tests/fixtures/reality-corpus-1.json` |
-| 05 Interpreter and compiler | **IN PROGRESS: offline reader v2, `interpret v2` contract (TESTED MOCK ONLY), composer UI and Generative Reality runs built and tested; LIVE UNVERIFIED; the offline reader generalises only partly (second held-out corpus, scored untuned: 51/80 labels, 13/30 supported read faithfully)** | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
+| 05 Interpreter and compiler | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider configured: model accuracy, latency and token cost not measured). On sentences neither reader was tuned on, the offline reader v2 reads 13/30 supported sentences faithfully against V1's 3/30 (labels 51/80 against 34/80); it refuses rather than invents (1 invented effect in 32 impossible sentences, 0/7 injections obeyed); written beliefs become executable rules that change the world (integration test, two villages) | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
 | 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
 | 07-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
@@ -18,7 +18,7 @@ Live model calls so far: **none**. Inference spend so far: **0**. Deployments: *
 
 ---
 
-## 2026-10-27 — Phase 05 (in progress): reading any sentence, the model contract and the composer
+## 2026-10-27 — Phase 05: reading any sentence, the model contract and the composer (VERIFIED offline and with mocks; LIVE UNVERIFIED)
 
 **What was done**
 
@@ -36,6 +36,20 @@ Live model calls so far: **none**. Inference spend so far: **0**. Deployments: *
   a **Generative Reality** tab on the mode screen (chapters, or Reality Lab, unranked); `V2_FEATURES.generativeReality` on.
 - Language and engine fixes found on the way: see the phase 05 checkpoint commit; the preview sentences now agree in number and name
   regions ("rain in The Redbank is called onto Eastbank").
+- **Integration test** (`tests/unit/reality-integration.test.ts`): three sentences written for the test (in no corpus) per village,
+  in Redbank and Harvest, read offline, written through `COMPOSE`, believed (white-box social shortcut) and played 7 nights against a
+  control on the same seed. Each reads as a different mechanic and leaves a different, measured world: hens rise and more of the
+  flock lives; rain called onto Eastbank pools there and more homes stand; the river turned from the bridge leaves the bridge
+  standing where the control's collapses; wheat ripens and is harvested that the control never ripens; rain called onto the valley
+  keeps its fields from parching; tireless farmhands add a little growth (less than the wheat belief) and no water. Eight distinct
+  state hashes.
+- What that test found and fixed: (1) water a belief turned from the bridge never reached the bridge (bank shields skip river tiles;
+  the stamp was also centred on the bell tower, not the bridge the sentence named): positional effects now measure from the named
+  landmark, and a new optional `bridgeFlow` modifier changes the river level the bridge takes (V1 arithmetic unchanged when absent);
+  (2) "work without tiring" logged an effect but changed nothing unless a moonlight law was draining workers: diligence now makes the
+  fields its believers work give a little more, says when it found nothing it could change, and is refused where nobody works
+  fields; (3) the reader offered readings the village could not hold as "understood": it now refuses them with the reason
+  (`not_here`); one in-sample label that expected such a reading was corrected; (4) logs named "the source" instead of the place.
 
 **Corpus results.** In-sample (`reality-corpus-1`, the reader was tuned on it): 172/172 labels. **First held-out**
 (`reality-corpus-holdout-1`, 80 sentences written by a separate agent that never saw the reader, its lexicon or the in-sample corpus;
@@ -54,15 +68,27 @@ instructions obeyed **0/7**; readings that build in their village 29/31. This is
 generalisation: better than the first measurement, still well short of reliable comprehension. It is honest about what it cannot do
 (it refuses rather than invents) far more often than it understands an unfamiliar phrasing.
 
+**Against V1** (the gate's "parsed more broadly than V1"): V1's offline composer (`nl/interpret.ts`), its claims carried into AST v2
+by `astFromV1`, scored by the same scorer on the same sentences (`npm run reality:corpus -- --holdout2 --v1`): labels **34/80**,
+supported sentences read faithfully **3/30**, invented effects 1/32, injections obeyed 0/7 (V1 names no v2 reason ids, so "reason
+named" does not apply). The v2 reader reads four times as many unfamiliar sentences faithfully, mostly because V1's vocabulary has
+no chickens, stones, light, temperature, motivation or status at all. A unit test keeps v2 above three times V1 on this corpus.
+
+**Gate.** Novel sentences are read more broadly than V1 (above); unsupported meaning is acknowledged with the reason (holdout-2:
+28/32 refused, 1 invented effect; every reading the reader offers now builds in its village); validated ASTs become executable
+rules that change the world (integration test). "Actual model-provider evidence where configured": no provider is configured, so
+the LIVE column is UNVERIFIED, not failed. Model accuracy, latency and token cost are **not measured**.
+
 **Commands and results**
 
 | Command | Result |
 |---|---|
 | `npm run typecheck`, `npm run lint` | pass |
-| `BE_REQUIRE_REDIS=1 npm test` | 40 files, **459 passed** |
+| `BE_REQUIRE_REDIS=1 npm test` | 41 files, **475 passed** |
+| `npx vitest run tests/unit/reality-integration.test.ts` | 10 passed (two villages × three new sentences, each against a control) |
 | `npx vitest run tests/unit/ai-interpret-v2.test.ts tests/unit/ai-reality-client.test.ts` | 12 passed (schema, provenance, invented keys and numbers, fidelity, region move, refusals, timeout, shared allowance, cache poisoning) |
 | `npm run reality:corpus` / `-- --holdout` / `-- --holdout2` | the tables above |
-| `npm run build`, `npm run size` | entry 253 KB gzip (budget 260), reality composer chunk 19 KB (budget 40), 3D chunk 193 KB |
+| `npm run build`, `npm run size` | entry 254 KB gzip (budget 260), reality composer chunk 23 KB (budget 40), 3D chunk 193 KB |
 | `npx playwright test tests/e2e/{v2-online,inventor,v2-reality,modes}.spec.ts --project=desktop --project=phone` | **42 passed, 6 skipped** (skips are desktop-only or phone-only by design) |
 
 **Mock vs LIVE:** every `interpret v2` test used a scripted provider or the offline reader as a stand-in: **TESTED MOCK ONLY**. No

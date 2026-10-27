@@ -4,8 +4,8 @@ import type { ClaimDef, LawState, RunState } from '../core/types.ts';
 import { stampShield, type Modifiers, type Source } from '../laws/effects.ts';
 import { activeLaws } from '../laws/resolver.ts';
 import { cheb, idx, regionAt } from '../world/grid.ts';
-import type { Clause, CondTest, Condition, Selector, Trigger } from './ast.ts';
-import { KINDS, type TargetKind } from './ontology.ts';
+import { triggerEvents, type Clause, type CondTest, type Condition, type Selector, type Trigger } from './ast.ts';
+import { ANCHOR_LABEL, KINDS, type TargetKind } from './ontology.ts';
 import { OPERATORS, type OpId } from './operators.ts';
 import type { AppliedEffect } from './state.ts';
 
@@ -35,6 +35,8 @@ export interface EntityIntents {
   fear: Record<string, number>;
   /** coop id → chicks to hatch at dawn */
   hatch: Record<string, number>;
+  /** field id → extra food its tireless workers bring in at dawn (villages whose crops are not grown night by night) */
+  yield: Record<string, number>;
   /** beacons burning double fuel tonight */
   extraFuel: string[];
   /** which law and clause produced each entity intent (for credit and the debrief) */
@@ -69,6 +71,7 @@ const COMBINE: Record<string, { mode: 'max' | 'sum'; lo: number; hi: number; int
   cold: { mode: 'sum', lo: -10, hi: 10, int: true },
   labor: { mode: 'sum', lo: -60, hi: 60, int: true },
   bridgeHard: { mode: 'max', lo: -0.5, hi: 0.9 },
+  bridgeFlow: { mode: 'max', lo: -3, hi: 3, int: true },
   homeShield: { mode: 'max', lo: -0.5, hi: 0.7 },
   homeFire: { mode: 'sum', lo: -0.6, hi: 0.9 },
   fireproof: { mode: 'max', lo: 0, hi: 1, int: true },
@@ -79,6 +82,7 @@ const COMBINE: Record<string, { mode: 'max' | 'sum'; lo: number; hi: number; int
   mass: { mode: 'sum', lo: -5, hi: 3, int: true },
   fear: { mode: 'sum', lo: -40, hi: 40, int: true },
   hatch: { mode: 'sum', lo: 0, hi: 3, int: true },
+  yield: { mode: 'max', lo: 0, hi: 1, int: true },
   fuel: { mode: 'max', lo: 0, hi: 1, int: true },
   light: { mode: 'sum', lo: -2, hi: 2, int: true },
 };
@@ -307,9 +311,9 @@ function describe(clause: Clause, n: number, s: RunState, def: ClaimDef): string
   const why = `“${def.short}”`;
   switch (e.op) {
     case 'APPLY_FORCE':
-      return e.direction === 'up' ? `${why}: ${count}${what} rise ${e.magnitude} tile${e.magnitude === 1 ? '' : 's'} into the air.` : `${why}: ${count}${what} are pushed ${e.direction === 'away' ? 'away from' : 'toward'} the source.`;
+      return e.direction === 'up' ? `${why}: ${count}${what} rise ${e.magnitude} tile${e.magnitude === 1 ? '' : 's'} into the air.` : `${why}: ${count}${what} are pushed ${e.direction === 'away' ? 'away from' : 'toward'} ${fromWhat(clause)}.`;
     case 'REDIRECT_FLOW':
-      return `${why}: floodwater is ${e.mode === 'attract' ? 'drawn toward' : e.mode === 'slow' ? 'slowed around' : 'turned away from'} the source within ${e.radius} tiles.`;
+      return `${why}: floodwater is ${e.mode === 'attract' ? 'drawn toward' : e.mode === 'slow' ? 'slowed around' : 'turned away from'} ${fromWhat(clause)} within ${e.radius} tiles.`;
     case 'WEATHER_MODIFIER':
       return `${why}: the rain is ${e.mode === 'repel' ? 'pushed back' : e.mode === 'redirect' ? 'drawn off the river' : 'called in'}${e.toward ? ` toward ${s.world.regions.find((r) => r.id === e.toward)?.name ?? e.toward}` : ''}.`;
     case 'SET_MATERIAL_PROPERTY':
@@ -330,9 +334,11 @@ function describe(clause: Clause, n: number, s: RunState, def: ClaimDef): string
       return `${why}: ${what} move ${e.delta < 0 ? 'slower' : 'faster'} tonight.`;
     case 'MOVE_AWAY':
     case 'MOVE_TOWARD':
-      return `${why}: ${what} are ${e.op === 'MOVE_AWAY' ? 'driven away from' : 'drawn toward'} the source within ${e.radius} tiles.`;
+      return `${why}: ${what} are ${e.op === 'MOVE_AWAY' ? 'driven away from' : 'drawn toward'} ${fromWhat(clause)} within ${e.radius} tiles.`;
     case 'INFLUENCE_MOTIVATION':
-      return `${why}: ${count}villagers feel ${e.motive === 'diligence' ? 'tireless' : e.motive === 'calm' ? 'calmer' : 'braver'} (feelings only; beliefs are their own).`;
+      return e.motive === 'diligence'
+        ? `${why}: ${count}villagers work without tiring, and the fields they tend give a little more (feelings only; beliefs are their own).`
+        : `${why}: ${count}villagers feel ${e.motive === 'calm' ? 'calmer' : 'braver'} (feelings only; beliefs are their own).`;
     case 'SPAWN_BOUNDED_ENTITY':
       return `${why}: eggs will hatch at dawn (each chick costs one food).`;
     case 'RELOCATE_RESOURCE':
@@ -344,7 +350,18 @@ function describe(clause: Clause, n: number, s: RunState, def: ClaimDef): string
   }
 }
 
-function contribute(s: RunState, wk: Work, sources: Source[], targets: Target[], light: number, out: Contribution[], intents: EntityIntents): void {
+const POWER_PLACE: Partial<Record<string, string>> = { bell: 'the ringing bell tower', lantern: 'the lit lanterns', smoke_fire: 'the smoke fires', watchers: 'the watched bridge' };
+const MANY = new Set(['beacon', 'campfire', 'home', 'field', 'pen']);
+
+/** What a positional effect is measured from, in words: the landmark the clause names, else the place that powers it. */
+function fromWhat(clause: Clause): string {
+  const near = clause.target.near;
+  if (near) return `the ${ANCHOR_LABEL[near.anchor] ?? near.anchor}${MANY.has(near.anchor) ? 's' : ''}`;
+  const ev = triggerEvents(clause.when).find((x) => POWER_PLACE[x]);
+  return ev ? POWER_PLACE[ev]! : 'where it is powered';
+}
+
+function contribute(s: RunState, wk: Work, sources: Source[], targets: Target[], light: number, out: Contribution[], intents: EntityIntents, mods: Modifiers): void {
   const { law, clause } = wk;
   const e = clause.effect;
   const st = law.strength;
@@ -353,16 +370,23 @@ function contribute(s: RunState, wk: Work, sources: Source[], targets: Target[],
     if (value !== 0 && Number.isFinite(value)) out.push({ key, value, weight, law: law.id });
   };
   const by = (id: string) => (intents.by[id] ??= { law: law.id, claim: wk.def.id, clause: clause.id });
+  // what a positional effect is measured from: the landmark the clause names ("…keeps clear of the bridge"), preferring the ones
+  // powering it tonight (the lit lanterns), else what powers it (the ringing bell tower)
   const anchorSources = (): Source[] => {
-    if (sources.length) return sources;
-    if (clause.target.near) return anchorsIn(s, clause.target.near.anchor, law.regionId);
-    return [];
+    const near = clause.target.near;
+    if (!near) return sources;
+    const lit = sources.filter((src) => s.world.landmarks.find((l) => l.id === src.id)?.kind === near.anchor);
+    return lit.length ? lit : anchorsIn(s, near.anchor, law.regionId);
   };
   const stamp = (prefix: 'flood' | 'predBlock' | 'predLure', radius: number, mag: number, sign: 1 | -1) => {
     const n = s.world.w * s.world.h;
     const arr = new Array<number>(n).fill(0);
     for (const src of anchorSources()) stampShield(s, arr, src, radius, scaled(mag, st), sign);
     for (let i = 0; i < n; i++) if (arr[i] !== 0) push(`${prefix}:${i}`, arr[i]);
+    // the bridge stands in the river, which a shield on the banks never touches: water turned from it (or drawn to it) changes the
+    // flood it takes
+    const br = prefix === 'flood' ? s.world.landmarks.find((l) => l.kind === 'bridge' && l.hp > 0) : undefined;
+    if (br && anchorSources().some((a) => Math.hypot(a.x - br.x, a.y - br.y) <= radius + 0.5)) push('bridgeFlow', sign * scaled(mag, st));
   };
   const regions = regionsOf(targets, law);
   switch (e.op) {
@@ -464,8 +488,27 @@ function contribute(s: RunState, wk: Work, sources: Source[], targets: Target[],
       break;
     }
     case 'INFLUENCE_MOTIVATION':
-      if (e.motive === 'diligence') for (const r of regions.length ? regions : [law.regionId]) push(`labor:${r}`, -15 * e.magnitude * st);
-      else
+      if (e.motive === 'diligence') {
+        // tireless people ease the drain of night labour where a law asks for it, and the fields they work give a little more:
+        // faster growth where crops grow night by night, otherwise a little more food at dawn from a field with two of them on it
+        for (const r of regions.length ? regions : [law.regionId]) if ((mods.laborDrain[r] ?? 0) > 0) push(`labor:${r}`, -15 * e.magnitude * st);
+        const hands = new Map<string, number>();
+        for (const t of targets) {
+          const v = s.villagers.find((x) => x.id === t.id && x.status !== 'dead');
+          const f = v?.workId ? s.world.landmarks.find((l) => l.id === v.workId && l.kind === 'field' && !l.data.ruined && !l.data.harvested) : undefined;
+          if (f) hands.set(f.id, (hands.get(f.id) ?? 0) + 1);
+        }
+        const byRegion = new Map<string, number>();
+        for (const [fid, n] of [...hands.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+          const f = s.world.landmarks.find((l) => l.id === fid)!;
+          if (s.scn.features.crops) byRegion.set(f.district, (byRegion.get(f.district) ?? 0) + n);
+          else if (n >= 2) {
+            by(fid);
+            push(`yield:${fid}`, 1);
+          }
+        }
+        for (const [r, n] of [...byRegion.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) push(`cropBoost:${r}`, Math.max(1, Math.round(Math.min(n, 4) * 0.75 * e.magnitude * st)));
+      } else
         for (const t of targets) {
           by(t.id);
           push(`fear:${t.id}`, -Math.round(10 * e.magnitude * st) || -1);
@@ -524,7 +567,7 @@ export function resolveKey(key: string, cs: Contribution[]): Resolved {
 }
 
 function emptyIntents(): EntityIntents {
-  return { lift: {}, push: {}, mass: {}, fear: {}, hatch: {}, extraFuel: [], by: {} };
+  return { lift: {}, push: {}, mass: {}, fear: {}, hatch: {}, yield: {}, extraFuel: [], by: {} };
 }
 
 /**
@@ -566,11 +609,13 @@ export function runRealityLaws(ctx: Ctx, mods: Modifiers): RealityPlan {
     const targets = resolveTargets(s, wk.clause.target, wk.law, fire.sources, light, wk.clause.where);
     firing.set(wk, { fire, targets });
     const before = contribs.length;
-    contribute(s, wk, fire.sources, targets, light, contribs, intents);
+    contribute(s, wk, fire.sources, targets, light, contribs, intents, mods);
     const touched = contribs.length - before;
     const op: OpId = wk.clause.effect.op;
     if (!touched && op !== 'SPAWN_BOUNDED_ENTITY') {
-      emit(ctx, { step: 'law', code: 'REALITY_IDLE', importance: 1, law: wk.law.id, claim: wk.def.id, text: `“${wk.def.short}” was powered tonight but found no ${KINDS[wk.clause.target.kind].label} to act on.` });
+      const label = KINDS[wk.clause.target.kind].label;
+      const found = targets.length ? `reached ${targets.length} ${label} and found nothing in them it could change` : `found no ${label} to act on`;
+      emit(ctx, { step: 'law', code: 'REALITY_IDLE', importance: 1, law: wk.law.id, claim: wk.def.id, text: `“${wk.def.short}” was powered tonight but ${found}.` });
       continue;
     }
     const text = describe(wk.clause, targets.length, s, wk.def);
@@ -657,6 +702,9 @@ function applyKey(mods: Modifiers, it: EntityIntents, key: string, v: number): v
     case 'bridgeHard':
       mods.bridgeHardness = Math.max(-0.5, Math.min(0.9, (mods.bridgeHardness ?? 0) + v));
       break;
+    case 'bridgeFlow':
+      mods.bridgeFlow = v;
+      break;
     case 'homeShield':
       (mods.homeShield ??= {})[rest] = v;
       break;
@@ -686,6 +734,9 @@ function applyKey(mods: Modifiers, it: EntityIntents, key: string, v: number): v
       break;
     case 'hatch':
       it.hatch[rest] = v;
+      break;
+    case 'yield':
+      it.yield[rest] = v;
       break;
     case 'fuel':
       it.extraFuel.push(rest);

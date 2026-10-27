@@ -113,7 +113,9 @@ visibility in tiles of cover, speed ×0.2..2, health, fear and labour in points,
 
 `ALTER_GRAVITY_LOCAL` from the program list is expressed as `APPLY_FORCE` up on what the language can lift (chickens) and as
 `SET_MATERIAL_PROPERTY` mass on stones (only stones have a weight a belief can change; flammability applies to homes and fields,
-hardness to the bridge and homes, and the validator refuses any other pairing); `INFLUENCE_MOTIVATION` changes feelings (courage and calm lower fear; diligence lowers the exhaustion of night work),
+hardness to the bridge and homes, and the validator refuses any other pairing); `INFLUENCE_MOTIVATION` changes feelings (courage
+and calm lower fear; diligence eases the exhaustion of night work under a moonlight law and makes the fields its believers work
+give a little more: faster growth where crops grow night by night, elsewhere one more food at dawn from a field two of them work),
 never a villager's conviction. Every operator also
 declares its cost weight (balance), the property it changes and the key of the 3D effect that will draw it (phase 10).
 
@@ -143,7 +145,8 @@ wolves where none hunt, growth where fields are not grown night by night, water 
 and, per region of the belief: lanterns or smoke fires that do not exist in that region (they power only their own region's laws,
 as in V1) and a `near` landmark that is not in that region ("there is no bridge in Eastbank to measure from": the bridge stands
 in the river commons). The bell and the bridge's watchers are heard and seen by the whole village. Things that make a belief weak
-or rare (no rain in the forecast, no chickens left) are notes, shown but allowed.
+or rare (no rain in the forecast, no chickens left, no field workers in this region) are notes, shown but allowed. Diligence in a
+village where nobody works the fields is refused: it would change nothing.
 
 ## 7. Execution (`execute.ts`, `entities.ts`)
 
@@ -155,20 +158,25 @@ Each night, after V1's `computeModifiers` and only in runs with `s.v2`:
 4. For each clause: the trigger is read from tonight's inputs (rituals done today, lit landmarks, bridge watchers, the night's
    scheduled weather, words said today), the condition is checked, the selector resolves to at most **40** targets in the law's
    region, and the effect becomes **contributions** (key, value, support weight = law pressure × strength). Nothing is written yet.
-   A clause that finds nothing to act on emits `REALITY_IDLE`, never an error.
+   A clause that finds nothing to act on emits `REALITY_IDLE` (naming whether it found no targets or nothing in them it could
+   change), never an error. Positional effects (water, wolves, pushes) are measured from the landmark the clause names (`near`),
+   preferring the ones powering it tonight (the lit lanterns), else from what powers it (the ringing bell tower), and the log says
+   which ("floodwater is turned away from the bridge within 2 tiles").
 5. Contributions are combined per key. Agreeing ones take the strongest or add up within the property's range. **Opposite ones
    resolve by support**: `(P·W⁺ − N·W⁻) / (W⁺ + W⁻)`, so the result is the same whatever order the laws were written in
    (`REALITY_CONFLICT` names both laws and the support behind each).
 6. Results go into V1's `Modifiers` (flood shield, river level, predator stamps, fire cut and spread, crop growth, sickness, cold,
-   labour) or new optional fields (bridge hardness, home shield, home fire cut, fireproof villagers, bounded water sinks, wolf
-   steps), so V1's hazard code carries the physical consequences; entity intents (lift, push, mass, fear, hatching, fuel) go to
-   `entities.ts`. Each change emits `REALITY_EFFECT` with the law, claim and source tile, and is recorded in `s.v2.lastNight`.
+   labour) or new optional fields (bridge hardness, **bridge flow**, home shield, home fire cut, fireproof villagers, bounded
+   water sinks, wolf steps), so V1's hazard code carries the physical consequences; entity intents (lift, push, mass, fear,
+   hatching, fuel, extra yield) go to `entities.ts`. The bridge stands in the river, where a flood shield on the banks never
+   reaches, so water turned from it (or drawn to it) changes the river level the bridge takes that night (bridge flow, ±3); V1's
+   arithmetic is unchanged when the field is absent. Each change emits `REALITY_EFFECT` with the law, claim and source tile, and is recorded in `s.v2.lastNight`.
 
 Then `entities.ts` runs at dusk (light stones within 4 tiles of a worker are hauled to the bank: up to 2 a night, each raising a
 bank tile and its two nearest neighbours to at most 2), at night (lifted chickens ride out floods and packs; wind ≥ 2 strands
 some across the river; grounded chickens drown in water or are taken by packs; light stones in floodwater are carried against the
-bridge, -6 damage) and at dawn (fear changes, hatching costs food, strays come home over a standing bridge, every 5 hens lay one
-food). Witnesses of a belief's effect gain evidence for it.
+bridge, -6 damage) and at dawn (fear changes, hatching costs food, tended fields bring in their extra food, strays come home over
+a standing bridge, every 5 hens lay one food). Witnesses of a belief's effect gain evidence for it.
 
 **Persistence.** Modifiers are rebuilt from nothing every night: temporary effects end the night the law stops acting. What was
 done stays done: raised bank tiles, placed or lost stones, drowned or hatched chickens, damage. When belief drains away the law
@@ -204,14 +212,39 @@ budget = `balance.ts`; compile and diagnostics = `build.ts` + `ground.ts`; legac
 
 ## 11. The adversarial corpus
 
-`tests/fixtures/reality-corpus-1.json`: 172 labelled sentences (supported 90, unsupported 61, partial 18, ambiguous 3) in 15
+`tests/fixtures/reality-corpus-1.json`: 172 labelled sentences (supported 89, unsupported 62, partial 18, ambiguous 3) in 15
 categories (core, synonyms, negation, conditionals, references, quantifiers, compounds, poetic, contradictions, incompatible
 effects, unknown targets, global scope, time, coercion, injected instructions) over 12 kinds of thing. Each label says what a
 correct reading must contain (kinds, operators, trigger events) or which absent concept must be named. The same author wrote the
 corpus and the reader, so scores against it measure regressions and honesty, not unbiased accuracy.
 
-## 12. Not done yet
+Two **held-out** corpora (`reality-corpus-holdout-1.json`, `reality-corpus-holdout-2.json`, 80 sentences each) were written by
+separate agents that never saw the reader, its lexicon, the earlier corpora or the scorer. Each is scored **once, untuned**, before
+any change it could inform, and that figure is recorded in `PROGRESS.md`; after a tuning round that uses it, a corpus is in-sample
+and its score is a regression floor only. Untuned results: holdout-1 42/80 labels (reader `offline-v2.1`), holdout-2 51/80
+(reader `offline-v2.2`). `npm run reality:corpus -- --holdout` / `--holdout2` prints the tables; add `--v1` to score V1's offline
+composer on the same sentences through `astFromV1` (holdout-2: 34/80 labels, 3/30 supported read faithfully).
 
-The offline reader v2 and the model contract (`interpret v2`) that turn sentences into this AST, and the composer UI (phase 05);
-villager cognition that carries these beliefs through real persuasion (phases 07-09); 3D drawing of chickens, stones and each
+## 12. Reading sentences (`read.ts`, `lexicon.ts`, `wire.ts`, `fidelity.ts`)
+
+**Offline reader v2** (`readBelief`, id `offline-v2.N`): a closed lexicon (kinds, senses with their operator and parameters,
+triggers, conditions, places, refusal reasons, instruction patterns) matched with inflections and `*` gaps, longest span first.
+It splits clauses, resolves subjects, objects, causes ("the bells make…"), pronouns (by number: "it" is the rain, "they" the
+flames) and negation, and returns one of four answers: **supported** (1 candidate), **partial** (what was left out, named),
+**ambiguous** (up to two choices, e.g. "spared" from flood or from fire) or **unsupported** (each reason named, and up to two
+honestly related alternatives, never for a forbidden idea or a contradiction). A forbidden idea in a coordinated clause refuses
+that clause; one set off by commas modifies its neighbour and refuses the sentence. Every candidate is built by the engine
+(`buildRealityClaim`) against the live run, with the region chosen where the belief can act; a reading the village cannot hold
+anywhere is refused (`not_here`), never offered as understood. Instructions and markup are stripped, reported, and never set a
+number.
+
+**The model contract** (`interpret v2`, server): the browser sends only the sentence, the scenario id and seed, the day and a
+hashed run reference; the server rebuilds the village, asks the model for output in a schema generated from the operator
+registry, fills in provenance, validates, builds, moves a reading to a region where it can act, and drops readings that act on
+something the sentence never names (`fidelity.ts`). The browser rebuilds every reading against the live run again (`wire.ts`).
+A model only proposes; the engine decides. No model has been called from this repository yet (LIVE unverified).
+
+## 13. Not done yet
+
+Villager cognition that carries these beliefs through real persuasion (phases 07-09); 3D drawing of chickens, stones and each
 operator's effect (phase 10). `smoke`, `bell` and `livestock` are logical kinds with no 3D representation of their own.

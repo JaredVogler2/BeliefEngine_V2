@@ -4,7 +4,7 @@ import { GameSession, buildRealityClaim, validateRealityAst } from '../../src/en
 import type { RunState } from '../../src/engine/core/types.ts';
 import { triggerEvents } from '../../src/engine/reality/ast.ts';
 import { readBelief, stripInstructions, type Reading } from '../../src/engine/reality/read.ts';
-import { candidatesOf, scoreCorpus, type CorpusCase } from '../../scripts/lib/reality-score.ts';
+import { candidatesOf, scoreCorpus, v1Reading, type CorpusCase } from '../../scripts/lib/reality-score.ts';
 
 /**
  * Phase 05: the offline reader v2 (sentence → AST v2 or an honest refusal). The corpus floors below are regression guards on the
@@ -47,6 +47,21 @@ describe('the first held-out corpus (scored once untuned at 42/80, then tuned ag
     expect(m.hallucinated).toBeLessThanOrEqual(1);
     expect(m.injectionObeyed).toBe(0);
     expect(m.grounded / m.readings).toBeGreaterThanOrEqual(0.95);
+  });
+});
+
+describe('broader than V1 (the second held-out corpus, first scored untuned at 51/80)', () => {
+  const corpus = JSON.parse(readFileSync(new URL('../fixtures/reality-corpus-holdout-2.json', import.meta.url), 'utf8')) as { cases: CorpusCase[] };
+  const v2 = scoreCorpus(corpus.cases, stateFor).metrics;
+  const v1 = scoreCorpus(corpus.cases, stateFor, v1Reading).metrics;
+
+  it('reads far more unfamiliar sentences faithfully than V1\'s offline composer, and invents no more effects', () => {
+    expect(v2.labelOk).toBeGreaterThanOrEqual(51);
+    expect(v2.faithful).toBeGreaterThan(3 * v1.faithful);
+    expect(v2.labelOk).toBeGreaterThan(v1.labelOk);
+    expect(v2.hallucinated).toBeLessThanOrEqual(v1.hallucinated);
+    expect(v2.injectionObeyed).toBe(0);
+    expect(v2.grounded).toBe(v2.readings);
   });
 });
 

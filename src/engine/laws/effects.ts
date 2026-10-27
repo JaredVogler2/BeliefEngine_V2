@@ -35,6 +35,8 @@ export interface Modifiers {
   // ---- treats absent as "no change", so V1's arithmetic is untouched
   /** share of flood damage to the bridge prevented whether or not anyone watches it (negative: weaker) */
   bridgeHardness?: number;
+  /** river levels of floodwater turned away from the bridge tonight (negative: drawn onto it) */
+  bridgeFlow?: number;
   /** home id → share of flood damage prevented */
   homeShield?: Record<string, number>;
   /** home id → share of fire damage prevented (negative: more) */

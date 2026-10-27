@@ -2128,14 +2128,10 @@
    "scenario": "redbank",
    "category": "unknown",
    "text": "The moon pulls the river away.",
-   "expect": "partial",
-   "kinds": [
-    "water"
-   ],
+   "expect": "unsupported",
+   "kinds": [],
    "ops": [],
-   "triggers": [
-    "clear_night"
-   ],
+   "triggers": [],
    "absent": [
     "sky_bodies"
    ]

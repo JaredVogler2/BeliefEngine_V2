@@ -9,89 +9,90 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **03 Provider, auth and budgets: VERIFIED with mocks, a real Redis and an offline `vercel build`. LIVE: UNVERIFIED** (no
   credential exists here; `npm run ai:smoke` refuses and exits 2). **NOT DEPLOYED** (no Vercel project). Details:
   [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md).
-- **04 Generative belief language: VERIFIED** (engine gate). **06 Simulation primitives: IN PROGRESS** (executor, 17 operators,
-  chickens and loose stones verified in engine tests; 3D drawing waits for phase 10). Reference:
-  [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md).
-- **05 Interpreter and compiler: NOT STARTED. It is the next task (below).**
+- **04 Generative belief language: VERIFIED** (engine gate). Reference: [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md).
+- **05 Interpreter and compiler: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Offline reader v2 (`offline-v2.2`), the
+  `interpret v2` server contract, the lazy reality composer, Generative Reality runs, and an integration test in two villages.
+  Generalisation (second held-out corpus, scored untuned): 51/80 labels, 13/30 supported sentences read faithfully; V1's composer
+  on the same sentences: 34/80 and 3/30.
+- **06 Simulation primitives: IN PROGRESS** (executor, 17 operators, chickens and loose stones verified in engine tests; their 3D
+  drawing waits for phase 10).
+- **07 Agent cognition and memory: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
 Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2` (open pull request JaredVogler2/BeliefEngine_V2#2),
-on top of `main@534448e`. Phase 03 is commit `0344851`; phases 04/06 (engine) are the commit that adds `src/engine/reality/` and
-[`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md).
+on top of `main@534448e`. Phase 03 is commit `0344851`; phases 04/06 (engine) `e33209b`; phase 05 is the run of commits from
+`e093c4f` (reader) to the one that adds `tests/unit/reality-integration.test.ts`.
 
-## Working files changed in phases 04/06
+## Working files changed in phase 05
 
-New: `src/engine/reality/{ontology,operators,ast,state,balance,execute,entities,ground,build,cost,v1}.ts`,
-`tests/helpers/reality.ts`, `tests/unit/reality-{language,execute,properties}.test.ts`, `tests/fixtures/reality-corpus-1.json`,
-`docs/REALITY_LANGUAGE.md`. Changed (every change is inert without `s.v2` or the new optional fields, so Classic hashes hold):
-`core/types.ts` (`RealityClaim`, `ClaimDef.reality?`, `RunState.v2?`, `CreateRunOptions.reality?/realityLab?`), `core/create.ts`,
-`core/resolve.ts` (executor after `computeModifiers`; entity steps at dusk, night, dawn), `core/actions.ts` (`COMPOSE` for
-reality claims; cost), `laws/effects.ts` (optional `Modifiers` fields; `stampShield` exported), `world/hazards.ts` (bounded V2
-sinks; optional bridge hardness, home shield and fire cut, fireproof villagers), `world/wolves.ts` (optional step change),
-`save/serialize.ts` (re-verify reality claims on load), `index.ts` (exports).
+New: `src/engine/reality/{read,lexicon,wire,fidelity}.ts`, `server/ai/tasks/interpret-v2.ts`, `api/interpret-reality.ts`,
+`src/ui/play/{RealityCompose,online}.tsx`, `scripts/reality-corpus.ts`, `scripts/lib/reality-score.ts`,
+`tests/unit/reality-{reader,integration}.test.ts`, `tests/unit/ai-{interpret-v2,reality-client}.test.ts`,
+`tests/e2e/v2-reality.spec.ts`, `tests/fixtures/reality-corpus-holdout-{1,2}.json`. Changed: `server/ai/{app,config,vercel}.ts`,
+`src/ai/client.ts`, `src/ui/play/{Play,Compose,Hand,screens}.tsx`, `src/engine/progress/options.ts`, `src/v2/features.ts`
+(`generativeReality` on), `scripts/check-bundle.ts` (composer chunk budget), and engine fixes the reader and the integration
+test exposed in `src/engine/reality/{execute,entities,ground,balance,build,operators,ast}.ts`, `laws/effects.ts` (optional
+`bridgeFlow`) and `world/hazards.ts` (bridge damage reads it; absent in Classic).
 
 ## Commands run and exact results
 
-In [`PROGRESS.md`](PROGRESS.md) (phases 04/06 entry): typecheck, lint, 438/438 unit tests with `BE_REQUIRE_REDIS=1`, build and
-size (entry 251 of 260 KB gzip), simulation smoke 256/256 with determinism, V1 golden hashes unchanged.
+In [`PROGRESS.md`](PROGRESS.md) (phase 05 entry): typecheck and lint pass; `BE_REQUIRE_REDIS=1 npm test` 41 files, 475 passed;
+`npx playwright test tests/e2e/v2-reality.spec.ts --project=desktop --project=phone` 7 passed, 1 skipped by design; V1 golden
+hashes unchanged (`tests/unit/v2-migration.test.ts`).
 
 ## Mock vs LIVE model tests
 
-Executing a validated AST needs no model. Phase 03's inference tests are **TESTED MOCK ONLY**. **LIVE: UNVERIFIED.**
+Every `interpret v2` test used a scripted provider or the offline reader standing in for a model: **TESTED MOCK ONLY**.
+**LIVE: UNVERIFIED.** Executing a validated AST needs no model.
 
 ## Screenshots and browser/device
 
-None new: phases 04/06 are engine-only so far. Phase 03's are in [`screenshots/v2-phase03/`](screenshots/v2-phase03/).
+[`screenshots/v2-phase05/`](screenshots/v2-phase05/): the mode screen, a compound reading, a partial reading and a refusal, on
+desktop (1366×768) and phone (390×844), from the production build.
 
 ## Known blockers and risks
 
 1. **No credential, no deployment.** Every LIVE item stays UNVERIFIED until the owner privately sets the variables in
    [`AI_SETUP.md`](AI_SETUP.md) and runs `npm run ai:smoke`; deployment needs the owner's authorisation (no Vercel project exists).
-   Phase 05 is built and scored offline and with mocks; its LIVE column stays UNVERIFIED.
-2. **Entry bundle headroom is 9 KB gzip.** Load the reader v2 and the reality composer with a dynamic `import()` (a separate
-   chunk), and add that chunk to `scripts/check-bundle.ts` with its own budget.
+   Phase 07's gate asks for six villagers deciding through a real provider: build and verify it offline and with mocks, and mark
+   the LIVE part UNVERIFIED.
+2. **Entry bundle headroom is about 7 KB gzip** (253 of 260). New UI for phase 07 (a conversation panel) should be a lazy chunk
+   with its own budget in `scripts/check-bundle.ts`, as the reality composer is.
 3. **V1's pull request JaredVogler2/BeliefEngine#2 (3D part 2) is not in V2.** Merge it before touching `src/render3d/` or
-   `src/ui/play/` heavily (procedure at the end of this file); phase 05 adds a composer panel and a run option, so re-check them.
+   `src/ui/play/` heavily (procedure at the end of this file).
 4. **3D tests are slow on a software rasteriser** (≈3 fps): keep new 3D browser tests short; long traces behind `BE_SLOW_3D=1`.
 5. V1 defects D7, D8, D9 ([`V1_AUDIT.md`](V1_AUDIT.md) §12) are still open.
+6. The offline reader understands about half of unfamiliar phrasings; the model contract is where broad comprehension is meant to
+   come from, and it is unmeasured until a provider is configured.
 
-## Phase 05 in progress (checkpoint)
+## Next exact code changes (phase 07: hybrid cognitive villagers)
 
-Done and committed: the offline reader v2 (`src/engine/reality/read.ts`, data-only `lexicon.ts`; `npm run reality:corpus`), its
-tests (`tests/unit/reality-reader.test.ts`), the wire format and fidelity check (`src/engine/reality/wire.ts`), and language fixes
-the reader exposed (no-op operator targets refused, material properties per kind, "near" never priced above the region,
-redundant "at night" not discounted, drawing in versus driving off counted as a contradiction). In-sample corpus: 172/172 labels,
-but the reader was tuned on it; a held-out corpus written by a separate agent (`tests/fixtures/reality-corpus-holdout-1.json`)
-is the generalisation measure, scored WITHOUT tuning on it. Next: steps 2-4 below (server contract, composer, tests).
+Everything below lives under `s.v2` (absent in Classic, so Classic hashes hold) and works offline with a deterministic policy;
+a model only proposes, through the same schema, and every proposal is validated and recorded as an action so replays never call it.
 
-## Next exact code changes (phase 05)
-
-1. **Offline reader v2** (`src/engine/reality/read.ts` + data-only `lexicon.ts`): sentence → a reading union, exactly the shape
-   the model must return: `supported` (1-3 candidate ASTs, each clause mapped to the words it came from), `ambiguous` (1-2
-   choices), `partial` (what is included and what is left out, consent needed), `unsupported` (the absent concept, with up to 2
-   honestly related alternatives). Kinds from `KINDS[].words`, anchors from `ANCHOR_WORDS`, absent concepts from `ABSENT`, plus
-   phrases per operator, trigger and condition words, negation, quantifiers, strength words, and V1's injection and coercion
-   handling (`nl/parse.ts` `sanitizeText`). Ground every candidate with `buildRealityClaim`; never map an absent concept to a
-   nearby operator ("reverse time" is not faster crops). Score it against `tests/fixtures/reality-corpus-1.json` in a test with
-   floors (supported cases: right kinds, operators and triggers; unsupported: abstains, no invented effect; injection: never
-   obeyed) and `npm run reality:corpus` printing the table; record the scores in `PROGRESS.md`.
-2. **Model contract `interpret v2`** (`server/ai/tasks/interpret-v2.ts`): a zod schema mirroring the reading union and AST v2,
-   instructions carrying the ontology, operator parameters, trigger and condition names, anchors and absent concepts, the
-   scenario context (regions, landmark kinds present, features) sent by the client (no private data), the claim as untrusted
-   data, no chain of thought. Server-side checks before anything reaches the browser: `validateRealityAst`, grounding against the
-   context, a fidelity check against the offline reader (a candidate's target kinds must be named in the text), power recomputed
-   by the engine (a model's claimed strength is ignored). Same guarded path as v1 (cooldown, lease, reservation, cache keyed by
-   normalized text + language version + context digest); the demo provider is the offline reader v2.
-3. **Client and composer**: a Generative Reality run option behind a new `V2_FEATURES.realityRuns` switch (modes proper are phase
-   11); a reality composer (lazy chunk): text ≤240, optional region, read offline or online (phase 03 consent), a preview card
-   ("You said" / "The game will do": mechanics with units, conditions, duration, support needed, downsides, cost, confidence,
-   omissions; choices for ambiguous; consent for partial; alternatives for unsupported); confirm sends `COMPOSE` bound to the run
-   revision and the candidate's hash; the AST keeps `source` (reader, model, prompt version, interpretation id) so replays never
-   reinterpret.
-4. **Tests**: reader corpus floors; server mock tests (structured output, refusal, timeout, injection, ambiguous, unsupported,
-   stale confirmation, quota); an integration test where three new sentences yield materially different physics after activation
-   in two chapters; a browser test composing a reality belief offline; screenshots of the preview on desktop and phone.
+1. **Minds in the engine** (`src/engine/mind/`): per villager, a personality derived from V1 traits and archetype (curiosity,
+   skepticism, ambition, fear, altruism, stubbornness, courage; bounded), goals from role, household and district, and **episodic
+   memories** captured from the event log each night: what they witnessed (within sight of the event's tile) or heard (from whom,
+   with that person's credibility), salience, valence, the event id as provenance, private or public. Caps per villager, keeping
+   high-salience events and every event needed to judge a law; a deterministic summary with source pointers past the cap. Bounded
+   personality drift from major events. Save/load and replay cover it.
+2. **Decisions** (`src/engine/mind/decide.ts`): an `NpcDecision` schema shared with the server (villager id, input revision,
+   intent from an explicit enum: spread, ask, investigate, challenge, comfort, persuade, move, stage evidence, support rescue,
+   wait; target ids; one short line; cited memory ids; tone; confidence as an estimate only); `eligibleIntents`, a validator
+   (ids exist, intent legal now, cited memories are theirs), and an engine action that applies an accepted decision through the
+   existing persuasion and evidence rules (a line of dialogue never changes a belief by itself). A deterministic fallback policy
+   proposes in the same schema.
+3. **When to think**: salience triggers (a new player claim heard, a contradiction witnessed, a personal loss, a law activating or
+   failing, a faction move, the player talking to them, a crisis), a per-day queue of at most a few agents with 1-3 decisions
+   each, and a per-run budget; the cheap utility AI handles everyone else.
+4. **Server**: `npc` contract v2 in `server/ai/tasks/npc.ts` (memories and eligible intents in the context, structured output,
+   ids validated, hallucinated memories refused); the demo provider is the deterministic policy.
+5. **Conversation** (lazy UI chunk): select a villager, ask / persuade / challenge / ask for a guess; answers come only from what
+   they witnessed or heard (no omniscience), and results are local events resolved by trust and evidence.
+6. **Tests**: 50+ mock schema cases (hallucinated person or claim, no such memory, injection, stale revision, contradictory
+   evidence); six named villagers given the same claim and evidence choose differently by their memories and personality (offline
+   policy); replay of recorded decisions without a model; memories across save/load; 12-20 agents per night within a time budget.
 
 ## Parallel track: the 3D world
 

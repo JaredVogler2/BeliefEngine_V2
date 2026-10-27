@@ -121,6 +121,47 @@ describe('determinism, saves and replays', () => {
   });
 });
 
+describe('effects that change something real, or say they found nothing', () => {
+  const SRC = { reader: 'offline-v2' as const, model: null, prompt: null, id: null };
+  const tireless = (region: string): RealityAst => ({
+    v: 2, lang: 'reality-1', text: 'At night the farmers work without tiring.', author: 'player', source: SRC, day: 1, regions: [region],
+    clauses: [{ id: 'c1', when: { event: 'night', min: null }, where: null, target: { kind: 'villager', near: null, tags: [], region: null }, effect: { op: 'INFLUENCE_MOTIVATION', motive: 'diligence', magnitude: 2 }, duration: 'night' }],
+    omitted: [], narrative: null,
+  });
+
+  it('tireless farmers bring in a little more food from the fields they work, and the idle nights say so', () => {
+    const none = playReality(null, ring);
+    const run = playReality(tireless('east'), ring);
+    const tended = run.g.state.log.filter((e) => e.code === 'FIELD_TENDED');
+    expect(tended.length).toBeGreaterThan(0);
+    expect(tended.every((e) => e.claim === run.claimId)).toBe(true);
+    expect(count(none.g.state, 'FIELD_TENDED')).toBe(0);
+    for (const e of run.g.state.log.filter((x) => x.code === 'REALITY_IDLE')) expect(e.text).toMatch(/found nothing in them it could change/);
+  });
+
+  it('a village where nobody works the fields refuses it', () => {
+    const g = GameSession.create({ scenarioId: 'ashwood', seed: 1, reality: true });
+    const b = buildRealityClaim(g.state, tireless('mill'));
+    expect(b.ok).toBe(false);
+    if (!b.ok) expect(b.issues.join()).toMatch(/nobody here works the fields/);
+  });
+
+  it('water turned from the bridge spares the bridge, and the log names the bridge', () => {
+    const near: RealityAst = {
+      v: 2, lang: 'reality-1', text: 'Whenever the bell is rung, the river keeps clear of the bridge.', author: 'player', source: SRC, day: 1, regions: ['river'],
+      clauses: [{ id: 'c1', when: { event: 'bell', min: null }, where: null, target: { kind: 'water', near: { anchor: 'bridge', radius: 2 }, tags: [], region: null }, effect: { op: 'REDIRECT_FLOW', mode: 'repel', magnitude: 2, radius: 2 }, duration: 'night' }],
+      omitted: [], narrative: null,
+    };
+    const none = playReality(null, ring);
+    const run = playReality(near, ring);
+    const hp = (st: RunState) => st.world.landmarks.find((l) => l.kind === 'bridge')!.hp;
+    expect(hp(run.g.state)).toBeGreaterThan(hp(none.g.state));
+    const fx = run.g.state.log.filter((e) => e.code === 'REALITY_EFFECT');
+    expect(fx.length).toBeGreaterThan(0);
+    expect(fx[0].text).toMatch(/turned away from the bridge within 2 tiles/);
+  });
+});
+
 describe('the Compose action rebuilds and checks every reality belief', () => {
   const fresh = () => {
     const g = GameSession.create({ scenarioId: 'redbank', seed: 1, reality: true });

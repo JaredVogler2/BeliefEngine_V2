@@ -43,7 +43,7 @@ export const lightEast = (g: GameSession): void => {
 };
 
 /**
- * A Redbank Generative Reality run in which `ast` is written on day 1 and every villager of its region firmly believes it each
+ * A Redbank Generative Reality run in which `ast` is written on day 1 and every villager who votes on its region firmly believes it each
  * morning (a white-box shortcut for the social part, which phase 09 tests through real persuasion). The law machinery itself still
  * decides when the law wakes. `daily` runs each day before it ends.
  */
@@ -51,18 +51,19 @@ export function playReality(ast: RealityAst | null, daily: (g: GameSession) => v
   const g = GameSession.create({ scenarioId, seed, reality: true });
   g.act({ type: 'PICK_STARTER', claim: g.state.scn.starters[0] });
   let claimId: string | null = null;
+  let voters = new Set<string>();
   if (ast) {
     const b = buildRealityClaim(g.state, ast);
     if (!b.ok) throw new Error(`build failed: ${b.code} ${b.issues.join('; ')}`);
     const r = g.act({ type: 'COMPOSE', claim: b.draft.claim });
     if (!r.ok) throw new Error(`compose failed: ${r.error.code}`);
     claimId = b.draft.claim.id;
+    // who votes on it: the region's own villagers, or for a place nobody lives (the river) the districts the claim names
+    const region = ast.regions[0];
+    voters = new Set(b.draft.claim.electorate?.[region] ?? [region]);
   }
   for (let d = 0; d < days && !g.state.outcome; d++) {
-    if (claimId) {
-      const region = ast!.regions[0];
-      for (const v of g.state.villagers) if (v.district === region && v.status !== 'dead') v.beliefs[claimId] = { conv: 85, heard: 3, lastDay: g.state.day, lastSource: null, evidence: 30, cause: null, stale: 0 };
-    }
+    if (claimId) for (const v of g.state.villagers) if (voters.has(v.district) && v.status !== 'dead') v.beliefs[claimId] = { conv: 85, heard: 3, lastDay: g.state.day, lastSource: null, evidence: 30, cause: null, stale: 0 };
     daily(g);
     g.endDay();
   }
