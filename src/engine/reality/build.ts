@@ -94,42 +94,59 @@ function selectorText(s: RunState, sel: Selector, regions: string[]): string {
   return `${tags}${k.label}${near} in ${where}`;
 }
 
-function effectText(c: Clause): string {
+/** Things named in the singular in previews (floodwater, rain, fire, smoke, the bridge); every other kind is plural. */
+const SINGULAR = new Set(['water', 'rain', 'fire', 'smoke', 'bridge']);
+const IRREGULAR_3RD: Record<string, string> = { are: 'is', have: 'has' };
+
+/** The verb agreeing with its subject: "chickens rise", "rain rises". */
+function v(base: string, sg: boolean): string {
+  if (!sg) return base;
+  if (IRREGULAR_3RD[base]) return IRREGULAR_3RD[base];
+  return /(s|sh|ch|x|z)$/.test(base) ? `${base}es` : `${base}s`;
+}
+
+function effectText(s: RunState, c: Clause): string {
   const e = c.effect;
+  const sg = SINGULAR.has(c.target.kind);
+  const tiles = (n: number) => `${n} tile${n === 1 ? '' : 's'}`;
   switch (e.op) {
     case 'APPLY_FORCE':
-      return e.direction === 'up' ? `rise up to ${e.magnitude} tile${e.magnitude === 1 ? '' : 's'} into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind)` : `are pushed up to ${e.magnitude} tile${e.magnitude === 1 ? '' : 's'} ${e.direction === 'away' ? 'away from' : 'toward'} the source`;
+      return e.direction === 'up' ? `${v('rise', sg)} up to ${tiles(e.magnitude)} into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind)` : `${v('are', sg)} pushed up to ${tiles(e.magnitude)} ${e.direction === 'away' ? 'away from' : 'toward'} the source`;
     case 'REDIRECT_FLOW':
-      return `${e.mode === 'attract' ? 'draw floodwater in: the ground counts as up to' : 'turn floodwater aside: the ground counts as up to'} ${e.magnitude} tile${e.magnitude === 1 ? '' : 's'} ${e.mode === 'attract' ? 'lower' : 'higher'} within ${e.radius} tiles of each source`;
+      return e.mode === 'slow' ? `${v('are', sg)} slowed and turned aside: the ground counts as up to ${tiles(e.magnitude)} higher within ${tiles(e.radius)} of each source` : `${v('are', sg)} ${e.mode === 'attract' ? 'drawn in: the ground counts as up to' : 'turned aside: the ground counts as up to'} ${tiles(e.magnitude)} ${e.mode === 'attract' ? 'lower' : 'higher'} within ${tiles(e.radius)} of each source`;
     case 'WEATHER_MODIFIER':
-      return e.mode === 'redirect' ? `draw up to ${e.magnitude} steps of rain off the river${e.toward ? ` onto ${e.toward}` : ''}` : e.mode === 'repel' ? 'push the rain back: the river rises one step less' : `call up to ${e.magnitude} steps of rain${e.toward ? ` onto ${e.toward}` : ' there'} (rain is moved, not made: it lands on the low ground)`;
+      return e.mode === 'redirect'
+        ? `${v('are', sg)} drawn off the river: up to ${e.magnitude} steps of rain fall${e.toward ? ` on ${regionName(s, e.toward)}` : ' elsewhere'} instead`
+        : e.mode === 'repel'
+          ? `${v('are', sg)} pushed back: the river rises one step less`
+          : `${v('are', sg)} called${e.toward ? ` onto ${regionName(s, e.toward)}` : ''}: up to ${e.magnitude} steps of rain fall there instead of upriver (moved, not made: it lands on the low ground)`;
     case 'SET_MATERIAL_PROPERTY':
-      return e.property === 'mass' ? `weigh ${Math.abs(e.delta)} load${Math.abs(e.delta) === 1 ? '' : 's'} ${e.delta < 0 ? 'less' : 'more'} (a stone of 1 load or less is carried to the bank by anyone working nearby, and floats in floodwater)` : e.property === 'flammability' ? `burn ${e.delta < 0 ? 'less' : 'more'} readily (fire damage ${e.delta < 0 ? '-' : '+'}${Math.abs(e.delta) * 20}%)` : `become ${e.delta > 0 ? 'harder' : 'softer'} (damage ${e.delta > 0 ? 'reduced' : 'increased'})`;
+      return e.property === 'mass' ? `${v('weigh', sg)} ${Math.abs(e.delta)} load${Math.abs(e.delta) === 1 ? '' : 's'} ${e.delta < 0 ? 'less' : 'more'} (a stone of 1 load or less is carried to the bank by anyone working nearby, and floats in floodwater)` : e.property === 'flammability' ? `${v('burn', sg)} ${e.delta < 0 ? 'less' : 'more'} readily (fire damage ${e.delta < 0 ? '-' : '+'}${Math.abs(e.delta) * 20}%)` : `${v('become', sg)} ${e.delta > 0 ? 'harder' : 'softer'} (damage ${e.delta > 0 ? 'reduced' : 'increased'})`;
     case 'GROW_ENTITY':
-      return `ripen up to ${10 * e.magnitude}% faster each night`;
+      return `${v('ripen', sg)} up to ${10 * e.magnitude}% faster each night`;
     case 'DECAY_ENTITY':
-      return `wither: up to ${6 * e.magnitude}% growth lost each night`;
+      return `${v('wither', sg)}: up to ${6 * e.magnitude}% growth lost each night`;
     case 'ALTER_TEMPERATURE':
-      return e.delta < 0 ? `burn weaker: fire damage cut by up to ${25 * Math.abs(e.delta)}%` : `burn hotter: fire damage raised by up to ${20 * e.delta}%`;
+      return e.delta < 0 ? `${v('burn', sg)} weaker: fire damage cut by up to ${25 * Math.abs(e.delta)}%` : `${v('burn', sg)} hotter: fire damage raised by up to ${20 * e.delta}%`;
     case 'CHANGE_LIGHT':
-      return `${e.delta > 0 ? 'shine' : 'dim'}: lantern-powered beliefs reach ${Math.abs(e.delta)} tile${Math.abs(e.delta) === 1 ? '' : 's'} ${e.delta > 0 ? 'further' : 'less far'}`;
+      return `${v(e.delta > 0 ? 'shine' : 'dim', sg)}: lantern-powered beliefs reach ${tiles(Math.abs(e.delta))} ${e.delta > 0 ? 'further' : 'less far'}`;
     case 'MODIFY_DURABILITY':
-      return e.delta > 0 ? `hold stronger: up to ${[0, 45, 70, 90][e.delta]}% of flood damage prevented (whether watched or not)` : `grow weaker: up to ${30 * Math.abs(e.delta)}% more damage`;
+      return e.delta > 0 ? `${v('hold', sg)} stronger: up to ${[0, 45, 70, 90][e.delta]}% of flood damage prevented (whether watched or not)` : `${v('grow', sg)} weaker: up to ${30 * Math.abs(e.delta)}% more damage`;
     case 'MODIFY_VISIBILITY':
-      return `${e.delta < 0 ? 'are hidden from' : 'are shown to'} the wolves within ${Math.abs(e.delta)} tiles`;
+      return `${v('are', sg)} ${e.delta < 0 ? 'hidden from' : 'shown to'} the wolves within ${tiles(Math.abs(e.delta))}`;
     case 'MODIFY_MOVEMENT':
-      return c.target.kind === 'fire' ? `spread ${e.delta < 0 ? 'slower' : 'faster'} (×${(1 + 0.2 * e.delta).toFixed(1)} at full support)` : `${e.delta < 0 ? 'cover one tile less' : 'cover one tile more'} each night`;
+      return c.target.kind === 'fire' ? `${v('spread', sg)} ${e.delta < 0 ? 'slower' : 'faster'} (×${(1 + 0.2 * e.delta).toFixed(1)} at full support)` : `${v('cover', sg)} one tile ${e.delta < 0 ? 'less' : 'more'} each night`;
     case 'MOVE_AWAY':
     case 'MOVE_TOWARD':
-      return `are ${e.op === 'MOVE_AWAY' ? 'driven away from' : 'drawn toward'} the source within ${e.radius} tiles`;
+      return `${v('are', sg)} ${e.op === 'MOVE_AWAY' ? 'driven away from' : 'drawn toward'} the source within ${tiles(e.radius)}`;
     case 'INFLUENCE_MOTIVATION':
-      return e.motive === 'diligence' ? `tire less from night work (exhaustion -${15 * e.magnitude})` : `feel ${e.motive === 'calm' ? 'calmer' : 'braver'}: fear -${10 * e.magnitude} at dawn (feelings only; what they believe is their own)`;
+      return e.motive === 'diligence' ? `${v('tire', sg)} less from night work (exhaustion -${15 * e.magnitude})` : `${v('feel', sg)} ${e.motive === 'calm' ? 'calmer' : 'braver'}: fear -${10 * e.magnitude} at dawn (feelings only; what they believe is their own)`;
     case 'SPAWN_BOUNDED_ENTITY':
-      return `hatch up to ${e.count} chick${e.count === 1 ? '' : 's'} per coop at dawn, each costing one food (at most 12 a coop, 24 in all)`;
+      return `${v('hatch', sg)} up to ${e.count} chick${e.count === 1 ? '' : 's'} per coop at dawn, each costing one food (at most 12 a coop, 24 in all)`;
     case 'RELOCATE_RESOURCE':
-      return `draw up to ${e.magnitude} steps of water from the river onto ${e.toward}`;
+      return `${v('are', sg)} drawn from the river: up to ${e.magnitude} steps of water land on ${regionName(s, e.toward)}`;
     case 'GIVE_STATUS_EFFECT':
-      return e.status === 'fireproof' ? 'are untouched by fire for the night' : e.status === 'sick_resistant' ? `fall sick less: sickness -${25 * e.magnitude}%` : `keep warm: cold drain -${2 * e.magnitude}`;
+      return e.status === 'fireproof' ? `${v('are', sg)} untouched by fire for the night` : e.status === 'sick_resistant' ? `${v('fall', sg)} sick less: sickness -${25 * e.magnitude}%` : `${v('keep', sg)} warm: cold drain -${2 * e.magnitude}`;
     default:
       return 'cannot act in this version';
   }
@@ -138,7 +155,7 @@ function effectText(c: Clause): string {
 export function clauseText(s: RunState, c: Clause, regions: string[]): string {
   const when = `When ${triggerText(c.when)}${c.where ? ` and ${condText(c.where)}` : ''}`;
   const dur = c.duration === 'while_active' ? ', and from then on every night while the belief holds' : '';
-  return `${when}${dur}: ${selectorText(s, c.target, regions)} ${effectText(c)}.`;
+  return `${when}${dur}: ${selectorText(s, c.target, regions)} ${effectText(s, c)}.`;
 }
 
 function requiresOf(s: RunState, ast: RealityAst): string[] {

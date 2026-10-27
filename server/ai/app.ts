@@ -9,8 +9,12 @@ import type { InferenceProvider, ModelCall, ModelResult } from './provider.ts';
 import { bearer, issueToken, verifyToken, type Scope, type SessionClaims } from './session.ts';
 import { StoreUnavailableError, type CounterSpec, type QuotaStore } from './store.ts';
 import * as iv1 from './tasks/interpret-v1.ts';
+import * as iv2 from './tasks/interpret-v2.ts';
 import * as npc from './tasks/npc.ts';
 import type { LlmReply } from '../../src/engine/nl/llm.ts';
+import { sanitizeText } from '../../src/engine/nl/parse.ts';
+import { REALITY_LANG } from '../../src/engine/reality/ontology.ts';
+import type { WireReading } from '../../src/engine/reality/wire.ts';
 
 /**
  * The inference service as one transport-free function: `(route, Request) → Response`. Vercel Functions in `api/`, the local
@@ -23,8 +27,8 @@ import type { LlmReply } from '../../src/engine/nl/llm.ts';
  * Any failure of the shared store before the provider call refuses the request (fail closed).
  */
 
-export type Route = 'ai-status' | 'session' | 'interpret-belief' | 'npc-decision' | 'ai-metrics';
-export const ROUTES: Route[] = ['ai-status', 'session', 'interpret-belief', 'npc-decision', 'ai-metrics'];
+export type Route = 'ai-status' | 'session' | 'interpret-belief' | 'interpret-reality' | 'npc-decision' | 'ai-metrics';
+export const ROUTES: Route[] = ['ai-status', 'session', 'interpret-belief', 'interpret-reality', 'npc-decision', 'ai-metrics'];
 
 export interface AppDeps {
   config: AiConfig;
@@ -166,7 +170,7 @@ export function createAiApp(deps: AppDeps): AiApp {
       reason,
       provider: configured ? (deps.provider!.name === 'mock' ? 'mock' : 'vercel-ai-gateway') : null,
       models: configured ? { fast: cfg.models.fast, accurate: cfg.models.accurate } : null,
-      contracts: { interpret: [1], npc: [1] },
+      contracts: { interpret: [1, 2], npc: [1] },
       limits: publicLimits(),
       privacy: PRIVACY_NOTE,
     });
@@ -193,6 +197,28 @@ export function createAiApp(deps: AppDeps): AiApp {
     }
     const { token, claims } = issueToken(s.secret, now(), L.sessionTtlMs, parsed.data.scopes ?? ['interpret', 'npc']);
     return json(200, { ok: true, token, expiresAt: claims.exp * 1000, scopes: claims.scp, limits: publicLimits() });
+  }
+
+  /** Both interpret contracts draw on one allowance: per session, per network, project calls, session tokens and project spend. */
+  function interpretCounters(sid: string, ip: string, modelId: string, promptChars: number, maxOut: number): { counters: CounterSpec[]; reasons: { reason: 'over_quota' | 'over_budget'; message: string }[] } {
+    const d = day();
+    const ttl = ttlDay();
+    return {
+      counters: [
+        { key: `q:i:s:${sid}:${d}`, amount: 1, limit: L.interpretPerSessionDay, ttlMs: ttl },
+        { key: `q:i:ip:${ip}:${d}`, amount: 1, limit: L.interpretPerIpDay, ttlMs: ttl },
+        { key: `q:calls:${d}`, amount: 1, limit: L.callsPerDay, ttlMs: ttl },
+        { key: `q:tok:s:${sid}:${d}`, amount: estimateTokens(promptChars) + maxOut, limit: L.tokensPerSessionDay, ttlMs: ttl },
+        { key: `q:usd:${d}`, amount: reserveMicros(modelId, promptChars, maxOut), limit: Math.floor(cfg.dailyBudgetUsd * 1_000_000), ttlMs: ttl },
+      ],
+      reasons: [
+        { reason: 'over_quota', message: 'This session has used its online readings for today. The offline reader still works.' },
+        { reason: 'over_quota', message: 'This network has used its online readings for today. The offline reader still works.' },
+        { reason: 'over_quota', message: 'The interpreter is at its daily capacity. The offline reader still works.' },
+        { reason: 'over_quota', message: 'This session has used its online allowance for today. The offline reader still works.' },
+        { reason: 'over_budget', message: 'The online budget for today is spent. The offline reader still works.' },
+      ],
+    };
   }
 
   // ------------------------------------------------------------------------------------------ POST /api/interpret-belief
@@ -239,30 +265,15 @@ export function createAiApp(deps: AppDeps): AiApp {
     const instructions = iv1.interpretV1Instructions();
     const prompt = iv1.interpretV1Prompt(n);
     const maxOut = L.maxOutputTokens.interpret;
-    const estTok = estimateTokens(instructions.length + prompt.length) + maxOut;
-    const d = day();
-    const ttl = ttlDay();
-    const ip = ipHash(pre.secret, req);
+    const q = interpretCounters(sid, ipHash(pre.secret, req), modelId, instructions.length + prompt.length, maxOut);
     const g = await guarded({
       route: 'interpret',
       store: pre.store,
       provider: pre.provider,
       sid,
       cooldownMs: L.interpretCooldownMs,
-      counters: [
-        { key: `q:i:s:${sid}:${d}`, amount: 1, limit: L.interpretPerSessionDay, ttlMs: ttl },
-        { key: `q:i:ip:${ip}:${d}`, amount: 1, limit: L.interpretPerIpDay, ttlMs: ttl },
-        { key: `q:calls:${d}`, amount: 1, limit: L.callsPerDay, ttlMs: ttl },
-        { key: `q:tok:s:${sid}:${d}`, amount: estTok, limit: L.tokensPerSessionDay, ttlMs: ttl },
-        { key: `q:usd:${d}`, amount: reserveMicros(modelId, instructions.length + prompt.length, maxOut), limit: Math.floor(cfg.dailyBudgetUsd * 1_000_000), ttlMs: ttl },
-      ],
-      reasons: [
-        { reason: 'over_quota', message: 'This session has used its online readings for today. The offline reader still works.' },
-        { reason: 'over_quota', message: 'This network has used its online readings for today. The offline reader still works.' },
-        { reason: 'over_quota', message: 'The interpreter is at its daily capacity. The offline reader still works.' },
-        { reason: 'over_quota', message: 'This session has used its online allowance for today. The offline reader still works.' },
-        { reason: 'over_budget', message: 'The online budget for today is spent. The offline reader still works.' },
-      ],
+      counters: q.counters,
+      reasons: q.reasons,
       call: { task: 'interpret', tier, modelId, instructions, prompt, schema: iv1.InterpretV1Output, schemaName: 'belief_reading', schemaDescription: 'Readings of one player belief in the village vocabulary', maxOutputTokens: maxOut, timeoutMs: L.timeoutMs[tier], temperature: 0, signal: req.signal },
     });
     if (!g.ok) return g.response;
@@ -280,6 +291,89 @@ export function createAiApp(deps: AppDeps): AiApp {
     await pre.store.set(cacheKey, JSON.stringify({ reply, model: modelId }), L.cacheTtlMs).catch(() => undefined);
     await meter.record({ ...metered, outcome: 'ok' });
     return json(200, { ...base, model: { tier, id: res.modelId }, id: interpretationId(reply), cached: false, reply, usage: { inputTokens: res.usage.inputTokens, outputTokens: res.usage.outputTokens, latencyMs: res.latencyMs, costUsd: g.costMicros / 1_000_000 } });
+  }
+
+  // ------------------------------------------------------------------------------------------ POST /api/interpret-reality
+  async function interpretReality(req: Request): Promise<Response> {
+    const pre = await preflight(req, 'interpret');
+    if (!pre.ok) return pre.response;
+    const body = await readJson(req, L.bodyMaxBytes);
+    if (!body.ok) return body.response;
+    const parsed = iv2.InterpretV2Request.safeParse(body.value);
+    if (!parsed.success) return fail(400, 'bad_request', `The request does not match the reality interpreter contract (${parsed.error.issues[0]?.path.join('.') || 'body'}).`);
+    const r = parsed.data;
+    const text = sanitizeText(r.text);
+    if (!text || text.length > L.claimMaxChars) return fail(400, 'bad_request', `Write 1 to ${L.claimMaxChars} characters.`);
+    // the server builds the village itself: a request names it, never describes it
+    const village = iv2.villageState(r);
+    if (!village) return fail(400, 'bad_request', 'That village does not exist in this version of the game.');
+    if (r.region && !village.world.regions.some((x) => x.id === r.region)) return fail(400, 'bad_request', 'That region does not exist in this village.');
+    const tier: Tier = iv2.interpretV2Tier(text);
+    const modelId = cfg.models[tier];
+    const sid = pre.claims.sid;
+    const cacheKey = `c:i2:${sha256Hex(JSON.stringify({ p: iv2.INTERPRET_V2_PROMPT, l: REALITY_LANG, m: modelId, t: text.toLowerCase(), s: r.scenario, g: r.region }))}`;
+    const runPart = r.run ? `${r.run.id}|${r.run.rev}` : '-';
+    const finish = (o: iv2.InterpretV2Output, actual: string): { reading: WireReading; id: string } | null => {
+      const w = iv2.toWireV2(o, { text, state: village, day: r.day, modelId: actual, interpretationId: null });
+      if (!w) return null;
+      const iid = hmacHex(pre.secret, `iid2|${sid}|${runPart}|${cacheKey}|${JSON.stringify(w)}`).slice(0, 24);
+      return { reading: iv2.stampId(w, iid), id: iid };
+    };
+    const base = { ok: true as const, contract: 2, provider: pre.provider.name, model: { tier, id: modelId }, promptVersion: iv2.INTERPRET_V2_PROMPT };
+
+    // the model's validated answer to the same sentence in the same village is reused, and checked again on the way out
+    try {
+      if (!(await pre.store.claim(`cd:interpret-cache:${sid}`, '1', 250))) return fail(429, 'rate_limited', 'One moment.', 1);
+      const hit = await pre.store.get(cacheKey);
+      if (hit) {
+        let done: ReturnType<typeof finish> = null;
+        try {
+          const j = JSON.parse(hit) as { output?: unknown; model?: string };
+          const out = j.model === modelId ? iv2.InterpretV2Output.safeParse(j.output) : null;
+          done = out?.success ? finish(out.data, modelId) : null;
+        } catch {
+          done = null;
+        }
+        if (done) {
+          await meter.record({ route: 'interpret', outcome: 'cache_hit', tier, modelId, provider: pre.provider.name });
+          return json(200, { ...base, id: done.id, cached: true, reading: done.reading, usage: { inputTokens: 0, outputTokens: 0, latencyMs: 0, costUsd: 0 } });
+        }
+        await pre.store.del(cacheKey);
+      }
+    } catch (e) {
+      if (e instanceof StoreUnavailableError) return storeDown();
+      throw e;
+    }
+
+    const instructions = iv2.interpretV2Instructions();
+    const prompt = iv2.interpretV2Prompt(text, r, village);
+    const maxOut = L.maxOutputTokens.interpretV2;
+    const q = interpretCounters(sid, ipHash(pre.secret, req), modelId, instructions.length + prompt.length, maxOut);
+    const g = await guarded({
+      route: 'interpret',
+      store: pre.store,
+      provider: pre.provider,
+      sid,
+      cooldownMs: L.interpretCooldownMs,
+      counters: q.counters,
+      reasons: q.reasons,
+      call: { task: 'interpret', tier, modelId, instructions, prompt, schema: iv2.InterpretV2Output, schemaName: 'reality_reading', schemaDescription: 'Readings of one player belief in the reality-1 rule language', maxOutputTokens: maxOut, timeoutMs: L.timeoutMs[tier], temperature: 0, signal: req.signal },
+    });
+    if (!g.ok) return g.response;
+    const res = g.result;
+    const metered = { route: 'interpret' as const, tier, modelId: res.modelId, provider: pre.provider.name, inputTokens: res.usage.inputTokens, outputTokens: res.usage.outputTokens, cachedInputTokens: res.usage.cachedInputTokens, latencyMs: res.latencyMs, costMicros: g.costMicros };
+    if (!res.ok) {
+      await meter.record({ ...metered, outcome: res.kind });
+      return providerFailure(res.kind);
+    }
+    const done = finish(res.value, res.modelId);
+    if (!done) {
+      await meter.record({ ...metered, outcome: 'invalid' });
+      return providerFailure('malformed');
+    }
+    await pre.store.set(cacheKey, JSON.stringify({ output: res.value, model: modelId }), L.cacheTtlMs).catch(() => undefined);
+    await meter.record({ ...metered, outcome: 'ok' });
+    return json(200, { ...base, model: { tier, id: res.modelId }, id: done.id, cached: false, reading: done.reading, usage: { inputTokens: res.usage.inputTokens, outputTokens: res.usage.outputTokens, latencyMs: res.latencyMs, costUsd: g.costMicros / 1_000_000 } });
   }
 
   // ------------------------------------------------------------------------------------------ POST /api/npc-decision
@@ -380,6 +474,8 @@ export function createAiApp(deps: AppDeps): AiApp {
           return await session(req);
         case 'interpret-belief':
           return await interpret(req);
+        case 'interpret-reality':
+          return await interpretReality(req);
         case 'npc-decision':
           return await npcDecision(req);
         case 'ai-metrics':

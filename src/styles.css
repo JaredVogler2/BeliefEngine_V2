@@ -379,3 +379,13 @@ textarea[data-testid='compose-text'] { background: #0b1220; border: 1px solid va
 /* the one-line note shown when the classic map is used because there is no graphics acceleration */
 .stage-note { position: absolute; left: 10px; top: 10px; z-index: 6; display: flex; align-items: center; gap: 0.5rem; max-width: calc(100% - 80px); padding: 0.25rem 0.5rem 0.25rem 0.8rem; border-radius: 999px; background: rgba(16, 26, 43, 0.9); border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
 .stage-note .btn { min-height: 32px; padding: 0.15rem 0.7rem; }
+
+/* Generative Reality composer: what the player said beside what the game will do */
+.said-did { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.4rem 0; }
+.said-did h4 { margin: 0 0 0.2rem; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted, #9fb0d0); }
+.said-did ul { margin: 0; padding-left: 1.1rem; }
+.said-did .said { border-left: 3px solid #6b7fb3; padding-left: 0.5rem; }
+.said-did .did { border-left: 3px solid var(--gold); padding-left: 0.5rem; }
+.reasons { border: 1px dashed #6b5a2a; border-radius: 10px; padding: 0.4rem 0.6rem; margin: 0.3rem 0; }
+@media (max-width: 560px) { .said-did { grid-template-columns: 1fr; } }
+

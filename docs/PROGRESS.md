@@ -9,12 +9,54 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 02 Migration and baseline | **VERIFIED** | [`MIGRATION.md`](MIGRATION.md), [`BASELINE.md`](BASELINE.md), `tests/unit/v2-migration.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
 | 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
 | 04 Generative belief language | **VERIFIED (gate: typed, validated, deterministic, V1-compatible, three novel executable claims, property tests); the interactive preview UI arrives with phase 05's composer** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md), `tests/unit/reality-language.test.ts`, `tests/unit/reality-properties.test.ts`, `tests/fixtures/reality-corpus-1.json` |
-| 05 Interpreter and compiler | NOT STARTED | next: [`CONTINUE_HERE.md`](CONTINUE_HERE.md) |
+| 05 Interpreter and compiler | **IN PROGRESS: offline reader v2, `interpret v2` contract (TESTED MOCK ONLY), composer UI and Generative Reality runs built and tested; LIVE UNVERIFIED; the offline reader generalises poorly (held-out: 42/80 labels, 6/30 supported read faithfully)** | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
 | 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
 | 07-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-27 — Phase 05 (in progress): reading any sentence, the model contract and the composer
+
+**What was done**
+
+- **Offline reader v2** (`src/engine/reality/read.ts`, data-only `lexicon.ts`): any sentence → the four answers a model must also
+  give (supported / partial / ambiguous / unsupported), with the words each part came from; instructions and markup are removed
+  and reported; every candidate is validated and built against the actual village, choosing a region where it can act.
+- **`interpret v2`** (`server/ai/tasks/interpret-v2.ts`, `POST /api/interpret-reality`, `api/interpret-reality.ts`): the browser
+  names the village (scenario id and seed) and the server rebuilds it itself; the model's schema is generated from the operator
+  registry; the server fills in provenance, validates, builds, moves a reading to a region where it can act, and drops readings that
+  act on something the sentence never mentions or are powered by something it never names (`fidelity.ts`). Same allowance, lease,
+  reservation and fail-closed path as v1; a cache of model outputs re-checked on every read. The demo provider is the offline reader.
+- **Browser**: `aiClient.interpretReality` (rebuilds every reading against the live run; `wire.ts`), a lazy **reality composer**
+  (`RealityCompose.tsx`, its own 19 KB chunk) showing what the player said beside what the game will do, what is left out, needs,
+  support, cost and confidence, with an explicit yes for partial or substitute readings and confirmation bound to the run revision;
+  a **Generative Reality** tab on the mode screen (chapters, or Reality Lab, unranked); `V2_FEATURES.generativeReality` on.
+- Language and engine fixes found on the way: see the phase 05 checkpoint commit; the preview sentences now agree in number and name
+  regions ("rain in The Redbank is called onto Eastbank").
+
+**Corpus results.** In-sample (`reality-corpus-1`, the reader was tuned on it): 172/172 labels. **Held-out** (`reality-corpus-holdout-1`,
+80 sentences written by a separate agent that never saw the reader, its lexicon or the in-sample corpus; scored once, before any
+change it could inform): labels **42/80 (52.5%)**; supported sentences read faithfully **6/30 (20%)**; impossible sentences refused
+29/32, with an invented effect for **3/32**; partial readings naming what was left out 3/12; ambiguous sentences offered a choice 0/6;
+injected instructions obeyed 0/3; readings that build in their village 24/25. The offline reader matches a vocabulary; its
+generalisation is poor, and the held-out score is the number to quote for it.
+
+**Commands and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `BE_REQUIRE_REDIS=1 npm test` | 40 files, **459 passed** |
+| `npx vitest run tests/unit/ai-interpret-v2.test.ts tests/unit/ai-reality-client.test.ts` | 12 passed (schema, provenance, invented keys and numbers, fidelity, region move, refusals, timeout, shared allowance, cache poisoning) |
+| `npm run reality:corpus` / `-- --holdout` | the two tables above |
+| `npm run build`, `npm run size` | entry 253 KB gzip (budget 260), reality composer chunk 19 KB (budget 40), 3D chunk 193 KB |
+| `npx playwright test tests/e2e/{v2-online,inventor,v2-reality,modes}.spec.ts --project=desktop --project=phone` | **42 passed, 6 skipped** (skips are desktop-only or phone-only by design) |
+
+**Mock vs LIVE:** every `interpret v2` test used a scripted provider or the offline reader as a stand-in: **TESTED MOCK ONLY**. No
+model has been called; **LIVE: UNVERIFIED**; model accuracy is **not measured**.
 
 ---
 

@@ -285,7 +285,9 @@ export function mentionsOf(toks: Tok[], s: RunState): Mention[] {
   const pool = cands.filter((m) => !nounAfterDet(m));
   // longest first (by the words spanned), then by category, then left to right; each word is used once
   const span = (m: Mention) => m.toks.length + (m.soft?.length ?? 0);
-  pool.sort((a, b) => span(b) - span(a) || PRIORITY[a.cat] - PRIORITY[b.cat] || a.at - b.at);
+  // on a tie, a phrase with its verb ("bell rings") beats a bare noun phrase ("the bell")
+  const bare = (m: Mention) => (DETERMINERS.has(m.phrase.split(' ')[0]) ? 1 : 0);
+  pool.sort((a, b) => span(b) - span(a) || PRIORITY[a.cat] - PRIORITY[b.cat] || bare(a) - bare(b) || a.at - b.at);
   const taken = new Set<number>();
   const kept: Mention[] = [];
   for (const m of pool) {
@@ -394,7 +396,13 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
     for (const m of mentionsOf(t2, s)) if (m.cat === 'reason' && m.reason?.id === 'game') addReason('game', m.toks.map((i) => t2[i].w).join(' '), m.reason.why);
   }
   const toks = tokenize(normalizeBelief(rest));
-  const wordsOf = (m: { toks: number[]; soft?: number[] } | null): string => (m ? [...(m.soft ?? []), ...m.toks].sort((a, b) => a - b).map((i) => toks[i].w).join(' ') : '');
+  // the player's own words, in their own case, for what each part of a reading came from
+  const original = (ws: string): string => {
+    if (!ws) return ws;
+    const re = new RegExp(ws.split(' ').map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join("[^a-z0-9]+(?:(?:s|'s)[^a-z0-9]+)?"), 'i');
+    return re.exec(rest)?.[0] ?? ws;
+  };
+  const wordsOf = (m: { toks: number[]; soft?: number[] } | null): string => (m ? original([...(m.soft ?? []), ...m.toks].sort((a, b) => a - b).map((i) => toks[i].w).join(' ')) : '');
   const ms = mentionsOf(toks, s);
   const segs = segmentsOf(toks);
   const blockers: Mention[] = [];

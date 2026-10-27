@@ -61,11 +61,18 @@ export function Hand() {
           </button>
         );
       })}
-      {state.flags.inventor && !pickingStarter && !state.outcome && (
+      {state.flags.inventor && !state.v2 && !pickingStarter && !state.outcome && (
         <button className="claim write" onClick={() => store.set({ composing: true })} data-testid="compose-open">
           <span className="c-top"><ClaimGlyph icon="scroll" /><span className="c-text">Write a belief</span></span>
           <span className="c-line">Say in a sentence what the village should come to believe. Preview is free.</span>
           <span className="chip violet">Inventor run · unranked</span>
+        </button>
+      )}
+      {state.v2 && !pickingStarter && !state.outcome && (
+        <button className="claim write" onClick={() => store.set({ composing: true })} data-testid="reality-open">
+          <span className="c-top"><ClaimGlyph icon="scroll" /><span className="c-text">Write a belief into reality</span></span>
+          <span className="c-line">Any sentence about how this world works. The game shows exactly what it can make real. Reading is free.</span>
+          <span className="chip violet">{state.v2.lab ? 'Reality Lab · unranked' : 'Generative Reality'}</span>
         </button>
       )}
     </div>

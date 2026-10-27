@@ -9,8 +9,9 @@
 export const V2_FEATURES = Object.freeze({
   /** phase 03 (on since 2026-10-27): budgeted model calls through a server function holding the credential (never a browser key) */
   serverInference: true,
-  /** phases 04-06 and 09-11: the Generative Reality mode, where written beliefs compile to validated rules with new primitives */
-  generativeReality: false,
+  /** phases 04-06 (on since phase 05, 2026-10-27): Generative Reality runs, where written beliefs compile to validated rules with new
+   *  primitives (an extra mode on the mode screen; Classic is unchanged and stays the default) */
+  generativeReality: true,
   /** phases 07-08: villagers whose salient decisions are proposed by a model and then checked and applied by the engine */
   villagerCognition: false,
 });

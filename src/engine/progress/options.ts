@@ -170,5 +170,6 @@ export function optionsFromState(s: import('../core/types.ts').RunState): import
     // twists the player chose (as opposed to the ones a generated village drew from its seed)
     ...(s.flags.twisted ? { modifiers: mods } : {}),
     ...(s.flags.inventor ? { inventor: true } : {}),
+    ...(s.flags.reality === 2 ? { realityLab: true } : s.flags.reality === 1 ? { reality: true } : {}),
   };
 }

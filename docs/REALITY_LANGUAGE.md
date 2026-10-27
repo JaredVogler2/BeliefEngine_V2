@@ -100,19 +100,20 @@ visibility in tiles of cover, speed ×0.2..2, health, fear and labour in points,
 | `MOVE_AWAY` / `MOVE_TOWARD` | movement | wolf, water, chicken | magnitude 1-3; radius 0-4 | yes | 11 | temporary | what is driven off ends up elsewhere / what is drawn in arrives where the source stands |
 | `MODIFY_VISIBILITY` | light | home, livestock | delta -3..3 | yes | 12 | temporary | a pack that cannot find one place hunts the next |
 | `MODIFY_DURABILITY` | structure | bridge, home | delta -3..3 | yes | 15 | temporary | a structure the village trusts too much draws crowds onto it |
-| `MODIFY_MOVEMENT` | movement | fire, water, wolf | delta -3..3 | yes | 18 | temporary | slowed water stands longer where it is |
+| `MODIFY_MOVEMENT` | movement | fire, wolf | delta -3..3 | yes | 18 | temporary | slowed flames smoulder where they are; slowed packs linger near the village (water is slowed by `REDIRECT_FLOW` slow) |
 | `SET_MATERIAL_PROPERTY` | materials | stone, home, bridge, field | mass/flammability/hardness; delta -3..3 | yes | 20 | temporary | light stones float off in floodwater and batter what is downstream |
 | `ALTER_TEMPERATURE` | thermal | fire | delta -3..3 | yes | 25 | temporary | hotter flames destroy more; cooler ones make beacons and hearths weaker comfort |
 | `GROW_ENTITY` / `DECAY_ENTITY` | growth | field | magnitude 1-3 | yes | 30 | temporary | faster crops need more hands and water / withered crops mean less food |
-| `APPLY_FORCE` | dynamics | chicken, stone | direction up/away/toward; magnitude 1-3 | yes | 40 | temporary | what flies can be carried off by the wind and land out of reach |
+| `APPLY_FORCE` | dynamics | chicken | direction up/away/toward; magnitude 1-3 | yes | 40 | temporary | what flies can be carried off by the wind and land out of reach (stones are not thrown: a belief changes their weight) |
 | `INFLUENCE_MOTIVATION` | behavior | villager | courage/calm/diligence; magnitude 1-2 | yes | 50 | temporary | calm people are harder to convince of anything, yours included |
 | `GIVE_STATUS_EFFECT` | status | villager, home | fireproof/sick_resistant/warm; magnitude 1-3 | yes | 55 | temporary | people who feel protected linger where the danger is |
 | `SPAWN_BOUNDED_ENTITY` | spawn | chicken | chicken; count 1-3 | yes | 60 | lasting | each chick costs one food; a coop holds at most twelve |
 | `TRANSFORM_MATERIAL` | materials | stone, home, bridge, field, water | into word | **no**: it would create things from nothing | - | - | - |
 | `MODIFY_STRUCTURE_CONNECTION` | structure | bridge | connect | **no**: not modelled yet | - | - | - |
 
-`ALTER_GRAVITY_LOCAL` from the program list is expressed as `APPLY_FORCE` up on what the language can lift (chickens, light
-stones); `INFLUENCE_MOTIVATION` changes feelings (courage and calm lower fear; diligence lowers the exhaustion of night work),
+`ALTER_GRAVITY_LOCAL` from the program list is expressed as `APPLY_FORCE` up on what the language can lift (chickens) and as
+`SET_MATERIAL_PROPERTY` mass on stones (only stones have a weight a belief can change; flammability applies to homes and fields,
+hardness to the bridge and homes, and the validator refuses any other pairing); `INFLUENCE_MOTIVATION` changes feelings (courage and calm lower fear; diligence lowers the exhaustion of night work),
 never a villager's conviction. Every operator also
 declares its cost weight (balance), the property it changes and the key of the 3D effect that will draw it (phase 10).
 

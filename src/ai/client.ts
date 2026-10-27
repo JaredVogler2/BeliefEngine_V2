@@ -1,7 +1,9 @@
-import { NL_VERSION, candidatesFromReply, parseLlmReply } from '../engine/index.ts';
+import { NL_VERSION, REALITY_LANG, candidatesFromReply, parseLlmReply } from '../engine/index.ts';
 import type { RunState } from '../engine/index.ts';
 import { hashValue } from '../engine/core/hash.ts';
 import type { Candidate } from '../engine/nl/parse.ts';
+import type { Reading } from '../engine/reality/read.ts';
+import { fromWire, type WireReading } from '../engine/reality/wire.ts';
 
 /**
  * The browser side of online interpretation. It talks only to this site's own `/api/*` functions (same origin: the page's
@@ -36,6 +38,7 @@ export interface ReadingMeta {
 }
 
 export type OnlineResult = { ok: true; readings: Candidate[]; meta: ReadingMeta } | AiFailure;
+export type RealityResult = { ok: true; reading: Reading; meta: ReadingMeta } | AiFailure;
 
 const REASON_TEXT: Record<string, string> = {
   disabled: 'Online reading is switched off on this server.',
@@ -159,6 +162,48 @@ export class AiClient {
     return {
       ok: true,
       readings,
+      meta: {
+        id: String(body.id ?? '').slice(0, 40),
+        cached: body.cached === true,
+        provider: String(body.provider ?? '').slice(0, 20),
+        model: String(model.id ?? '').slice(0, 80),
+        tier: String(model.tier ?? '').slice(0, 12),
+        promptVersion: String(body.promptVersion ?? '').slice(0, 60),
+        latencyMs: Number(usage.latencyMs) || 0,
+      },
+    };
+  }
+
+  /**
+   * One sentence in the reality language (Generative Reality runs). What leaves the device: the sentence, which village (scenario id
+   * and seed: the server rebuilds the village itself), the region the player picked if any, the day and a hashed run reference.
+   * The answer is validated and every reading rebuilt against this live run before the player can confirm one.
+   */
+  async interpretReality(state: RunState, text: string, opts: { region?: string | null; timeoutMs?: number } = {}): Promise<RealityResult> {
+    if (!state.v2) return { ok: false, reason: 'bad_request', why: 'Written reality beliefs belong to Generative Reality runs.' };
+    if (!this.hasSession()) {
+      const s = await this.openSession();
+      if (!s.ok) return s;
+    }
+    const payload = { v: 2, text: text.slice(0, 240), lang: REALITY_LANG, scenario: { id: state.scenarioId, seed: state.seed, lab: !!state.v2.lab }, region: opts.region ?? null, day: state.day, run: runRef(state) };
+    const r = await this.request('/api/interpret-reality', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${this.token}` }, body: JSON.stringify(payload) }, opts.timeoutMs ?? 25_000);
+    if ('ok' in r && r.ok === false) return r;
+    const { status, body } = r as { status: number; body: Record<string, unknown> | null };
+    if (status === 401) this.forget();
+    if (status !== 200 || !body || body.ok !== true) return this.failure(body);
+    const w = body.reading as WireReading | undefined;
+    if (!w || typeof w !== 'object' || !['supported', 'partial', 'ambiguous', 'unsupported'].includes((w as { kind?: string }).kind ?? '')) return { ok: false, reason: 'bad_output', why: explain('bad_output') };
+    let reading: Reading;
+    try {
+      reading = fromWire(state, w);
+    } catch {
+      return { ok: false, reason: 'bad_output', why: explain('bad_output') };
+    }
+    const model = (body.model ?? {}) as { id?: unknown; tier?: unknown };
+    const usage = (body.usage ?? {}) as { latencyMs?: unknown };
+    return {
+      ok: true,
+      reading,
       meta: {
         id: String(body.id ?? '').slice(0, 40),
         cached: body.cached === true,

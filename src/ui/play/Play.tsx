@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { allClaimDefs, firstName, getForecast, getHud, getLawViews, describeAction, nightReport } from '../../engine/index.ts';
 import { setAmbience, setSceneAudio, setThreatIntensity, unlockAudio } from '../../audio/audio.ts';
 import { Icon, Modal, Pips, evIcon } from '../components.tsx';
 import { store, useStore } from '../store.ts';
 import { getTutorial } from '../tutorial.ts';
 import { Compose } from './Compose.tsx';
+
+// the reality composer carries the reader v2 and its vocabulary: it loads only when a Generative Reality run opens it
+const RealityCompose = lazy(() => import('./RealityCompose.tsx'));
 import { Hand } from './Hand.tsx';
 import { MapView } from './MapView.tsx';
 import { ForecastPanel, LawsPanel, LogPanel, SelectedPanel, TABS, VillagePanel, tabLabel } from './Panels.tsx';
@@ -279,7 +282,7 @@ export function Play() {
       </aside>
       <PlanBar />
       {ui.confirmEnd && <ConfirmEnd />}
-      {ui.composing && <Compose />}
+      {ui.composing && (state.v2 ? <Suspense fallback={<div className="sr-only" role="status">Opening the composer…</div>}><RealityCompose /></Suspense> : <Compose />)}
       <Toasts />
       <div className="sr-only" aria-live="polite" role="status" data-testid="announce">{ui.announce}</div>
     </div>

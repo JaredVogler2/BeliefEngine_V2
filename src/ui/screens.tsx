@@ -12,6 +12,7 @@ import { BIOME_LABEL, dailyLabel, dailyOptions, expeditionOptions, freshExpediti
 import { downloadText } from './files.ts';
 import { useWhatIf } from './whatif.ts';
 import { store, useStore } from './store.ts';
+import { V2_FEATURES } from '../v2/features.ts';
 
 // ------------------------------------------------------------------ title
 
@@ -106,7 +107,7 @@ export function Title() {
 
 // ------------------------------------------------------------------ scenario select + briefing
 
-type ModeTab = 'story' | 'expedition' | 'daily';
+type ModeTab = 'story' | 'expedition' | 'daily' | 'reality';
 
 function ModifierList({ ids }: { ids: string[] }) {
   if (!ids.length) return null;
@@ -153,7 +154,7 @@ export function Scenarios() {
         <button className="btn small" onClick={() => store.set({ screen: 'title' })}>← Back</button>
         <h1 style={{ marginTop: '0.8rem' }}>Choose how to play</h1>
         <div className="tabs mode-tabs" role="tablist" aria-label="Game mode">
-          {([['story', 'Story chapters'], ['expedition', 'Expedition'], ['daily', 'Daily village']] as [ModeTab, string][]).map(([t, label]) => (
+          {([['story', 'Story chapters'], ['expedition', 'Expedition'], ['daily', 'Daily village'], ...(V2_FEATURES.generativeReality ? [['reality', 'Generative Reality']] : [])] as [ModeTab, string][]).map(([t, label]) => (
             <button key={t} role="tab" className="tab" aria-selected={tab === t} data-testid={`mode-${t}`} onClick={() => { sfx('click'); setTab(t); }}>{label}</button>
           ))}
         </div>
@@ -181,6 +182,31 @@ export function Scenarios() {
               })}
             </div>
           </>
+        )}
+        {tab === 'reality' && V2_FEATURES.generativeReality && (
+          <section data-testid="reality-panel">
+            <p className="muted">
+              The story chapters, with one difference: you can write any belief about how the world works, in your own words. The game shows exactly what it can make real
+              of it (and what it cannot), and a belief only changes the world once enough villagers hold it. These runs also have chickens and loose stones to work with.
+              Reading is offline unless you choose otherwise.
+            </p>
+            <div className="grid2">
+              {list.map((sc) => (
+                <div key={sc.id} className="card scn-card" data-testid={`reality-scn-${sc.id}`}>
+                  <h2>{sc.name}</h2>
+                  <p>{sc.tagline}</p>
+                  <div className="row wrap">
+                    <span className="chip">{sc.days} days</span>
+                    <span className="chip violet">Write your own laws</span>
+                  </div>
+                  <div className="row wrap" style={{ gap: '0.5rem' }}>
+                    <button className="btn primary" onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), reality: true }); }} data-testid={`begin-reality-${sc.id}`}>Begin</button>
+                    <button className="btn" title="Three clauses, wider reach and stronger beliefs; never ranked." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), realityLab: true }); }} data-testid={`begin-lab-${sc.id}`}>Reality Lab (unranked)</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
         {tab === 'expedition' && (
           <section data-testid="expedition-panel">
