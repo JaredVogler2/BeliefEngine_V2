@@ -9,7 +9,8 @@ import { OPERATORS } from './operators.ts';
  * both languages, so written V2 beliefs and V1's authored laws are priced against each other.
  *
  *   clause power  = reach x magnitude x trigger ease x operator weight / 8 x conditions x duration
- *   reach         = a radius r: pi (r + 0.5)^2 x 0.35;  a whole region: 4 per region
+ *   reach         = an operator's radius r: pi (r + 0.5)^2 x 0.35;  a whole region: 4 per region; a "near" selector on a
+ *                   region-wide effect: the smaller of its circle and the region (narrowing never costs more)
  *   ease          = always 1.6, night 1.15, watchers 1, lantern/bell/smoke 1, rain 0.9, ritual or spoken 0.9, flood 0.8;
  *                   all-of: the hardest x 0.85; any-of: the easiest x 1.1; not: 1.4
  *   conditions    = x 0.8 per condition test (at least 0.5);  duration: one night 1, while the law holds 1.25
@@ -29,10 +30,18 @@ export const apCostOf = (p: number): number => (p < 10 ? 1 : p < 30 ? 2 : 3);
 
 const EASE: Record<string, number> = { always: 1.6, night: 1.15, watchers: 1, lantern: 1, bell: 1, smoke_fire: 1, rain: 0.9, clear_night: 1, ritual: 0.9, spoken: 0.9, flood: 0.8 };
 
+/** Parts that fire every night restrict nothing: "at night, when the bell rings" is priced as "when the bell rings". */
+const everyNight = (t: Trigger): boolean => 'event' in t && (t.event === 'night' || t.event === 'always');
+
 export function triggerEase(t: Trigger): number {
   if ('event' in t) return EASE[t.event] ?? 1;
   if ('not' in t) return 1.4;
-  if ('all' in t) return Math.min(...t.all.map(triggerEase)) * 0.85;
+  if ('all' in t) {
+    const real = t.all.filter((x) => !everyNight(x));
+    if (!real.length) return Math.min(...t.all.map(triggerEase));
+    return real.length === 1 ? triggerEase(real[0]) : Math.min(...real.map(triggerEase)) * 0.85;
+  }
+  if (t.any.some(everyNight)) return 1.6;
   return Math.min(1.6, Math.max(...t.any.map(triggerEase)) * 1.1);
 }
 
@@ -55,8 +64,9 @@ function countTests(c: Clause['where']): number {
 
 export function clausePower(c: Clause, regions: number): number {
   const e = c.effect as Record<string, unknown>;
-  const radius = typeof e.radius === 'number' ? e.radius : c.target.near ? c.target.near.radius : null;
-  const reach = radius === null ? 4 * Math.max(1, regions) : reachOf(radius);
+  const whole = 4 * Math.max(1, regions);
+  // an operator's own radius is its reach (V1's stamps); a "near" selector only narrows a region-wide effect, so it never costs more
+  const reach = typeof e.radius === 'number' ? reachOf(e.radius) : c.target.near ? Math.min(whole, reachOf(c.target.near.radius)) : whole;
   const op = OPERATORS[c.effect.op];
   const cond = Math.max(0.5, 0.8 ** countTests(c.where));
   const dur = c.duration === 'while_active' ? 1.25 : 1;

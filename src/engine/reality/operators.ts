@@ -65,10 +65,10 @@ const RADIUS = { name: 'radius', kind: 'int', min: 0, max: 4, unit: 'tiles aroun
 
 export const OPERATORS: Record<OpId, OperatorDef> = {
   APPLY_FORCE: {
-    id: 'APPLY_FORCE', family: 'dynamics', label: 'push or lift', targets: ['chicken', 'stone'],
+    id: 'APPLY_FORCE', family: 'dynamics', label: 'push or lift', targets: ['chicken'],
     params: [{ name: 'direction', kind: 'enum', values: ['up', 'away', 'toward'] }, MAG],
     executes: true, tickOrder: 40, weight: 6, persistence: 'temporary', property: 'altitude',
-    downside: 'what flies or is pushed can be carried off by the wind and land where nobody can reach it', visual: 'force_lift',
+    downside: 'what flies or is pushed can be carried off by the wind and land where nobody can reach it (stones are not thrown: a belief changes their weight)', visual: 'force_lift',
   },
   REDIRECT_FLOW: {
     id: 'REDIRECT_FLOW', family: 'hydrology', label: 'turn floodwater', targets: ['water'],
@@ -126,9 +126,9 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
     downside: 'a pack that cannot find one place hunts the next', visual: 'veil',
   },
   MODIFY_MOVEMENT: {
-    id: 'MODIFY_MOVEMENT', family: 'movement', label: 'make it move faster or slower', targets: ['fire', 'water', 'wolf'],
+    id: 'MODIFY_MOVEMENT', family: 'movement', label: 'make it move faster or slower', targets: ['fire', 'wolf'],
     params: [DELTA], executes: true, tickOrder: 18, weight: 5, persistence: 'temporary', property: 'speed',
-    downside: 'slowed water stands longer where it is', visual: 'slow_ripple',
+    downside: 'slowed flames smoulder where they are instead of burning out; slowed packs linger near the village longer (water is slowed by turning its flow)', visual: 'slow_ripple',
   },
   MOVE_AWAY: {
     id: 'MOVE_AWAY', family: 'movement', label: 'drive away from the source', targets: ['wolf', 'water', 'chicken'],
@@ -171,5 +171,8 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
     downside: 'people who feel protected take more risks: they linger where the danger is', visual: 'ward',
   },
 };
+
+/** Which things each material property means something for (a bridge has no weight the village can change). */
+export const MATERIAL_TARGETS: Record<'mass' | 'flammability' | 'hardness', TargetKind[]> = { mass: ['stone'], flammability: ['home', 'field'], hardness: ['bridge', 'home'] };
 
 export const EXECUTABLE_OPS = (Object.keys(OPERATORS) as OpId[]).filter((k) => OPERATORS[k].executes);

@@ -56,6 +56,15 @@ None new: phases 04/06 are engine-only so far. Phase 03's are in [`screenshots/v
 4. **3D tests are slow on a software rasteriser** (≈3 fps): keep new 3D browser tests short; long traces behind `BE_SLOW_3D=1`.
 5. V1 defects D7, D8, D9 ([`V1_AUDIT.md`](V1_AUDIT.md) §12) are still open.
 
+## Phase 05 in progress (checkpoint)
+
+Done and committed: the offline reader v2 (`src/engine/reality/read.ts`, data-only `lexicon.ts`; `npm run reality:corpus`), its
+tests (`tests/unit/reality-reader.test.ts`), the wire format and fidelity check (`src/engine/reality/wire.ts`), and language fixes
+the reader exposed (no-op operator targets refused, material properties per kind, "near" never priced above the region,
+redundant "at night" not discounted, drawing in versus driving off counted as a contradiction). In-sample corpus: 172/172 labels,
+but the reader was tuned on it; a held-out corpus written by a separate agent (`tests/fixtures/reality-corpus-holdout-1.json`)
+is the generalisation measure, scored WITHOUT tuning on it. Next: steps 2-4 below (server contract, composer, tests).
+
 ## Next exact code changes (phase 05)
 
 1. **Offline reader v2** (`src/engine/reality/read.ts` + data-only `lexicon.ts`): sentence → a reading union, exactly the shape

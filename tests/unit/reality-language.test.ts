@@ -147,9 +147,35 @@ describe('balance', () => {
     expect(weak.thresholds.on).toBeGreaterThanOrEqual(0.6);
   });
 
+  it('never prices a narrowing "near" above the whole region, nor a redundant "at night" below the trigger it accompanies', () => {
+    const region = clone(chickensFly());
+    const near = clone(chickensFly());
+    near.clauses[0].target.near = { anchor: 'beacon', radius: 4 };
+    expect(beliefPower(near)).toBeLessThanOrEqual(beliefPower(region));
+    const atNight = clone(chickensFly());
+    atNight.clauses[0].when = { all: [{ event: 'night', min: null }, { event: 'bell', min: null }] };
+    expect(beliefPower(atNight)).toBeCloseTo(beliefPower(chickensFly()), 9);
+    const either = clone(chickensFly());
+    either.clauses[0].when = { any: [{ event: 'always', min: null }, { event: 'bell', min: null }] };
+    expect(beliefPower(either)).toBeCloseTo(beliefPower({ ...chickensFly(), clauses: [{ ...chickensFly().clauses[0], when: { event: 'always', min: null } }] }), 9);
+  });
+
+  it('treats drawing in and driving off, growing and withering, as opposite pushes on one thing', () => {
+    const wolves = (op: 'MOVE_AWAY' | 'MOVE_TOWARD', id: string) => ({ id, when: { event: 'smoke_fire' as const, min: null }, where: null, target: { kind: 'wolf' as const, near: null, tags: [], region: null }, effect: { op, magnitude: 2, radius: 2 }, duration: 'night' as const });
+    const r = validateRealityAst({ ...chickensFly('north'), clauses: [wolves('MOVE_AWAY', 'c1'), wolves('MOVE_TOWARD', 'c2')] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.issues[0].code).toBe('CONTRADICTION');
+    // two different properties of one thing are not a contradiction
+    const home = (property: 'flammability' | 'hardness', id: string) => ({ id, when: { event: 'bell' as const, min: null }, where: null, target: { kind: 'home' as const, near: null, tags: [], region: null }, effect: { op: 'SET_MATERIAL_PROPERTY' as const, property, delta: -1 }, duration: 'night' as const });
+    expect(validateRealityAst({ ...chickensFly(), clauses: [home('flammability', 'c1'), home('hardness', 'c2')] }).ok).toBe(true);
+    // and a property that thing does not have is refused: a bridge has no weight a belief can change
+    const bridge = { ...chickensFly(), clauses: [{ ...home('flammability', 'c1'), target: { kind: 'bridge' as const, near: null, tags: [], region: null }, effect: { op: 'SET_MATERIAL_PROPERTY' as const, property: 'mass' as const, delta: -2 } }] };
+    expect(validateRealityAst(bridge).ok).toBe(false);
+  });
+
   it('narrows a belief that is too large, and says how', () => {
     const big = clone(chickensFly('east', 3));
-    big.clauses[0] = { ...big.clauses[0], when: { event: 'always', min: null }, target: { kind: 'chicken', near: { anchor: 'belltower', radius: 4 }, tags: [], region: null }, duration: 'while_active' };
+    big.clauses[0] = { ...big.clauses[0], when: { event: 'always', min: null }, target: { kind: 'water', near: null, tags: [], region: null }, effect: { op: 'REDIRECT_FLOW', mode: 'repel', magnitude: 3, radius: 4 }, duration: 'while_active' };
     expect(beliefPower(big)).toBeGreaterThan(60);
     const b = balanceReality(big);
     expect(b.power).toBeLessThanOrEqual(60);
@@ -285,8 +311,8 @@ describe('the adversarial belief corpus (tests/fixtures/reality-corpus-1.json)',
       expect(scenarios.has(c.scenario), c.id).toBe(true);
       expect(['supported', 'partial', 'ambiguous', 'unsupported'], c.id).toContain(c.expect);
       expect(c.text.length, c.id).toBeGreaterThan(0);
-      for (const k of c.kinds) expect(k in KINDS, `${c.id} kind ${k}`).toBe(true);
-      for (const o of c.ops) expect(o in OPERATORS, `${c.id} op ${o}`).toBe(true);
+      for (const k of c.kinds) expect(Object.hasOwn(KINDS, k), `${c.id} kind ${k}`).toBe(true);
+      for (const o of c.ops) expect(Object.hasOwn(OPERATORS, o), `${c.id} op ${o}`).toBe(true);
       for (const t of c.triggers) expect(events.has(t), `${c.id} trigger ${t}`).toBe(true);
       if (c.expect === 'supported') expect(c.kinds.length * c.ops.length, c.id).toBeGreaterThan(0);
       if (c.expect === 'unsupported' || c.expect === 'partial') expect(c.absent.length, c.id).toBeGreaterThan(0);

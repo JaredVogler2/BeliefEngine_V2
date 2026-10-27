@@ -32,6 +32,7 @@
     "mcp:verify": "tsx mcp/verify-run.ts",
     "replay:example": "tsx scripts/replay-example.ts",
     "nl:corpus": "tsx scripts/nl-corpus.ts",
+    "reality:corpus": "tsx scripts/reality-corpus.ts",
     "nl:demo": "tsx scripts/nl-demo.ts",
     "acceptance:mcp": "tsx scripts/acceptance-b.ts",
     "acceptance:fun": "tsx scripts/acceptance-fun.ts",

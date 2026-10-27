@@ -1,7 +1,7 @@
 import { canonicalize, hash53 } from '../core/hash.ts';
 import type { LandmarkKind } from '../core/types.ts';
 import { ANCHORS, KINDS, REALITY_LANG, type TargetKind } from './ontology.ts';
-import { OPERATORS, type OpId, type ParamSpec } from './operators.ts';
+import { MATERIAL_TARGETS, OPERATORS, type OpId, type ParamSpec } from './operators.ts';
 
 /**
  * AST v2: the typed, data-only form of a Generative Reality belief. A sentence (read offline or by a model), a save file or an
@@ -163,6 +163,17 @@ function checkParam(p: ParamSpec, v: unknown): boolean {
   }
 }
 
+/** Operators that push the same property from opposite sides: drawing in and driving off, growing and withering. */
+const AXIS: Partial<Record<OpId, string>> = { MOVE_AWAY: 'MOVE', MOVE_TOWARD: 'MOVE', GROW_ENTITY: 'GROWTH', DECAY_ENTITY: 'GROWTH' };
+/** The parameter that makes two uses of one operator different things (weight versus flammability, courage versus calm). */
+function subKind(e: Effect): string {
+  if (e.op === 'SET_MATERIAL_PROPERTY') return e.property;
+  if (e.op === 'INFLUENCE_MOTIVATION') return e.motive;
+  if (e.op === 'GIVE_STATUS_EFFECT') return e.status;
+  if (e.op === 'APPLY_FORCE') return e.direction === 'up' ? 'up' : 'level';
+  return '';
+}
+
 /** Strict validation of untrusted data. `limits` relaxes only clause count and reach (Reality Lab), never depth or shape. */
 export function validateRealityAst(x: unknown, limits: Limits = LIMITS): AstCheck {
   const issues: Issue[] = [];
@@ -228,9 +239,11 @@ export function validateRealityAst(x: unknown, limits: Limits = LIMITS): AstChec
     for (const p of def.params) if (!checkParam(p, e[p.name])) issues.push({ code: 'RANGE', at: `${at}.effect.${p.name}`, message: `${p.name} is out of range for ${def.id}` });
     if (!def.executes) issues.push({ code: 'OP_NOT_EXECUTABLE', at: `${at}.effect.op`, message: `${def.label}: ${def.why}` });
     if (kind && !def.targets.includes(kind)) issues.push({ code: 'TARGET', at: `${at}.effect`, message: `${def.label} cannot act on ${KINDS[kind].label}` });
+    else if (kind && def.id === 'SET_MATERIAL_PROPERTY' && typeof e.property === 'string' && Object.prototype.hasOwnProperty.call(MATERIAL_TARGETS, e.property) && !MATERIAL_TARGETS[e.property as keyof typeof MATERIAL_TARGETS].includes(kind))
+      issues.push({ code: 'TARGET', at: `${at}.effect.property`, message: `${KINDS[kind].label} have no ${e.property === 'mass' ? 'weight' : e.property} a belief can change here` });
   });
   if (!issues.length) {
-    const sig = (c: Clause) => `${c.target.kind}|${c.effect.op}|${canonicalize(c.target.near)}`;
+    const sig = (c: Clause) => `${c.target.kind}|${AXIS[c.effect.op] ?? c.effect.op}|${subKind(c.effect)}|${canonicalize(c.target.near)}`;
     const cs = clauses as Clause[];
     for (let i = 0; i < cs.length; i++)
       for (let j = i + 1; j < cs.length; j++) {

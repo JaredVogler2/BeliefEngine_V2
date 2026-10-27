@@ -2,6 +2,7 @@
  "name": "reality-corpus-1",
  "language": "reality-1",
  "created": "2026-10-27",
+ "revised": "2026-10-27, before any reader was scored: cond-02's trigger corrected from bell to always (the wind is a condition and the bell tower only a place); two reason ids renamed to generic codes (unknown_trigger, unknown_place); rules written down. After the first scoring: comp-12 relabelled partial (not_here): Redbank has no wolves, so 'draw wolves' cannot happen there; the reader offers the rest and names it (a product decision: readings must build in their village).",
  "author": "written by the developer (Claude) for phase 04; the same author wrote the reader, so this measures regressions and honesty, not unbiased accuracy",
  "labels": {
   "supported": "every meaningful part can be represented; the reading must contain these target kinds, operators and trigger events",
@@ -9,6 +10,12 @@
   "ambiguous": "two materially different readings exist; the reader should offer a choice, not pick silently",
   "unsupported": "nothing executable should come out; the reader must say why (absent lists the concept)"
  },
+ "rules": [
+  "A reading matches a supported or partial case when its target kinds, operators and trigger events include the listed ones (extra ones are allowed).",
+  "Lanterns or smoke fires named as the place something is near must be burning: they also power the clause. A bell tower named as a place does not ring.",
+  "The moon and stars named as a time mean night; 'clear night', 'cloudless' or 'not raining' mean clear_night.",
+  "'absent' lists the reason a reader must name: an ABSENT concept id (time, the_dead, metal, shadow, sky_bodies, monsters, minds, sea, tools, game) or a reason code (no_change, no_mechanic, abstract, contradiction, incompatible, transform, infinite_resource, absolute, unbounded_spawn, animals_not_modelled, unknown_trigger, unknown_place, single_instance, exact_count, fraction, third_clause, instruction, not_here)."
+ ],
  "cases": [
   {
    "id": "core-01",
@@ -843,7 +850,7 @@
     "APPLY_FORCE"
    ],
    "triggers": [
-    "bell"
+    "always"
    ],
    "absent": []
   },
@@ -999,7 +1006,7 @@
    ],
    "triggers": [],
    "absent": [
-    "bridge_falls_trigger"
+    "unknown_trigger"
    ]
   },
   {
@@ -1053,7 +1060,7 @@
     "lantern"
    ],
    "absent": [
-    "river_bank_place"
+    "unknown_place"
    ]
   },
   {
@@ -1585,7 +1592,7 @@
    "scenario": "redbank",
    "category": "compound",
    "text": "Lit lanterns turn the flood aside but draw wolves.",
-   "expect": "supported",
+   "expect": "partial",
    "kinds": [
     "water"
    ],
@@ -1595,7 +1602,9 @@
    "triggers": [
     "lantern"
    ],
-   "absent": []
+   "absent": [
+    "not_here"
+   ]
   },
   {
    "id": "poet-01",

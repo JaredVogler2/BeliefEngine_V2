@@ -54,11 +54,13 @@ function randomAst(r: () => number): RealityAst {
       else if (p.kind === 'bool') effect[p.name] = r() < 0.5;
       else effect[p.name] = 'stone';
     }
+    const kind = pick(def.targets);
+    if (op === 'SET_MATERIAL_PROPERTY' && r() < 0.8) effect.property = kind === 'stone' ? 'mass' : kind === 'bridge' ? 'hardness' : pick(['flammability', 'hardness']);
     return {
       id: `c${k + 1}`,
       when: trig(int(0, 3)),
       where: r() < 0.3 ? { test: pick(COND_TESTS) } : null,
-      target: { kind: pick(def.targets), near: r() < 0.4 ? { anchor: pick(ANCHORS), radius: int(0, 5) } : null, tags: r() < 0.2 ? [pick(TAGS)] : [], region: null },
+      target: { kind, near: r() < 0.4 ? { anchor: pick(ANCHORS), radius: int(0, 5) } : null, tags: r() < 0.2 ? [pick(TAGS)] : [], region: null },
       effect,
       duration: r() < 0.2 ? 'while_active' : 'night',
     };
@@ -159,7 +161,7 @@ describe('over time', () => {
     const id = b.draft.claim.id;
     let peak = 0;
     for (let d = 0; d < 9 && !g.state.outcome; d++) {
-      const conv = d < 3 ? 85 : 0;
+      const conv = d < 2 ? 85 : 0;
       for (const v of g.state.villagers) if (v.district === 'east' && v.status !== 'dead') v.beliefs[id] = { conv, heard: 3, lastDay: g.state.day, lastSource: null, evidence: conv ? 30 : 0, cause: null, stale: 0 };
       lightEast(g);
       g.endDay();

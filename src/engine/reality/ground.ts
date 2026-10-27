@@ -1,4 +1,5 @@
 import type { RunState } from '../core/types.ts';
+import { regionAt } from '../world/grid.ts';
 import { conditionTests, triggerEvents, type Clause, type RealityAst, type Trigger, type TriggerEvent } from './ast.ts';
 import { anchorsIn } from './execute.ts';
 import { ANCHOR_LABEL, KINDS, kindAvailable } from './ontology.ts';
@@ -94,6 +95,16 @@ export function groundAst(s: RunState, ast: RealityAst): Grounding {
     if ((e.op === 'WEATHER_MODIFIER' && e.toward && !regionIds.has(e.toward)) || (e.op === 'RELOCATE_RESOURCE' && !regionIds.has(e.toward))) issues.push(`${at}there is no region to send the water to by that name`);
     if (e.op === 'SPAWN_BOUNDED_ENTITY' && !v2.coops.length) issues.push(`${at}there are no coops in this village`);
     if (c.target.kind === 'chicken' && v2.chickens.filter((x) => x.alive).length === 0) notes.push(`${at}no chickens are alive right now`);
+    // a belief can be well grounded and still find nothing where its believers live
+    for (const r of ast.regions) {
+      if (!regionIds.has(r) || r === 'river') continue;
+      const name = s.world.regions.find((x) => x.id === r)?.name ?? r;
+      const none = (what: string) => notes.push(`${at}there are no ${what} in ${name} right now, so it would find nothing to act on there`);
+      if (c.target.kind === 'chicken' && !v2.chickens.some((x) => x.alive && (v2.coops.find((k) => k.id === x.coop)?.region ?? '') === r)) none('chickens');
+      if (c.target.kind === 'stone' && !v2.stones.some((x) => x.state === 'loose' && regionAt(s.world, x.x, x.y) === r)) none('loose stones');
+      if (c.target.kind === 'livestock' && !s.world.landmarks.some((l) => l.kind === 'pen' && l.district === r)) none('pens');
+      if (c.target.kind === 'field' && !s.world.landmarks.some((l) => l.kind === 'field' && l.district === r)) none('fields');
+    }
     if (c.target.kind === 'stone' && v2.stones.filter((x) => x.state === 'loose').length === 0) notes.push(`${at}no loose stones are left`);
     if (conditionTests(c.where).includes('blue') && !s.villagers.some((v) => v.status !== 'dead' && v.look.hue >= 190 && v.look.hue <= 260)) notes.push(`${at}nobody here wears blue right now`);
   });
