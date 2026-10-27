@@ -174,7 +174,12 @@ function episodesOf(s: RunState, e: GameEvent): [string, Draft][] {
       break;
     }
     case 'NPC_ACT':
-      if (e.actor && e.target && e.actor !== e.target) out.push([e.target, { ...base, kind: 'npc_spoke', witnessed: true, source: e.actor, credibility: trust01(s, e.target, e.actor), salience: 1, valence: 0, text: cut(e.text) }]);
+      if (e.actor && e.target && e.actor !== e.target && findVillager(s, e.target))
+        out.push([e.target, { ...base, kind: 'npc_spoke', witnessed: true, source: e.actor, credibility: trust01(s, e.target, e.actor), salience: e.reason === 'challenge' || e.reason === 'support_rescue' ? 2 : 1, valence: e.reason === 'comfort' || e.reason === 'support_rescue' ? 1 : e.reason === 'challenge' ? -1 : 0, text: cut(e.text) }]);
+      break;
+    case 'NPC_INVESTIGATED':
+      if (e.actor && e.reason !== 'nothing')
+        out.push([e.actor, { ...base, kind: e.reason === 'worked' ? 'saw_law_work' : 'saw_proof_fail', witnessed: true, source: null, credibility: 100, salience: 2, valence: e.reason === 'worked' ? 1 : -1, judge: true, text: cut(e.text) }]);
       break;
     case 'KEEPER_TALKED':
       if (e.target) out.push([e.target, { ...base, kind: 'talked_keeper', witnessed: true, source: 'keeper', credibility: Math.round(findVillager(s, e.target)?.keeperTrust ?? 50), salience: 1, valence: 0, text: cut(e.text) }]);
@@ -240,10 +245,11 @@ export function summaryText(s: RunState, l: SummaryLine): string {
   return cut(`${days}: ${LABEL[l.kind]}${l.claim ? ` about “${short(s, l.claim)}”` : ''}${l.count > 1 ? `, ${l.count} times` : ''}${from}.`);
 }
 
-/** Turns every log event since the last capture into memories. No-op outside V2 runs with minds. */
-export function captureMemories(s: RunState): void {
+/** Turns every log event since the last capture into memories; returns each villager's new ones. No-op outside V2 runs with minds. */
+export function captureMemories(s: RunState): Map<string, Episode[]> {
+  const added = new Map<string, Episode[]>();
   const minds = s.v2?.minds;
-  if (!minds) return;
+  if (!minds) return added;
   const fresh = s.log.filter((e) => e.id > minds.seen);
   minds.seen = s.nextEventId - 1;
   const by = new Map<string, Draft[]>();
@@ -269,12 +275,17 @@ export function captureMemories(s: RunState): void {
       .sort((a, b) => b.d.salience - a.d.salience || a.i - b.i)
       .slice(0, MAX_NEW_PER_DAY)
       .sort((a, b) => a.i - b.i);
+    const mine: Episode[] = [];
     for (const { d } of kept) {
-      m.episodes.push({ id: `m${minds.nextEpisode++}`, ...d });
+      const ep = { id: `m${minds.nextEpisode++}`, ...d };
+      m.episodes.push(ep);
+      mine.push(ep);
       drift(m, d);
     }
+    added.set(vid, mine);
     compact(s, m);
   }
+  return added;
 }
 
 /** What a villager remembers, most important first: for a model's context, the conversation panel and the debrief. */

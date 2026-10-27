@@ -1,6 +1,6 @@
 import { clamp, rand } from '../core/rng.ts';
 import type { RunState, Villager } from '../core/types.ts';
-import { TRAITS, type GoalId, type Mind, type MindsState, type Personality } from './types.ts';
+import { MODEL_DECISIONS_PER_RUN, TRAITS, type GoalId, type Mind, type MindsState, type Personality } from './types.ts';
 
 /**
  * A mind for each villager, derived only from what the run already holds: V1's traits (skepticism, openness, stubbornness,
@@ -67,5 +67,5 @@ export function initMinds(s: RunState): MindsState {
     const personality = personalityOf(s, v);
     agents[v.id] = { personality, base: { ...personality }, goals: goalsOf(s, v, personality), episodes: [], summary: [] };
   }
-  return { v: 1, agents, nextEpisode: 1, seen: s.nextEventId - 1 };
+  return { v: 1, agents, nextEpisode: 1, seen: s.nextEventId - 1, queue: [], decided: {}, last: [], refuge: {}, moves: {}, modelUsed: 0, modelCap: MODEL_DECISIONS_PER_RUN };
 }

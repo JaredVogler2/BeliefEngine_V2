@@ -10,6 +10,8 @@ import { NL_VERSION } from '../nl/ontology.ts';
 import { memoryFactor, remember } from './memory.ts';
 import type { Action, ActionError, ActionResult, ClaimDef, GameEvent, Landmark, RitualDef, RunState, Villager } from './types.ts';
 import { K, ensureBelief, evidenceGain, gossipDelta, REASON_TEXT, relevance, round1, seedGain } from '../social/persuasion.ts';
+import { validateChoice } from '../mind/decide.ts';
+import { THINKERS_PER_DAY, type Approach, type Intent, type Tone } from '../mind/types.ts';
 import { bfsDist, components, connected, passableMask } from '../world/nav.ts';
 import { idx } from '../world/grid.ts';
 
@@ -53,6 +55,7 @@ export function actionCost(s: RunState, a: Action): number {
     case 'COMPOSE':
       // what a belief costs to write follows from its strength (nl/balance.ts, reality/balance.ts), never from what the request says
       return a.claim?.reality ? realityComposeCost(s, a.claim.reality.ast) : composeCostOf(a.claim?.custom?.ast);
+    case 'NPC_DECIDE':
     case 'END_DAY':
       return 0;
   }
@@ -278,6 +281,8 @@ function perform(ctx: Ctx, a: Action): Fail | null {
       return doTrade(ctx, a);
     case 'COMPOSE':
       return doCompose(ctx, a);
+    case 'NPC_DECIDE':
+      return doNpcDecide(ctx, a);
     case 'END_DAY':
       return fail('USE_END_DAY', 'End the day with resolveDay().');
   }
@@ -288,6 +293,45 @@ function perform(ctx: Ctx, a: Action): Fail | null {
  * what it contradicts, whether it passes the safety test) is rebuilt here by the same function the composer used, so a stale,
  * edited or invented claim is refused and nothing the client says about its own strength is believed.
  */
+/**
+ * Decisions a model proposed for the villagers due to think today. Each is held to the live run (validateChoice); the accepted
+ * ones are kept for dusk, the rest are named and left to the game's own policy. A request built against an older village
+ * (another action happened since) is refused whole: the policy decides instead, and nothing asks the model again.
+ */
+function doNpcDecide(ctx: Ctx, a: Extract<Action, { type: 'NPC_DECIDE' }>): Fail | null {
+  const s = ctx.s;
+  const minds = s.v2?.minds;
+  if (!minds) return fail('NO_MINDS', 'Villager decisions belong to Generative Reality runs.');
+  if (a.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since these decisions were asked for. The villagers will decide for themselves at dusk.');
+  if (!Array.isArray(a.decisions) || a.decisions.length < 1 || a.decisions.length > THINKERS_PER_DAY) return fail('BAD_DECISIONS', `Send 1 to ${THINKERS_PER_DAY} decisions.`);
+  const accepted: string[] = [];
+  const refused: string[] = [];
+  for (const d of a.decisions) {
+    const who = findVillager(s, String(d?.citizenId ?? ''))?.name ?? String(d?.citizenId ?? '?').slice(0, 40);
+    if (minds.decided[d.citizenId]) {
+      refused.push(`${who} (already decided today)`);
+      continue;
+    }
+    if (minds.modelUsed >= minds.modelCap) {
+      refused.push(`${who} (this run's allowance of model decisions is spent)`);
+      continue;
+    }
+    const r = validateChoice(s, { ...d, intent: d.intent as Intent, tone: d.tone as Tone, approach: d.approach as Approach, source: 'model' });
+    if (!r.ok) {
+      refused.push(`${who} (${r.why})`);
+      continue;
+    }
+    minds.decided[d.citizenId] = r.choice;
+    minds.modelUsed += 1;
+    accepted.push(who);
+  }
+  emit(ctx, {
+    step: 'action', code: 'NPC_DECISIONS', importance: 1,
+    text: `${accepted.length ? `${accepted.join(', ')} will act on what they decided` : 'No proposed decision could be used'}${refused.length ? `; the game decides for ${refused.join('; ')}` : ''}.`,
+  });
+  return null;
+}
+
 function doCompose(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | null {
   const s = ctx.s;
   if (a.claim?.reality) return doComposeReality(ctx, a);
@@ -564,6 +608,8 @@ function labelOf(s: RunState, a: Action): string {
       return s.scn.deals?.find((d) => d.id === a.deal)?.label ?? `Trade: ${a.deal}`;
     case 'COMPOSE':
       return `Write a belief: “${a.claim.short || a.claim.text}”`;
+    case 'NPC_DECIDE':
+      return `Villagers decide (${a.decisions.length})`;
     case 'END_DAY':
       return 'End the day';
   }

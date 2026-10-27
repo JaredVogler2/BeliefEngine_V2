@@ -458,7 +458,23 @@ export type Action =
   | { type: 'PICK_STARTER'; claim: Id }
   | { type: 'TRADE'; deal: Id; target: Id }
   | { type: 'COMPOSE'; claim: ClaimDef }
+  /** decisions a model proposed for villagers due to think today (V2 minds); bound to the run revision the request was built at */
+  | { type: 'NPC_DECIDE'; rev: number; decisions: NpcChoiceInput[]; model?: string; id?: string }
   | { type: 'END_DAY' };
+
+/** A villager decision as it arrives from outside the engine (validated against the live run before anything uses it). */
+export interface NpcChoiceInput {
+  citizenId: string;
+  intent: string;
+  target: string | null;
+  claimId: string | null;
+  dialogue: string | null;
+  cites: string[];
+  tone: string;
+  approach: string;
+  confidence: number;
+  thought: string;
+}
 
 export type ActionType = Action['type'];
 

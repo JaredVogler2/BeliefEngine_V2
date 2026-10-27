@@ -125,7 +125,23 @@ export function commitEvacuations(ctx: Ctx): void {
     });
   const sent: string[] = [];
   const trapped: string[] = [];
+  // V2 minds: those who chose to go to a shelter early take their place first; a neighbour's offered floor saves the trapped
+  const minds = s.v2?.minds;
+  if (minds) {
+    for (const vid of Object.keys(minds.moves).sort()) {
+      const v = s.villagers.find((x) => x.id === vid && x.status !== 'dead' && x.duty !== 'shelter');
+      const sh = findLandmark(s, minds.moves[vid]);
+      if (!v || !sh || (used.get(sh.id) ?? 0) >= sh.capacity || water[idx(s.world, sh.x, sh.y)] >= 2) continue;
+      used.set(sh.id, (used.get(sh.id) ?? 0) + 1);
+      placeVillager(v, sh, (used.get(sh.id) ?? 1) - 1);
+      v.duty = 'evacuate';
+      v.dutyNote = `Chose to go to ${sh.name} before the water came.`;
+      sent.push(v.name);
+    }
+    minds.moves = {};
+  }
   for (const v of order) {
+    if (minds && v.duty === 'evacuate') continue;
     const home = homeLandmark(s, v);
     if (!home) continue;
     const depth = water[idx(s.world, home.x, home.y)];
@@ -157,11 +173,20 @@ export function commitEvacuations(ctx: Ctx): void {
       v.dutyNote = `Evacuating to ${best.name}.`;
       sent.push(v.name);
     } else {
+      const refuge = minds?.refuge[v.id] ? findLandmark(s, minds.refuge[v.id]) : undefined;
+      if (refuge && refuge.hp > 0 && water[idx(s.world, refuge.x, refuge.y)] === 0) {
+        placeVillager(v, refuge, 1);
+        v.duty = 'shelter';
+        v.dutyNote = `Taken in for the night at ${refuge.name}.`;
+        sent.push(v.name);
+        continue;
+      }
       v.duty = 'trapped';
       v.dutyNote = 'No way out: the road is cut or the shelter is full.';
       trapped.push(v.name);
     }
   }
+  if (minds) minds.refuge = {};
   if (sent.length)
     emit(ctx, { step: 'hazard', code: 'EVACUATION', importance: 2, text: `${sent.length} evacuate: ${sent.slice(0, 5).join(', ')}${sent.length > 5 ? '…' : ''}.` });
   if (trapped.length)

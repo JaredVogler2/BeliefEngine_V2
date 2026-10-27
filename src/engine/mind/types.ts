@@ -84,13 +84,68 @@ export interface Mind {
   summary: SummaryLine[];
 }
 
+export const INTENTS = ['spread', 'ask', 'investigate', 'challenge', 'comfort', 'persuade', 'move', 'stage_evidence', 'support_rescue', 'wait'] as const;
+export type Intent = (typeof INTENTS)[number];
+export const TONES = ['calm', 'warm', 'wary', 'angry', 'fearful', 'hopeful', 'amused', 'grieving'] as const;
+export type Tone = (typeof TONES)[number];
+export const APPROACHES = ['evidence', 'testimony', 'emotion', 'authority', 'humor', 'silence'] as const;
+export type Approach = (typeof APPROACHES)[number];
+/** why a villager stops to think: the salient moments of phase 07 */
+export const MOMENTS = ['novel_claim', 'argument', 'contradiction', 'loss', 'law_change', 'faction_move', 'conversation', 'crisis'] as const;
+export type Moment = (typeof MOMENTS)[number];
+
+/** A decision, whoever proposed it (a model or the game's own policy). The engine decides what it does. */
+export interface Choice {
+  citizenId: string;
+  intent: Intent;
+  /** a villager or landmark id from that move's legal targets, or null when the move takes none */
+  target: string | null;
+  claimId: string | null;
+  /** one short spoken line, shown, never followed */
+  dialogue: string | null;
+  /** ids of this villager's own memories the decision rests on */
+  cites: string[];
+  tone: Tone;
+  approach: Approach;
+  /** the villager's own guess, never authoritative */
+  confidence: number;
+  /** one plain sentence for the audit trail */
+  thought: string;
+  source: 'model' | 'policy';
+}
+
+/** A villager due to think today, and why. */
+export interface Queued {
+  id: string;
+  why: Moment;
+  claim: string | null;
+  /** the event that made the moment */
+  event: number | null;
+}
+
 export interface MindsState {
   v: 1;
   agents: Record<string, Mind>;
   nextEpisode: number;
   /** the last log event already turned into memories */
   seen: number;
+  /** who thinks today (planned last night), at most THINKERS_PER_DAY */
+  queue: Queued[];
+  /** decisions a model proposed today and the game accepted; the rest of the queue uses the policy at dusk */
+  decided: Record<string, Choice>;
+  /** what villagers decided at the last dusk, for the player to read */
+  last: Choice[];
+  /** tonight only: villager id → a home whose owner took them in (support_rescue) */
+  refuge: Record<string, string>;
+  /** tonight only: villager id → the shelter they chose to go to early (move) */
+  moves: Record<string, string>;
+  /** model decisions accepted in this run, and the most it may use */
+  modelUsed: number;
+  modelCap: number;
 }
+
+export const THINKERS_PER_DAY = 4;
+export const MODEL_DECISIONS_PER_RUN = 120;
 
 export const MAX_EPISODES = 24;
 export const MAX_SUMMARY = 8;
