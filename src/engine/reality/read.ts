@@ -306,22 +306,27 @@ interface Seg {
   sub: boolean;
   unless: boolean;
   or: boolean;
+  /** opened by "and", "but", "then" or "yet": a coordinated claim of its own, not a phrase set off by commas */
+  joined: boolean;
 }
 
 function segmentsOf(toks: Tok[]): Seg[] {
   const out: Seg[] = [];
   let from = 0;
+  let joined = false;
   const close = (to: number) => {
     if (to <= from) return;
     const ws = toks.slice(from, to).map((t) => t.w);
     const head = ws.slice(0, 3).join(' ');
-    out.push({ from, to, sub: SUBORDINATORS.some((x) => head === x || head.startsWith(`${x} `)), unless: ws[0] === 'unless', or: ws.includes('or') });
+    out.push({ from, to, sub: SUBORDINATORS.some((x) => head === x || head.startsWith(`${x} `)), unless: ws[0] === 'unless', or: ws.includes('or'), joined });
   };
   toks.forEach((t, i) => {
     if (PUNCT.has(t.w) || JOINERS.has(t.w)) {
       close(i);
+      joined = JOINERS.has(t.w) || (joined && from === i); // ", and" opens a coordinated clause too
       from = i + 1;
     } else if (SPLIT_SUBS.has(t.w) && i > from) {
+      joined = false;
       close(i);
       from = i;
     }
@@ -349,6 +354,8 @@ interface Draft {
   targetM: Mention | null;
   /** a landmark word used as a place for the thing ("the bell tower stones"): a place, not a power */
   modifierM: Mention | null;
+  /** an object pronoun that could mean either of these ("…have trouble finding them") */
+  refKinds?: TargetKind[];
   source: TriggerEvent | null;
   events: Ev[];
   conds: { test: string; words: string }[];
@@ -424,7 +431,13 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       if (k?.kind) lastKind = { kind: k.kind, m: k };
       continue;
     }
-    const senseM = inG.find((m) => m.cat === 'sense')!;
+    // the verb of the clause: the first one that fits its subject ("stones grow lighter": lighter, not grow), never a participle
+    // describing a noun ("wheat growing beside the beacons does not catch fire") when the clause has another verb
+    const sensesInG = inG.filter((m) => m.cat === 'sense');
+    const participle = (m: Mention) => sensesInG.length > 1 && /ing$/.test(toks[m.at].w) && inG.some((k) => k.cat === 'kind' && k.end === m.at);
+    const usable = sensesInG.filter((m) => !participle(m));
+    const head = inG.find((m) => m.cat === 'kind' || m.cat === 'illness');
+    const senseM = usable.find((m) => head?.kind && m.at > head.at && m.senses!.some((x) => x.kinds.includes(head.kind!))) ?? usable[0] ?? sensesInG[0];
     const heal = SENSES.find((x) => x.id === 'heal')!;
     // homes stand for the people in them when a change can only touch people ("keep sickness from the homes")
     const fitsAs = (k: TargetKind): { sense: Sense; kind: TargetKind } | null => {
@@ -477,6 +490,16 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       take(objFit, 'rain', towardSense);
       const r = regionWith(s, subj.kind);
       if (r) d.toward = { region: r, words: wordsOf(subj) };
+    } else if (subj?.cat === 'kind' && subj.kind && !objFit && inG.some((m) => m.cat === 'pronoun' && m.at > senseM.at)) {
+      // "the wolves have trouble finding them": the subject does not fit, so the pronoun is what changes; which thing is it?
+      const pron = inG.find((m) => m.cat === 'pronoun' && m.at > senseM.at)!;
+      const refs: TargetKind[] = [];
+      for (let i = pron.at - 1; i >= 0; i--) if (agrees(toks[i].w, toks[pron.at].w)) for (const v of toks[i].vs) { const k = KIND_OF_WORD.get(v); if (k && fits(k) && !refs.includes(k)) refs.push(k); }
+      if (refs.length === 1) take(pron, refs[0]);
+      else if (refs.length > 1) {
+        take(pron, refs[0]);
+        d.refKinds = refs.slice(0, 2);
+      } else d.problem = `incompatible:${subj.kind}`;
     } else if (subj?.cat === 'kind' && subj.kind) d.problem = `incompatible:${objects.map(asKind).find((k) => k) ?? subj.kind}`;
     else if (subj && sourceOf(subj) && objects.length) d.problem = `incompatible:${objects.map(asKind).find((k) => k) ?? 'villager'}`;
     else if (!subj && objFit && !pronoun) {
@@ -524,7 +547,8 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
   // a power at the very start ("At night the river slows…") speaks for the whole sentence
   const OPENERS = new Set(['at', 'after', 'during', 'every', 'each', 'by', 'under', 'beneath', 'in', 'on', 'tonight', 'when', 'whenever', 'if', 'while', 'once', 'nightly']);
   const opening = ms.filter((m) => m.at <= 1 && (m.cat === 'trigger' || m.cat === 'cond') && OPENERS.has(toks[m.at].w) && senseSegs[0] && within(m, senseSegs[0]));
-  const hasPerson = ms.some((m) => (m.cat === 'kind' && m.kind === 'villager') || ['anyone', 'someone', 'whoever'].includes(m.phrase));
+  // speech powers a belief when people speak: a villager is named, or the sentence tells the Keeper to speak ("Speak its name…")
+  const hasPerson = ms.some((m) => (m.cat === 'kind' && m.kind === 'villager') || ['anyone', 'someone', 'whoever'].includes(m.phrase)) || ms.some((m) => m.cat === 'speech' && m.at === 0);
   const ownTrig = (d: Draft) => ms.some((m) => within(m, d.seg) && (m.cat === 'trigger' || (m.cat === 'anchor' && ['beacon', 'campfire'].includes(m.anchor!))) && m !== d.targetM);
   const anyOwn = drafts.some(ownTrig);
   for (const d of drafts) {
@@ -541,7 +565,8 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       const not = g.unless;
       if (m.cat === 'trigger' && m.event) {
         if (d.kind && m.event === 'rain' && d.kind === 'rain') continue;
-        d.events.push({ event: m.event, min: m.event === 'watchers' || m.event === 'flood' ? (m.min ?? 1) : null, not, words: wordsOf(m), positional: POSITIONAL[m.event] ?? null });
+        const counted = m.event === 'watchers' ? ms.find((n) => n.cat === 'number' && within(n, g) && n.value && n.value <= 8)?.value : undefined;
+        d.events.push({ event: m.event, min: m.event === 'watchers' || m.event === 'flood' ? (counted ?? m.min ?? 1) : null, not, words: wordsOf(m), positional: POSITIONAL[m.event] ?? null });
       } else if (m.cat === 'speech' && hasPerson) d.events.push({ event: 'spoken', min: null, not, words: wordsOf(m), positional: null });
       else if (m.cat === 'cond' && m.test) d.conds.push({ test: m.test, words: wordsOf(m) });
       else if (m.cat === 'anchor' && m.anchor && !d.near) {
@@ -582,31 +607,81 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
     }
   }
 
+  // ---- a "when …" clause whose power is a pronoun ("whenever it falls", it = the rain), or no power the game knows
+  for (const g of segs) {
+    if (!g.sub || g.unless || senseSegs.includes(g)) continue;
+    const inG = ms.filter((m) => within(m, g));
+    if (inG.some((m) => m.cat === 'trigger' || m.cat === 'cond' || m.cat === 'speech' || (m.cat === 'anchor' && (m.anchor === 'beacon' || m.anchor === 'campfire' || m.active)))) continue;
+    const pron = inG.find((m) => m.cat === 'pronoun');
+    const ref = pron ? referentBefore(toks, pron.at) : null;
+    const ev: TriggerEvent | null = ref === 'rain' ? 'rain' : ref === 'lantern' ? 'lantern' : ref === 'water' ? 'flood' : null;
+    if (ev) {
+      for (const d of drafts) if (!d.events.length) d.events.push({ event: ev, min: ev === 'flood' ? 3 : null, not: false, words: toks.slice(g.from, g.to).map((t) => t.w).join(' '), positional: POSITIONAL[ev] ?? null });
+      continue;
+    }
+    if (inG.some((m) => m.cat === 'kind' || m.cat === 'sense')) continue; // handled below ("Should the bridge fall")
+    addReason('unknown_trigger', toks.slice(g.from, g.to).map((t) => t.w).join(' '));
+  }
+  for (const g of segs) {
+    // a separate claim about the moon or stars ("…and the moon glows red"), not the poetic framing of one ("Stars whisper to the wheat")
+    if (g.sub || senseSegs.includes(g) || g.to - g.from < 3 || !senseSegs.some((x) => x.to <= g.from)) continue;
+    const first = ms.find((m) => within(m, g) && m.cat !== 'negator' && m.cat !== 'pronoun' && m.cat !== 'flavor');
+    if (first && first.cat === 'trigger' && first.event === 'night' && /^(the )?(moon|sun|stars?)$/.test(wordsOf(first).toLowerCase()) && first.at <= g.from + 1) addReason('sky_bodies', toks.slice(g.from, g.to).map((t) => t.w).join(' '));
+  }
+
   // ---- a condition clause that names a change, not a power: "Should the bridge fall, chickens fly"
+  const mainElsewhere = (d: Draft) => drafts.some((x) => x !== d && !x.seg.sub) || segs.some((g) => !g.sub && g !== d.seg && ms.some((m) => within(m, g) && (m.cat === 'kind' || m.cat === 'reason')));
   for (const d of drafts)
-    if (d.seg.sub && drafts.some((x) => x !== d && !x.seg.sub) && !ms.some((m) => within(m, d.seg) && m.cat === 'trigger')) {
-      addReason('unknown_trigger', toks.slice(d.seg.from, d.seg.to).map((t) => t.w).join(' '));
+    if (d.seg.sub && mainElsewhere(d) && !ms.some((m) => within(m, d.seg) && m.cat === 'trigger')) {
       d.problem = 'trigger_clause';
+      // "whenever it falls" (it = the rain), "wherever the lanterns shine": the clause names a power the game knows
+      const pron = ms.find((m) => within(m, d.seg) && m.cat === 'pronoun');
+      const ref = pron ? referentBefore(toks, pron.at) : d.kind;
+      const ev: TriggerEvent | null = ref === 'rain' ? 'rain' : ref === 'lantern' ? 'lantern' : ref === 'water' ? 'flood' : null;
+      if (ev) {
+        for (const x of drafts) if (x !== d && !x.events.some((e) => e.event !== 'always')) x.events.push({ event: ev, min: ev === 'flood' ? 3 : null, not: false, words: toks.slice(d.seg.from, d.seg.to).map((t) => t.w).join(' '), positional: POSITIONAL[ev] ?? null });
+        continue;
+      }
+      addReason('unknown_trigger', toks.slice(d.seg.from, d.seg.to).map((t) => t.w).join(' '));
     }
 
   // ---- negation and strength → effects
-  const asks: { d: Draft; sense: Sense }[] = [];
+  const asks: { d: Draft; sense: Sense; alts: { sense: Sense; kind: TargetKind }[] }[] = [];
   const built: { d: Draft; clause: Clause }[] = [];
   const noChange: Draft[] = [];
   for (const d of drafts) {
     if (d.problem || !d.kind || !d.sense) continue;
+    if (d.refKinds && d.refKinds.length > 1 && !d.negated) {
+      const se = d.sense;
+      asks.push({ d, sense: se, alts: d.refKinds.map((k) => ({ sense: SENSES.find((x) => x.op === se.op && x.id === se.id) ?? se, kind: k })) });
+      d.problem = 'ask';
+      continue;
+    }
     let sense = d.sense;
     if (sense.onlyNegated && !d.negated) {
       d.problem = 'no_mechanic';
       continue;
     }
-    if (d.negated) {
-      if (sense.neg === 'ask') {
-        asks.push({ d, sense });
+    if (sense.ask && !d.negated) {
+      // one word, two physical meanings here: the player chooses
+      const alts = sense.ask
+        .map((id) => SENSES.find((x) => x.id === id && (x.kinds.includes(d.kind!) || (d.kind === 'home' && x.kinds.includes('villager') && x.op === 'GIVE_STATUS_EFFECT'))))
+        .filter((x): x is Sense => !!x)
+        .map((x) => ({ sense: x, kind: x.kinds.includes(d.kind!) ? d.kind! : ('villager' as TargetKind) }));
+      if (alts.length) {
+        asks.push({ d, sense, alts });
         d.problem = 'ask';
         continue;
       }
-      const flipped = sense.neg && sense.neg !== 'none' ? SENSES.find((x) => x.id === sense.neg && x.kinds.includes(d.kind!)) : null;
+    }
+    if (d.negated) {
+      if (sense.neg === 'ask') {
+        asks.push({ d, sense, alts: [{ sense: SENSES.find((x) => x.id === (sense.id === 'away' ? 'toward' : 'lift'))!, kind: d.kind! }] });
+        d.problem = 'ask';
+        continue;
+      }
+      const negs = sense.neg && sense.neg !== 'none' ? (Array.isArray(sense.neg) ? sense.neg : [sense.neg]) : [];
+      const flipped = negs.map((id) => SENSES.find((x) => x.id === id && x.kinds.includes(d.kind!))).find((x) => !!x) ?? null;
       if (!flipped) {
         noChange.push(d);
         d.problem = 'no_change';
@@ -631,6 +706,12 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
     built.push({ d, clause });
   }
 
+  // ---- two verbs for one change ("the barley swells and ripens"): one clause
+  for (let j = built.length - 1; j > 0; j--) {
+    const b = built[j].clause;
+    if (built.slice(0, j).some((x) => x.clause.target.kind === b.target.kind && x.clause.effect.op === b.effect.op && dirOf(x.clause.effect) === dirOf(b.effect) && JSON.stringify(x.clause.when) === JSON.stringify(b.when))) built.splice(j, 1);
+  }
+
   // ---- contradictions: one thing pushed both ways
   const AX: Partial<Record<OpId, string>> = { MOVE_AWAY: 'MOVE', MOVE_TOWARD: 'MOVE', GROW_ENTITY: 'GROWTH', DECAY_ENTITY: 'GROWTH' };
   for (let i = 0; i < built.length; i++)
@@ -646,7 +727,17 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
   const blockIds = new Set(REASONS.filter((r) => r.block).map((r) => r.id));
   const fatal = ['time', 'the_dead', 'minds', 'game', 'infinite_resource', 'transform', 'contradiction'];
   const valid = built.filter((c) => !blockers.some((b) => within(b, c.d.seg)));
-  const hardBlock = reasons.some((r) => r.id === 'contradiction') || blockers.some((b) => b.reason && (fatal.includes(b.reason.id) || (b.reason.block && ['absolute', 'unbounded_spawn'].includes(b.reason.id))));
+  // a forbidden idea inside a clause refuses that clause; one in a clause of its own leaves the rest as a partial reading. A sentence
+  // that is only about such an idea, or contradicts itself, is refused whole.
+  // its own clause: a part of the sentence that names a thing or a change of its own ("…and the wheat lost last week is restored"),
+  // or a coordinated claim ("…and do whatever the Warden commands"), not a modifier of the change beside it ("…hatch, without end, …")
+  const inOwnClause = (b: Mention) => {
+    const g = segs.find((x) => within(b, x));
+    if (!g) return false;
+    const names = g.joined || ms.some((m) => within(m, g) && m !== b && (m.cat === 'kind' || m.cat === 'illness' || m.cat === 'sense'));
+    return names && (!senseSegs.includes(g) || drafts.some((d) => d.seg === g && d.problem));
+  };
+  const hardBlock = reasons.some((r) => r.id === 'contradiction') || blockers.some((b) => b.reason && (fatal.includes(b.reason.id) || (b.reason.block && ['absolute', 'unbounded_spawn'].includes(b.reason.id))) && (!inOwnClause(b) || !built.some((c) => !within(b, c.d.seg))));
   const unsupported = (): Reading => {
     if (noChange.length) addReason('no_change', wordsOf(noChange[0].senseM));
     for (const d of drafts) {
@@ -664,13 +755,24 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
   };
   if (hardBlock || (!valid.length && !asks.length)) return unsupported();
 
-  if (asks.length && !valid.length) {
-    const { d, sense } = asks[0];
-    const alt = sense.id === 'away' ? SENSES.find((x) => x.id === 'toward')! : SENSES.find((x) => x.id === 'lift')!;
-    d.sense = alt;
-    const choice = assemble(s, text, [{ d, clause: { id: 'c1', when: triggerOf(d).trigger, where: conditionOf(d.conds), target: { kind: d.kind!, near: null, tags: [], region: null }, effect: effectOf(alt, d, () => undefined), duration: 'night' } }], opts, removed, reasons, wordsOf, ['one reading the game can make of it']);
-    const question = sense.id === 'away' ? `Do you mean the ${KINDS[d.kind!].label} are drawn to it? (If you only mean they are not afraid, nothing would change.)` : `Shall the ${KINDS[d.kind!].label} rise above the water instead? (Nothing in this world simply forbids drowning.)`;
-    return { ...base, kind: 'ambiguous', question, choices: choice ? [choice] : [] };
+  if (asks.length) {
+    const { d, sense, alts } = asks[0];
+    const others = valid.filter((c) => c.d !== d);
+    const choices = alts
+      .map(({ sense: alt, kind }) => {
+        const dd: Draft = { ...d, sense: alt, kind };
+        const clause: Clause = { id: 'c1', when: triggerOf(dd).trigger, where: conditionOf(dd.conds), target: { kind, near: null, tags: [], region: null }, effect: effectOf(alt, dd, () => undefined), duration: 'night' };
+        return assemble(s, text, [...others.slice(0, (opts.lab ? LAB_LIMITS : LIMITS).maxClauses - 1), { d: dd, clause }], opts, removed, reasons, wordsOf, [`reads "${wordsOf(d.senseM)}" as: ${OPERATORS[alt.op].label}`]);
+      })
+      .filter((c): c is ReadCandidate => !!c);
+    const question = sense.id === 'away' && d.negated
+      ? `Do you mean the ${KINDS[d.kind!].label} are drawn to it? (If you only mean they are not afraid, nothing would change.)`
+      : sense.id === 'not_drown'
+        ? `Shall the ${KINDS[d.kind!].label} rise above the water instead? (Nothing in this world simply forbids drowning.)`
+        : d.refKinds && d.refKinds.length > 1
+          ? `Which do you mean: ${d.refKinds.map((k) => KINDS[k].label).join(', or ')}?`
+          : `"${wordsOf(d.senseM)}" can mean more than one thing here. Which did you mean?`;
+    if (choices.length) return { ...base, kind: 'ambiguous', question, choices: choices.slice(0, 2) };
   }
   // a power the sentence leaves open where the village offers several ("the river turns away", "rain is drawn to the orchard")
   const open = valid.find((c) => c.d.events.length === 0 && ['water', 'wolf', 'rain'].includes(c.d.kind!) && !c.clause.target.near);
@@ -719,8 +821,16 @@ const KIND_OF_WORD: Map<string, TargetKind> = (() => {
 
 /** What "it" or "they" refers to: the nearest earlier word naming a thing, wherever it sits (even inside "watch the bridge"). */
 function referentBefore(toks: Tok[], at: number): TargetKind | null {
-  for (let i = at - 1; i >= 0; i--) for (const v of toks[i].vs) if (KIND_OF_WORD.has(v)) return KIND_OF_WORD.get(v)!;
+  for (let i = at - 1; i >= 0; i--) if (agrees(toks[i].w, toks[at]?.w ?? 'it')) for (const v of toks[i].vs) if (KIND_OF_WORD.has(v)) return KIND_OF_WORD.get(v)!;
   return null;
+}
+
+const PLURAL_WORDS = new Set(['people', 'men', 'women', 'children', 'folk', 'cattle', 'geese', 'oxen']);
+
+/** "it" stands for a singular or mass noun ("rain has a way with flames: whenever it falls…" is the rain); "they" for anything. */
+function agrees(word: string, pronoun: string): boolean {
+  if (!['it', 'its', 'itself'].includes(pronoun)) return true;
+  return !(PLURAL_WORDS.has(word) || (/s$/.test(word) && !/(ss|us|is)$/.test(word)));
 }
 
 function dedupe(rs: NamedReason[]): NamedReason[] {
@@ -907,7 +1017,7 @@ function alternativesFor(s: RunState, kinds: Mention[], opts: ReadOptions): Read
     seen.add(m.kind);
     const sense = SENSES.find((x) => x.kinds.includes(m.kind!) && !x.onlyNegated && !x.guarantee && !x.toward && x.op !== 'SPAWN_BOUNDED_ENTITY');
     if (!sense) continue;
-    const d: Draft = { seg: { from: 0, to: 0, sub: false, unless: false, or: false }, kind: m.kind, sense, negated: false, senseM: m, targetM: m, modifierM: null, source: null, events: [], conds: [], near: null, place: null, toward: null, strength: null, count: null, problem: null };
+    const d: Draft = { seg: { from: 0, to: 0, sub: false, unless: false, or: false, joined: false }, kind: m.kind, sense, negated: false, senseM: m, targetM: m, modifierM: null, source: null, events: [], conds: [], near: null, place: null, toward: null, strength: null, count: null, problem: null };
     const pos = openTriggers(s, m.kind)[0];
     if (pos && ['water', 'wolf', 'rain'].includes(m.kind)) d.events.push({ event: pos, min: null, not: false, words: eventLabel(pos), positional: POSITIONAL[pos] ?? null });
     const clause: Clause = { id: 'c1', when: triggerOf(d).trigger, where: null, target: { kind: m.kind, near: null, tags: [], region: null }, effect: effectOf(sense, d, () => undefined), duration: 'night' };

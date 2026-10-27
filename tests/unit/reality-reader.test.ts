@@ -37,6 +37,19 @@ describe('the adversarial corpus (in-sample: regression floors)', () => {
   });
 });
 
+describe('the first held-out corpus (scored once untuned at 42/80, then tuned against: now in-sample, so regression floors only)', () => {
+  const corpus = JSON.parse(readFileSync(new URL('../fixtures/reality-corpus-holdout-1.json', import.meta.url), 'utf8')) as { cases: CorpusCase[] };
+  const m = scoreCorpus(corpus.cases, stateFor).metrics;
+
+  it('keeps its scores', () => {
+    expect(m.labelOk / corpus.cases.length).toBeGreaterThanOrEqual(0.95);
+    expect(m.faithful / m.supported).toBeGreaterThanOrEqual(0.95);
+    expect(m.hallucinated).toBeLessThanOrEqual(1);
+    expect(m.injectionObeyed).toBe(0);
+    expect(m.grounded / m.readings).toBeGreaterThanOrEqual(0.95);
+  });
+});
+
 describe('what the reader promises', () => {
   it('reads the sentences of the program brief', () => {
     const a = facts(readBelief(red(), 'Chickens can fly when the chapel bells ring'));
@@ -86,6 +99,20 @@ describe('what the reader promises', () => {
       expect(amb.question).toMatch(/drawn/);
       expect(amb.choices[0].ast.clauses[0].effect.op).toBe('MOVE_TOWARD');
     }
+  });
+
+  it('refuses only the clause a forbidden idea sits in, and reads "it" by number', () => {
+    // a coordinated clause is a claim of its own: the rest stands as a partial reading that names what it leaves out
+    const own = readBelief(stateFor('ashwood'), 'When the smoke fires are lit, the hamlet folk find their nerve and do whatever the Warden commands.');
+    expect(own.kind).toBe('partial');
+    if (own.kind === 'partial') {
+      expect(own.reasons.map((x) => x.id)).toContain('minds');
+      expect(facts(own)).toMatchObject({ kinds: ['villager'], ops: ['INFLUENCE_MOTIVATION'], events: ['smoke_fire'] });
+    }
+    // a forbidden idea set off by commas modifies the change beside it, so the whole sentence is refused
+    expect(readBelief(red(), 'Chicks hatch, without end, in every coop.').kind).toBe('unsupported');
+    // "it" is the rain, not the flames named just before it; "they" are the flames
+    expect(facts(readBelief(red(), 'Rain has a way with flames: whenever it falls, they burn cooler.'))).toMatchObject({ kinds: ['fire'], ops: ['ALTER_TEMPERATURE'], events: ['rain'] });
   });
 
   it('removes instructions and markup, reports them, and never lets them set a number', () => {

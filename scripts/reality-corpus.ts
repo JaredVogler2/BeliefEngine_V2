@@ -1,16 +1,17 @@
 /**
  * Scores the offline reader v2 against the adversarial corpus (tests/fixtures/reality-corpus-1.json) and prints the table.
- * `npm run reality:corpus` (add `--holdout` for the held-out corpus, `--cases` to list every case, `--fails` for the misses only,
- * `--json` for machine output).
+ * `npm run reality:corpus` (add `--holdout` or `--holdout2` for a held-out corpus, `--cases` to list every case, `--fails` for the
+ * misses only, `--json` for machine output).
  *
- * The same author wrote the corpus and the reader, so these numbers measure regressions and honesty, not unbiased accuracy.
+ * The same author wrote the first corpus and the reader, so its numbers measure regressions and honesty, not unbiased accuracy. The
+ * held-out corpora were written by independent agents; each is scored once before any change it informs, and is in-sample after.
  */
 import { readFileSync } from 'node:fs';
 import { GameSession } from '../src/engine/index.ts';
 import { scoreCorpus, type CorpusCase } from './lib/reality-score.ts';
 
 const argv = process.argv.slice(2);
-const file = argv.includes('--holdout') ? 'reality-corpus-holdout-1.json' : 'reality-corpus-1.json';
+const file = argv.includes('--holdout2') ? 'reality-corpus-holdout-2.json' : argv.includes('--holdout') ? 'reality-corpus-holdout-1.json' : 'reality-corpus-1.json';
 const corpus = JSON.parse(readFileSync(new URL(`../tests/fixtures/${file}`, import.meta.url), 'utf8')) as { name: string; cases: CorpusCase[] };
 const states = new Map<string, ReturnType<typeof GameSession.create>['state']>();
 const stateFor = (id: string) => states.get(id) ?? states.set(id, GameSession.create({ scenarioId: id, seed: 1, reality: true }).state).get(id)!;
