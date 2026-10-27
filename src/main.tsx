@@ -10,7 +10,7 @@ function unsupported(msg: string): void {
   const main = document.createElement('main');
   main.style.cssText = 'max-width:520px;margin:4rem auto;padding:1.5rem;font-family:system-ui;color:#f4ecd8';
   const title = document.createElement('h1');
-  title.textContent = 'Belief Engine';
+  title.textContent = 'Belief Engine V2';
   const text = document.createElement('p');
   text.textContent = msg;
   main.append(title, text);

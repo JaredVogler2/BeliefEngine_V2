@@ -1,8 +1,8 @@
 {
-  "name": "belief-engine",
-  "version": "0.1.0",
+  "name": "belief-engine-v2",
+  "version": "2.0.0-alpha.0",
   "private": true,
-  "description": "Belief Engine - a browser strategy roguelite where shared belief rewrites the physical laws of a village.",
+  "description": "Belief Engine V2 (Generative Reality) - a browser strategy game where shared belief rewrites the physical laws of a village. Baseline: the V1 game, engine, 3D world and MCP server migrated intact.",
   "type": "module",
   "license": "MIT",
   "engines": {

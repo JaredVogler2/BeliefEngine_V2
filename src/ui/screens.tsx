@@ -80,7 +80,7 @@ export function Title() {
       <div>
         <h1 className="logo">
           <small>THE KEEPER OF STORIES</small>
-          Belief Engine
+          Belief Engine <span className="logo-mark">V2</span>
         </h1>
         <p className="tagline">Convince the village it is true — and the world obeys. But belief spreads both ways.</p>
         <nav className="menu" aria-label="Main menu">
@@ -556,7 +556,7 @@ export function Credits() {
         <button className="btn small" onClick={() => store.set({ screen: 'title' })}>← Back</button>
         <h1 style={{ marginTop: '0.8rem' }}>Credits</h1>
         <p>Design, code, procedural art and procedural audio: original, made for this project. No external art, music, fonts or sound files are used — every sprite is drawn in code and every sound is synthesised in your browser.</p>
-        <p>Built with React, TypeScript and Vite. The simulation is a pure deterministic TypeScript engine; the same engine powers the browser game, the bot tournaments and the MCP agent server.</p>
+        <p>Built with React, Three.js, TypeScript and Vite. The simulation is a pure deterministic TypeScript engine; the same engine powers the browser game, the bot tournaments and the MCP agent server.</p>
         <p className="muted small">Privacy: the game makes no network requests and sets no cookies. Saves and settings live in your browser’s local storage.</p>
       </div>
     </main>

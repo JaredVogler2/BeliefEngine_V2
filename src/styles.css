@@ -82,6 +82,7 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .title-bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(8, 12, 24, 0.3), rgba(8, 12, 24, 0.9)); }
 .logo { font-size: clamp(2.4rem, 8vw, 4.6rem); color: var(--gold); text-shadow: 0 3px 0 #6a4a10, 0 10px 40px rgba(242, 184, 75, 0.4); line-height: 1; }
 .logo small { display: block; font-size: 0.3em; letter-spacing: 0.35em; color: var(--ink); text-shadow: none; margin-bottom: 0.6rem; font-family: var(--sans); font-weight: 600; }
+.logo-mark { font-size: 0.42em; letter-spacing: 0.08em; vertical-align: 0.9em; font-family: var(--sans); font-weight: 700; }
 .tagline { font-family: var(--serif); font-size: clamp(1.05rem, 3.2vw, 1.5rem); color: var(--ink); max-width: 34ch; margin: 1rem auto 1.6rem; text-shadow: 0 2px 12px #000; }
 .menu { display: flex; flex-direction: column; gap: 0.7rem; width: min(340px, 90vw); margin: 0 auto; }
 .menu .btn { width: 100%; }

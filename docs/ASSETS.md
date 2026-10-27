@@ -20,7 +20,7 @@ This ledger records where each kind of asset comes from so that stays checkable.
 
 ## Third-party code
 
-Runtime dependencies bundled into the page: `react` and `react-dom` (MIT). Everything else in `package.json` is a development tool
+Runtime dependencies bundled into the page: `react`, `react-dom` and `three` (all MIT; `three` is only in the lazily loaded 3D world chunk). Everything else in `package.json` is a development tool
 (Vite, TypeScript, Vitest, Playwright, ESLint, Prettier, `@axe-core/playwright`, `@modelcontextprotocol/sdk`, `tsx`) and is not shipped
 to players. `npm ls --prod` is the authority.
 
