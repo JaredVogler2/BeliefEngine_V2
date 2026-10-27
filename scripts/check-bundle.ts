@@ -9,7 +9,10 @@ import { gzipSync } from 'node:zlib';
 // The classic game loads first and on its own. The 3D world (Three.js and the scene code) is a separate chunk fetched only when the
 // player's browser can draw it, so it has its own budget and the first load of everyone else is unchanged. The reality composer (the
 // reader v2 and its vocabulary) is another lazy chunk, fetched only when a Generative Reality run opens it.
-const BUDGET = { entryGzKb: 260, world3dGzKb: 270, realityGzKb: 40, cssGzKb: 12, totalFiles: 12 };
+// Entry raised 260 → 300 in phase 07: the V2 engine (the reality executor and villager minds) is part of the deterministic core and
+// must be present wherever a day resolves, so it ships with the game (V2 then measured 266 KB). If first-load size matters more
+// later, the V2-only engine can move to a chunk installed before any V2 run starts (a hook in resolve.ts), never after.
+const BUDGET = { entryGzKb: 300, world3dGzKb: 270, realityGzKb: 40, cssGzKb: 12, totalFiles: 12 };
 const dir = 'dist/assets';
 const files = readdirSync(dir).map((f) => ({ f, raw: statSync(join(dir, f)).size, gz: gzipSync(readFileSync(join(dir, f))).length }));
 const sum = (ext: string) => files.filter((x) => x.f.endsWith(ext)).reduce((a, x) => a + x.gz, 0) / 1024;

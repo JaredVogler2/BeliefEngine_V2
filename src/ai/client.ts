@@ -4,6 +4,8 @@ import { hashValue } from '../engine/core/hash.ts';
 import type { Candidate } from '../engine/nl/parse.ts';
 import type { Reading } from '../engine/reality/read.ts';
 import { fromWire, type WireReading } from '../engine/reality/wire.ts';
+import { buildNpcRequest } from '../engine/mind/request.ts';
+import type { NpcChoiceInput } from '../engine/core/types.ts';
 
 /**
  * The browser side of online interpretation. It talks only to this site's own `/api/*` functions (same origin: the page's
@@ -38,6 +40,8 @@ export interface ReadingMeta {
 }
 
 export type OnlineResult = { ok: true; readings: Candidate[]; meta: ReadingMeta } | AiFailure;
+/** Decisions for today's thinkers, already held to the request by the server; the engine holds them to the live run again. */
+export type NpcResult = { ok: true; rev: number; decisions: NpcChoiceInput[]; rejected: { citizenId: string; why: string }[]; meta: ReadingMeta } | AiFailure;
 export type RealityResult = { ok: true; reading: Reading; meta: ReadingMeta } | AiFailure;
 
 const REASON_TEXT: Record<string, string> = {
@@ -179,6 +183,40 @@ export class AiClient {
    * and seed: the server rebuilds the village itself), the region the player picked if any, the day and a hashed run reference.
    * The answer is validated and every reading rebuilt against this live run before the player can confirm one.
    */
+  /** Villager decisions for today's thinkers (Generative Reality runs only): only what each of them knows is sent. */
+  async npcDecisions(state: RunState, opts: NpcAsk = {}): Promise<NpcResult> {
+    const req = buildNpcRequest(state, runRef(state).id, null, opts.only ?? null);
+    if (!req) return { ok: false, reason: 'bad_request', why: 'Nobody in the village is due to think right now.' };
+    return this.postNpc(req, opts.timeoutMs ?? 25_000);
+  }
+
+  /** Sends one `npc` request and reads the answer; nothing here trusts it beyond its shape. */
+  async postNpc(req: object & { run: { rev: number } }, timeoutMs: number): Promise<NpcResult> {
+    if (!this.hasSession()) {
+      const s = await this.openSession();
+      if (!s.ok) return s;
+    }
+    const r = await this.request('/api/npc-decision', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${this.token}` }, body: JSON.stringify(req) }, timeoutMs);
+    if ('ok' in r && r.ok === false) return r;
+    const { status, body } = r as { status: number; body: Record<string, unknown> | null };
+    if (status === 401) this.forget();
+    if (status !== 200 || !body || body.ok !== true) return this.failure(body);
+    const decisions = (Array.isArray(body.decisions) ? body.decisions : []).map((d) => choiceInput(d as Record<string, unknown>)).filter((d): d is NpcChoiceInput => !!d).slice(0, 6);
+    const rejected = (Array.isArray(body.rejected) ? body.rejected : [])
+      .map((x) => x as { citizenId?: unknown; why?: unknown })
+      .map((x) => ({ citizenId: String(x.citizenId ?? '').slice(0, 40), why: String(x.why ?? '').slice(0, 160) }))
+      .slice(0, 6);
+    const model = (body.model ?? {}) as { id?: unknown; tier?: unknown };
+    const usage = (body.usage ?? {}) as { latencyMs?: unknown };
+    return {
+      ok: true,
+      rev: req.run.rev,
+      decisions,
+      rejected,
+      meta: { id: String(body.id ?? '').slice(0, 40), cached: false, provider: String(body.provider ?? '').slice(0, 20), model: String(model.id ?? '').slice(0, 80), tier: String(model.tier ?? '').slice(0, 12), promptVersion: String(body.promptVersion ?? '').slice(0, 60), latencyMs: Number(usage.latencyMs) || 0 },
+    };
+  }
+
   async interpretReality(state: RunState, text: string, opts: { region?: string | null; timeoutMs?: number } = {}): Promise<RealityResult> {
     if (!state.v2) return { ok: false, reason: 'bad_request', why: 'Written reality beliefs belong to Generative Reality runs.' };
     if (!this.hasSession()) {
@@ -215,6 +253,30 @@ export class AiClient {
       },
     };
   }
+}
+
+/** One decision as the server sent it, reduced to exactly the fields the engine reads (anything else is dropped). */
+function choiceInput(d: Record<string, unknown>): NpcChoiceInput | null {
+  if (!d || typeof d !== 'object' || typeof d.citizenId !== 'string' || typeof d.intent !== 'string') return null;
+  const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : null);
+  return {
+    citizenId: d.citizenId.slice(0, 40),
+    intent: d.intent.slice(0, 20),
+    target: str(d.target, 40),
+    claimId: str(d.claimId, 40),
+    dialogue: str(d.dialogue, 200),
+    cites: Array.isArray(d.cites) ? d.cites.filter((c): c is string => typeof c === 'string').slice(0, 3).map((c) => c.slice(0, 40)) : [],
+    tone: str(d.tone, 20) ?? 'calm',
+    approach: str(d.approach, 20) ?? 'testimony',
+    confidence: Number.isFinite(Number(d.confidence)) ? Number(d.confidence) : 0,
+    thought: str(d.thought, 240) ?? '',
+  };
+}
+
+export interface NpcAsk {
+  /** ask about these villagers only (they must be due to think today) */
+  only?: string[] | null;
+  timeoutMs?: number;
 }
 
 /** The page's one client. Constructed eagerly, but it does nothing until asked. */

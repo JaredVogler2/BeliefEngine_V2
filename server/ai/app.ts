@@ -170,7 +170,7 @@ export function createAiApp(deps: AppDeps): AiApp {
       reason,
       provider: configured ? (deps.provider!.name === 'mock' ? 'mock' : 'vercel-ai-gateway') : null,
       models: configured ? { fast: cfg.models.fast, accurate: cfg.models.accurate } : null,
-      contracts: { interpret: [1, 2], npc: [1] },
+      contracts: { interpret: [1, 2], npc: [1, 2] },
       limits: publicLimits(),
       privacy: PRIVACY_NOTE,
     });
@@ -433,7 +433,7 @@ export function createAiApp(deps: AppDeps): AiApp {
     const { accepted, rejected } = npc.validateDecisions(r, res.value);
     await meter.record({ ...metered, outcome: accepted.length ? 'ok' : 'invalid' });
     const batchId = hmacHex(pre.secret, `npc|${sid}|${r.run.id}|${r.run.rev}|${r.event.id}|${JSON.stringify(accepted)}`).slice(0, 24);
-    return json(200, { ok: true, contract: 1, id: batchId, provider: pre.provider.name, model: { tier, id: res.modelId }, promptVersion: npc.NPC_PROMPT, run: r.run, eventId: r.event.id, decisions: accepted, rejected, usage: { inputTokens: res.usage.inputTokens, outputTokens: res.usage.outputTokens, latencyMs: res.latencyMs, costUsd: g.costMicros / 1_000_000 } });
+    return json(200, { ok: true, contract: r.v, id: batchId, provider: pre.provider.name, model: { tier, id: res.modelId }, promptVersion: npc.NPC_PROMPT, run: r.run, eventId: r.event.id, decisions: accepted, rejected, usage: { inputTokens: res.usage.inputTokens, outputTokens: res.usage.outputTokens, latencyMs: res.latencyMs, costUsd: g.costMicros / 1_000_000 } });
   }
 
   // ------------------------------------------------------------------------------------------ GET /api/ai-metrics (operator only)
