@@ -13,8 +13,13 @@ what a village believes, and enough shared belief becomes physical law.
   replay hashes identical to V1, the MCP acceptance journey 28/28. Results: [`docs/BASELINE.md`](docs/BASELINE.md).
 - **The 3D world is now tested in a browser.** V1's browser tests always ran on the 2D map (headless browsers have no GPU);
   `tests/e2e/v2-world3d.spec.ts` forces the Three.js world and checks WebGL2, painting, picking by engine id and identical hashes.
-- **No generative feature exists yet.** Every V2 capability is switched off in `src/v2/features.ts`; the game needs no model, key or
-  network after load. No language model has been called by this repository.
+- **Phase 03 is built: a secure, budgeted inference service, never yet connected to a real model.** `server/ai/` behind five
+  Vercel Functions in `api/` (status, anonymous signed sessions, belief reading, villager decisions, operator metrics), with durable
+  shared quotas that fail closed, a worst-case spend reservation, a validated-only cache and metering that logs no text. Tested
+  with scripted providers, the AI SDK's mock model, a real Redis and an offline `vercel build`. **No language model has been called
+  by this repository: LIVE is UNVERIFIED** until the owner configures a credential ([`docs/AI_SETUP.md`](docs/AI_SETUP.md)). The
+  game asks the network for nothing unless the player opts in to online reading and accepts a notice; Classic play never does.
+- No generative reality yet (phases 04-17): written beliefs still use V1's seven-subject vocabulary.
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
   dusk) and today's world is measured against it ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)); the work to reach it is
@@ -40,7 +45,9 @@ or `?renderer=2d` for the classic map. The V1 player guide (controls, a three-mi
 |---|---|
 | `npm run typecheck` / `npm run lint` | strict TypeScript; ESLint (the engine forbids `Math.random` and `Date.now`) |
 | `npm test` | Vitest: engine, chapters, generator, composer, MCP over real stdio, source guards, and the V2 migration tripwire |
-| `npm run test:e2e` | Playwright on the production build: V1's specs (2D map) and `v2-world3d.spec.ts` (the Three.js world) on desktop and phone |
+| `npm run test:e2e` | Playwright on the production build: V1's specs (2D map), `v2-world3d.spec.ts` (the Three.js world) and `v2-online.spec.ts` (online reading against the local simulator) |
+| `npm run dev:api` | the inference service locally on :8787 (Vite forwards `/api`); `BE_AI_ENABLED=1 BE_AI_DEV_PROVIDER=mock BE_AI_DEV_MEMORY_STORE=1` runs it with scripted answers and no key |
+| `npm run ai:smoke` | the LIVE provider smoke test; only runs with a privately configured credential ([`docs/AI_SETUP.md`](docs/AI_SETUP.md)) |
 | `BE_SLOW_3D=1 npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop` | also replays two days of a recorded route by clicks in 3D (slow on a software rasteriser) |
 | `npm run test:e2e:browsers` | smoke tests in Chromium, Firefox, WebKit and an iPhone 14 profile |
 | `npm run test:sim:smoke` | 256 bot runs: balance, determinism, exploit search |
@@ -76,5 +83,7 @@ Implementation principles:
 
 ## Licence
 
-MIT ([`LICENSE`](LICENSE), carried from V1). No third-party art, music or fonts ([`docs/ASSETS.md`](docs/ASSETS.md)); runtime
-dependencies are `react`, `react-dom` and `three` (MIT).
+MIT ([`LICENSE`](LICENSE), carried from V1). No third-party art, music or fonts ([`docs/ASSETS.md`](docs/ASSETS.md)). The page's
+runtime dependencies are `react`, `react-dom` and `three` (MIT); the server-side inference service adds `ai` (the Vercel AI SDK) and
+`zod` with their dependencies (MIT, Apache-2.0, AFL-2.1/BSD-3-Clause), none of which reaches the browser bundle. Full lists:
+[`docs/THIRD_PARTY_LICENSES_PROD.md`](docs/THIRD_PARTY_LICENSES_PROD.md), [`docs/THIRD_PARTY_LICENSES.md`](docs/THIRD_PARTY_LICENSES.md).

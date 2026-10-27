@@ -17,7 +17,7 @@ function files(dir: string, out: string[] = []): string[] {
   }
   return out;
 }
-const shipped = [...files(join(ROOT, 'src')), ...files(join(ROOT, 'server')), ...files(join(ROOT, 'mcp'))];
+const shipped = [...files(join(ROOT, 'src')), ...files(join(ROOT, 'server')), ...files(join(ROOT, 'api')), ...files(join(ROOT, 'mcp'))];
 const browser = files(join(ROOT, 'src'));
 
 describe('no code is ever built from text', () => {
@@ -41,22 +41,48 @@ describe('no code is ever built from text', () => {
 });
 
 describe('no secret can reach the browser build', () => {
-  it('reads no provider key and no environment in the code the browser runs; the only build-time setting is the optional interpreter URL', () => {
+  const strip = (src: string) => src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+
+  it('reads no provider key and no environment in the code the browser runs, and no build-time setting beyond Vite\'s own', () => {
     for (const f of browser) {
       const src = readFileSync(f, 'utf8');
-      expect(/API_KEY|SECRET|process\.env/.test(src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), `${relative(ROOT, f)} reads a key or the environment`).toBe(false);
-      for (const m of src.matchAll(/import\.meta\.env\.(\w+)/g)) expect(['VITE_INTERPRETER_URL', 'DEV', 'PROD', 'MODE', 'BASE_URL'], `${relative(ROOT, f)} reads import.meta.env.${m[1]}`).toContain(m[1]);
+      expect(/API_KEY|SECRET|OIDC|UPSTASH|KV_REST|process\.env/.test(strip(src)), `${relative(ROOT, f)} reads a key or the environment`).toBe(false);
+      for (const m of src.matchAll(/import\.meta\.env\.(\w+)/g)) expect(['DEV', 'PROD', 'MODE', 'BASE_URL'], `${relative(ROOT, f)} reads import.meta.env.${m[1]}`).toContain(m[1]);
     }
   });
 
-  it('keeps the provider key in the server-side adapter only, read from its environment, and puts none in the proxy, the browser code or the MCP server', () => {
-    const adapter = readFileSync(join(ROOT, 'server', 'vercel-function.example.ts'), 'utf8');
-    expect(adapter).toContain('process.env.INTERPRETER_API_KEY');
-    for (const f of shipped.filter((x) => x !== join(ROOT, 'server', 'vercel-function.example.ts'))) {
-      const code = readFileSync(f, 'utf8').replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
-      expect(code.includes('INTERPRETER_API_KEY'), `${relative(ROOT, f)} reads the provider key`).toBe(false);
+  it('never imports the server, the AI SDK or the schema library into the browser', () => {
+    for (const f of browser) {
+      for (const m of readFileSync(f, 'utf8').matchAll(/from\s+'([^']+)'/g)) {
+        const spec = m[1];
+        expect(/(^|\/)server\/|^ai($|\/)|^@ai-sdk\/|^zod$|^@vercel\//.test(spec), `${relative(ROOT, f)} imports ${spec}`).toBe(false);
+      }
+    }
+  });
+
+  it('reads credentials in exactly one place: the server configuration, from its environment', () => {
+    const names = ['AI_GATEWAY_API_KEY', 'VERCEL_OIDC_TOKEN', 'BE_SESSION_SECRET', 'UPSTASH_REDIS_REST_TOKEN', 'KV_REST_API_TOKEN', 'BE_ADMIN_TOKEN'];
+    for (const f of shipped) {
+      const code = strip(readFileSync(f, 'utf8'));
+      const rel = relative(ROOT, f);
+      if (rel === join('server', 'ai', 'config.ts')) continue;
+      for (const n of names) expect(code.includes(`'${n}'`) || code.includes(`.${n}`), `${rel} reads ${n} itself`).toBe(false);
+      // in the inference service the environment object is handed to the configuration loader, never read field by field elsewhere
+      const unix = rel.replaceAll('\\', '/');
+      if (/^(server|api)\//.test(unix) && /process\.env/.test(code)) expect(['server/ai/vercel.ts', 'server/ai/dev-server.ts'], `${rel} reads process.env`).toContain(unix);
     }
     // no key-shaped literal anywhere in tracked source
     for (const f of shipped) expect(/\b(sk|pk)-[A-Za-z0-9_-]{16,}/.test(readFileSync(f, 'utf8')), `${relative(ROOT, f)} contains a key-shaped string`).toBe(false);
+  });
+
+  it('documents variable names only, and git ignores every real environment file', () => {
+    const example = readFileSync(join(ROOT, '.env.example'), 'utf8');
+    for (const line of example.split('\n')) {
+      if (!line.trim() || line.startsWith('#')) continue;
+      expect(line, `.env.example sets a value: ${line}`).toMatch(/^[A-Z][A-Z0-9_]*=$/);
+    }
+    expect(example).toContain('AI_GATEWAY_API_KEY=');
+    const ignore = readFileSync(join(ROOT, '.gitignore'), 'utf8').split('\n');
+    for (const rule of ['.env', '.env.*', '!.env.example', '.vercel']) expect(ignore, `.gitignore lacks ${rule}`).toContain(rule);
   });
 });

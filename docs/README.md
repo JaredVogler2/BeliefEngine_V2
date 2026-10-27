@@ -13,10 +13,13 @@ the date and provenance before trusting a number: **only the V2 records were pro
 | [`MIGRATION.md`](MIGRATION.md) | phase 02: what was imported, placed, excluded and changed, and how to re-check it |
 | [`BASELINE.md`](BASELINE.md) | phase 02: V1 and V2 test, build, replay, MCP and browser results side by side |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | how the migrated game is put together and where V2 work plugs in |
+| [`AI_SETUP.md`](AI_SETUP.md) | phase 03: the online-reading service, its security and cost controls, setup steps (names only), the LIVE smoke test, what is and is not verified |
+| [`AI_COSTS.md`](AI_COSTS.md) | phase 03: chosen models and catalog prices, per-call estimates (not measurements), the four spend limits |
 | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md) | the art direction and the measurable visual bar for the 3D world |
 | [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md) | the staged plan to reach that bar on the existing Three.js renderer |
 | [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) | what the 3D world looks like today, from real browser captures, scored honestly |
 | [`screenshots/v2-baseline/`](screenshots/v2-baseline/) | those captures (real Three.js canvas and the 2D map, never mock-ups) |
+| [`screenshots/v2-phase03/`](screenshots/v2-phase03/) | the composer's consent notice and a simulated online reading, from the running production build |
 
 ## Inherited V1 reference (describes the game as migrated; still true unless a V2 record says otherwise)
 
