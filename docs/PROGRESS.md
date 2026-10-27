@@ -9,7 +9,7 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 02 Migration and baseline | **VERIFIED** | [`MIGRATION.md`](MIGRATION.md), [`BASELINE.md`](BASELINE.md), `tests/unit/v2-migration.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
 | 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
 | 04 Generative belief language | **VERIFIED (gate: typed, validated, deterministic, V1-compatible, three novel executable claims, property tests); the interactive preview UI arrives with phase 05's composer** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md), `tests/unit/reality-language.test.ts`, `tests/unit/reality-properties.test.ts`, `tests/fixtures/reality-corpus-1.json` |
-| 05 Interpreter and compiler | **IN PROGRESS: offline reader v2, `interpret v2` contract (TESTED MOCK ONLY), composer UI and Generative Reality runs built and tested; LIVE UNVERIFIED; the offline reader generalises poorly (held-out: 42/80 labels, 6/30 supported read faithfully)** | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
+| 05 Interpreter and compiler | **IN PROGRESS: offline reader v2, `interpret v2` contract (TESTED MOCK ONLY), composer UI and Generative Reality runs built and tested; LIVE UNVERIFIED; the offline reader generalises only partly (second held-out corpus, scored untuned: 51/80 labels, 13/30 supported read faithfully)** | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
 | 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
 | 07-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
@@ -37,12 +37,22 @@ Live model calls so far: **none**. Inference spend so far: **0**. Deployments: *
 - Language and engine fixes found on the way: see the phase 05 checkpoint commit; the preview sentences now agree in number and name
   regions ("rain in The Redbank is called onto Eastbank").
 
-**Corpus results.** In-sample (`reality-corpus-1`, the reader was tuned on it): 172/172 labels. **Held-out** (`reality-corpus-holdout-1`,
-80 sentences written by a separate agent that never saw the reader, its lexicon or the in-sample corpus; scored once, before any
-change it could inform): labels **42/80 (52.5%)**; supported sentences read faithfully **6/30 (20%)**; impossible sentences refused
-29/32, with an invented effect for **3/32**; partial readings naming what was left out 3/12; ambiguous sentences offered a choice 0/6;
-injected instructions obeyed 0/3; readings that build in their village 24/25. The offline reader matches a vocabulary; its
-generalisation is poor, and the held-out score is the number to quote for it.
+**Corpus results.** In-sample (`reality-corpus-1`, the reader was tuned on it): 172/172 labels. **First held-out**
+(`reality-corpus-holdout-1`, 80 sentences written by a separate agent that never saw the reader, its lexicon or the in-sample corpus;
+scored once, before any change it could inform): labels **42/80 (52.5%)**; supported sentences read faithfully **6/30 (20%)**;
+impossible sentences refused 29/32, with an invented effect for **3/32**; partial readings naming what was left out 3/12; ambiguous
+sentences offered a choice 0/6; injected instructions obeyed 0/3; readings that build in their village 24/25. The reader was then
+improved against its misses by mechanism (reader `offline-v2.2`), so that corpus is **in-sample from then on** (now 78/80, a
+regression floor only).
+
+**Second held-out** (`reality-corpus-holdout-2`, 80 new sentences by another separate agent that read only the language reference,
+the AST and operator code and the scenario files; never the reader, lexicon, earlier corpora or scorer), scored **once, untuned**,
+against reader `offline-v2.2` before any change it could inform: labels **51/80 (63.8%)**; supported sentences read faithfully
+**13/30 (43.3%)**; impossible sentences refused 28/32 with the reason named for 19/32, an invented effect for **1/32**; partial
+readings naming what was left out 5/12; ambiguous sentences offered a choice **0/6**; two-clause sentences kept whole 2/5; injected
+instructions obeyed **0/7**; readings that build in their village 29/31. This is the number to quote for the offline reader's
+generalisation: better than the first measurement, still well short of reliable comprehension. It is honest about what it cannot do
+(it refuses rather than invents) far more often than it understands an unfamiliar phrasing.
 
 **Commands and results**
 
@@ -51,7 +61,7 @@ generalisation is poor, and the held-out score is the number to quote for it.
 | `npm run typecheck`, `npm run lint` | pass |
 | `BE_REQUIRE_REDIS=1 npm test` | 40 files, **459 passed** |
 | `npx vitest run tests/unit/ai-interpret-v2.test.ts tests/unit/ai-reality-client.test.ts` | 12 passed (schema, provenance, invented keys and numbers, fidelity, region move, refusals, timeout, shared allowance, cache poisoning) |
-| `npm run reality:corpus` / `-- --holdout` | the two tables above |
+| `npm run reality:corpus` / `-- --holdout` / `-- --holdout2` | the tables above |
 | `npm run build`, `npm run size` | entry 253 KB gzip (budget 260), reality composer chunk 19 KB (budget 40), 3D chunk 193 KB |
 | `npx playwright test tests/e2e/{v2-online,inventor,v2-reality,modes}.spec.ts --project=desktop --project=phone` | **42 passed, 6 skipped** (skips are desktop-only or phone-only by design) |
 
