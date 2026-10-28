@@ -45,7 +45,7 @@ describe('the api/ functions as Vercel builds them', () => {
 
   it('every function file imports only the shared wiring, and exports a fetch handler and a Node.js config', () => {
     const files = readdirSync(join(ROOT, 'api')).filter((f) => f.endsWith('.ts'));
-    expect(files.sort()).toEqual(['ai-metrics.ts', 'ai-status.ts', 'interpret-belief.ts', 'npc-decision.ts', 'session.ts']);
+    expect(files.sort()).toEqual(['ai-metrics.ts', 'ai-status.ts', 'interpret-belief.ts', 'interpret-reality.ts', 'npc-decision.ts', 'session.ts']);
     for (const f of files) {
       const src = readFileSync(join(ROOT, 'api', f), 'utf8');
       expect([...src.matchAll(/from '([^']+)'/g)].map((m) => m[1])).toEqual(['../server/ai/vercel.ts']);
@@ -61,7 +61,7 @@ describe('the api/ functions as Vercel builds them', () => {
     expect(emitted.length).toBeGreaterThan(10);
     for (const f of emitted.map((x) => join(OUT, relative(ROOT, x)).replace(/\.ts$/, '.js'))) expect(readFileSync(f, 'utf8')).not.toMatch(/from\s+['"]\.{1,2}\/[^'"]+\.ts['"]/);
     const script = `
-      const routes = { 'ai-status': ['GET', null], 'session': ['POST', '{"consent":true}'], 'interpret-belief': ['POST', '{}'], 'npc-decision': ['POST', '{}'], 'ai-metrics': ['GET', null] };
+      const routes = { 'ai-status': ['GET', null], 'session': ['POST', '{"consent":true}'], 'interpret-belief': ['POST', '{}'], 'interpret-reality': ['POST', '{}'], 'npc-decision': ['POST', '{}'], 'ai-metrics': ['GET', null] };
       const out = {};
       for (const [route, [method, body]] of Object.entries(routes)) {
         const mod = await import(new URL('./api/' + route + '.js', ${JSON.stringify('file://' + OUT + '/')}).href);
@@ -75,6 +75,7 @@ describe('the api/ functions as Vercel builds them', () => {
       'ai-status': [200, 'disabled', 'nodejs'],
       session: [503, 'disabled', 'nodejs'],
       'interpret-belief': [503, 'disabled', 'nodejs'],
+      'interpret-reality': [503, 'disabled', 'nodejs'],
       'npc-decision': [503, 'disabled', 'nodejs'],
       'ai-metrics': [404, 'not_found', 'nodejs'],
     });

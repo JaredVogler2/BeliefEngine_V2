@@ -1,21 +1,37 @@
 import { RULES_VERSION, SCHEMA_VERSION, type ClaimDef, type RunState } from '../core/types.ts';
 import { verifyCustomClaim } from '../nl/build.ts';
+import { verifyRealityClaim } from '../reality/build.ts';
+import { MAX_LEDGER_ENTRIES, type Ledger } from './ledger.ts';
 
 export const SAVE_FORMAT = 'belief-engine-save';
 
+/**
+ * A save: the run state (which holds its own complete action log, `history` and `today`, so it can be replayed from its options)
+ * and, beside it, the run's external-decision ledger (save/ledger.ts). The ledger is optional: an older save has none and gets one
+ * derived when it is loaded; a Classic run has nothing to put in it.
+ */
 export interface SaveEnvelope {
   format: typeof SAVE_FORMAT;
   schemaVersion: number;
   rulesVersion: string;
   state: RunState;
+  ledger?: Ledger;
 }
 
-export function serializeRun(s: RunState): string {
-  const env: SaveEnvelope = { format: SAVE_FORMAT, schemaVersion: SCHEMA_VERSION, rulesVersion: RULES_VERSION, state: s };
+export function serializeRun(s: RunState, extra: { ledger?: Ledger | null } = {}): string {
+  const env: SaveEnvelope = { format: SAVE_FORMAT, schemaVersion: SCHEMA_VERSION, rulesVersion: RULES_VERSION, state: s, ...(extra.ledger?.entries.length ? { ledger: extra.ledger } : {}) };
   return JSON.stringify(env);
 }
 
-export type LoadResult = { ok: true; state: RunState } | { ok: false; error: string };
+export type LoadResult = { ok: true; state: RunState; ledger?: Ledger } | { ok: false; error: string };
+
+/** The ledger a save carries, if it is shaped like one (what it says is checked against the run separately: checkRun). */
+function ledgerOf(raw: unknown): Ledger | undefined | null {
+  if (raw === undefined) return undefined;
+  if (!isObj(raw) || typeof raw.v !== 'number' || !Array.isArray(raw.entries) || raw.entries.length > MAX_LEDGER_ENTRIES || !raw.entries.every(isObj)) return null;
+  if (raw.head !== null && typeof raw.head !== 'string') return null;
+  return raw as unknown as Ledger;
+}
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 
@@ -57,6 +73,13 @@ export function deserializeRun(json: string): LoadResult {
       const why = verifyCustomClaim(def, st.villagers as { district: string }[], ((st.scn as { claimDefs?: ClaimDef[] } | undefined)?.claimDefs ?? []) as ClaimDef[], ((st.scn as { starters?: string[] } | undefined)?.starters ?? []) as string[]);
       if (why) return { ok: false, error: `The save holds a written belief that does not check out (${why}).` };
     }
+    if (def?.reality) {
+      if (!isObj(st.v2)) return { ok: false, error: 'The save holds a reality belief but no reality state.' };
+      const why = verifyRealityClaim(st as unknown as RunState, def);
+      if (why) return { ok: false, error: `The save holds a reality belief that does not check out (${why}).` };
+    }
   }
-  return { ok: true, state: st as unknown as RunState };
+  const ledger = ledgerOf(raw.ledger);
+  if (ledger === null) return { ok: false, error: 'The save has a malformed record of its external inputs.' };
+  return { ok: true, state: st as unknown as RunState, ...(ledger ? { ledger } : {}) };
 }

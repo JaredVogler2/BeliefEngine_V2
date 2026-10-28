@@ -1,14 +1,22 @@
-import { councilBanDays, getAvailableActions, getCallouts, getForecast, getIntents, getLawViews, getModifierViews, getVillagerView, memoryLines, previewAction, describeAction, omenFor } from '../../engine/index.ts';
-import type { Action, ClaimDef, Landmark, Preview, RunState } from '../../engine/index.ts';
+import { Suspense, lazy } from 'react';
+import { councilBanDays, getAvailableActions, getCallouts, getForecast, getIntents, getLawViews, getModifierViews, getVillagerView, memoryLines, previewAction, describeAction, stagingOmen } from '../../engine/index.ts';
+import type { Action, ClaimDef, GameEvent, Landmark, Preview, RunState, VillagerView } from '../../engine/index.ts';
 import { findClaimDef, neighborsOf } from '../../engine/core/lookup.ts';
 import { firstName } from '../../engine/core/names.ts';
+import { lawWitnesses } from '../../engine/mind/view.ts';
 import { Avatar, Bar, ClaimGlyph, Icon, evIcon } from '../components.tsx';
 import { store, useStore, type SideTab } from '../store.ts';
 import { getRenderer } from './MapView.tsx';
+import { LawProvenance } from './Provenance.tsx';
+
+// a villager's mind and a conversation with them (V2 runs only): its own chunk, loaded when a V2 villager is opened
+const MindPanel = lazy(() => import('./MindPanel.tsx'));
+const VillageMinds = lazy(() => import('./MindPanel.tsx').then((m) => ({ default: m.VillageMinds })));
+const InfluenceJournal = lazy(() => import('./MindPanel.tsx').then((m) => ({ default: m.InfluenceJournal })));
 
 // ------------------------------------------------------------------ shared action row
 
-interface Opt {
+export interface Opt {
   action: Action;
   label: string;
   cost: number;
@@ -16,7 +24,7 @@ interface Opt {
   badge?: 'good' | 'bad' | null;
 }
 
-function ActionRow({ o, onDone }: { o: Opt; onDone?: () => void }) {
+export function ActionRow({ o, onDone }: { o: Opt; onDone?: () => void }) {
   const ok = o.preview.ok;
   const deltas = o.preview.deltas.slice(0, 3).map((d) => `${firstName(d.name)} ${d.before}→${d.after}`).join(', ');
   return (
@@ -52,7 +60,7 @@ function playable(s: RunState, claimId: string): boolean {
   return !!d && (!d.rival || !!d.adoptable);
 }
 
-function mk(s: RunState, action: Action): Opt {
+export function mk(s: RunState, action: Action): Opt {
   return { action, label: describeAction(s, action), cost: previewAction(s, action).cost, preview: previewAction(s, action) };
 }
 
@@ -124,6 +132,30 @@ function Twists() {
   );
 }
 
+/** every action the Keeper can take on or through this person right now */
+export function villagerOpts(state: RunState, id: string, claimId: string | null): Opt[] {
+  const v = state.villagers.find((x) => x.id === id)!;
+  const out: Opt[] = [];
+  if (v.status === 'dead') return out;
+  if (claimId && state.claims.find((c) => c.id === claimId)?.available && playable(state, claimId)) {
+    out.push(mk(state, { type: 'SEED', claim: claimId, target: id }));
+    const believes = (v.beliefs[claimId]?.conv ?? 0) >= 35;
+    for (const n of neighborsOf(state, id)) {
+      const other = state.villagers.find((x) => x.id === n.id)!;
+      if (other.status === 'dead') continue;
+      if (believes && (other.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: id, to: n.id }));
+      if ((other.beliefs[claimId]?.conv ?? 0) >= 35 && (v.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: n.id, to: id }));
+    }
+  }
+  for (const c of state.scn.claimDefs.filter((d) => d.rival)) {
+    const targeted = state.rivals.some((r) => r.claim === c.id && r.plan?.target === id);
+    if (claimId && ((v.beliefs[c.id]?.conv ?? 0) >= 10 || targeted)) out.push(mk(state, { type: 'COUNTER', claim: claimId, against: c.id, target: id }));
+  }
+  for (const d of state.scn.deals ?? []) if (d.broker === id) out.push(mk(state, { type: 'TRADE', deal: d.id, target: id }));
+  out.push(mk(state, { type: 'SCOUT', target: id }));
+  return out;
+}
+
 function VillagerCard({ id }: { id: string }) {
   const state = useStore((s) => s.state)!;
   const ui = useStore((s) => s.ui);
@@ -134,27 +166,7 @@ function VillagerCard({ id }: { id: string }) {
   const claimId = ui.activeClaim;
   const claimShort = claimId ? findClaimDef(state, claimId)?.short ?? claimId : null;
 
-  const opts = ((): Opt[] => {
-    const out: Opt[] = [];
-    if (v.status === 'dead') return out;
-    if (claimId && state.claims.find((c) => c.id === claimId)?.available && playable(state, claimId)) {
-      out.push(mk(state, { type: 'SEED', claim: claimId, target: id }));
-      const believes = (v.beliefs[claimId]?.conv ?? 0) >= 35;
-      for (const n of neighborsOf(state, id)) {
-        const other = state.villagers.find((x) => x.id === n.id)!;
-        if (other.status === 'dead') continue;
-        if (believes && (other.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: id, to: n.id }));
-        if ((other.beliefs[claimId]?.conv ?? 0) >= 35 && (v.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: n.id, to: id }));
-      }
-    }
-    for (const c of state.scn.claimDefs.filter((d) => d.rival)) {
-      const targeted = state.rivals.some((r) => r.claim === c.id && r.plan?.target === id);
-      if (claimId && ((v.beliefs[c.id]?.conv ?? 0) >= 10 || targeted)) out.push(mk(state, { type: 'COUNTER', claim: claimId, against: c.id, target: id }));
-    }
-    for (const d of state.scn.deals ?? []) if (d.broker === id) out.push(mk(state, { type: 'TRADE', deal: d.id, target: id }));
-    out.push(mk(state, { type: 'SCOUT', target: id }));
-    return out;
-  })();
+  const opts = villagerOpts(state, id, claimId);
 
   const seed = opts.filter((o) => o.action.type === 'SEED');
   const msgFrom = opts.filter((o) => o.action.type === 'MESSENGER' && (o.action as { from: string }).from === id && o.preview.ok).sort((a, b) => b.preview.deltas.reduce((m, d) => m + d.after - d.before, 0) - a.preview.deltas.reduce((m, d) => m + d.after - d.before, 0)).slice(0, 6);
@@ -176,6 +188,7 @@ function VillagerCard({ id }: { id: string }) {
           </div>
         </div>
       </div>
+      {view.status !== 'dead' && <Glance state={state} view={view} claimId={claimId} />}
       <p className="small" style={{ margin: '0.5rem 0 0.2rem' }}><em>{view.want}</em></p>
       <p className="small muted" style={{ margin: 0 }}>{view.archetype.label}: {view.archetype.blurb}</p>
       {view.status !== 'dead' && <p className="small" style={{ margin: '0.3rem 0 0' }}>{view.dutyNote}{view.place ? ` (${view.place})` : ''}</p>}
@@ -201,11 +214,16 @@ function VillagerCard({ id }: { id: string }) {
           {intents.map((i) => <li key={i.kind} className={i.chosen ? 'chosen' : ''}><b>{i.label}</b> {i.score}{i.chosen ? ' ← what they will do' : ''}<span className="muted"> — {i.why}.</span></li>)}
         </ul>
       )}
-      {memories.length > 0 && (
+      {memories.length > 0 && !state.v2?.minds && (
         <>
           <h3>What they remember</h3>
           <ul className="small" data-testid="memories">{memories.map((m, i) => <li key={i}>{m}</li>)}</ul>
         </>
+      )}
+      {state.v2?.minds && (
+        <Suspense fallback={<p className="small muted" role="status">Reading their mind…</p>}>
+          <MindPanel id={id} />
+        </Suspense>
       )}
 
       <h3>What they believe</h3>
@@ -251,7 +269,62 @@ function VillagerCard({ id }: { id: string }) {
   );
 }
 
-function landmarkBlurb(l: Landmark): string {
+/** Open the log at one event (a "Why?" link): the event, what caused it, and the place or person it concerns on the map. */
+export function showEvent(s: RunState, id: number): void {
+  const e = s.log.find((x) => x.id === id);
+  store.set({ tab: 'log', sheetOpen: true, logFocus: id });
+  if (e?.tile) getRenderer()?.focusTile(e.tile[0], e.tile[1], 1.4);
+  else if (e?.target) getRenderer()?.focusVillager(e.target);
+}
+
+/**
+ * The questions a player asks of a villager, answered first (phase 12): what they think of the story in hand, why (with one link
+ * to the event that last moved them), whether hearing it from you would move them (the engine's own dry run of the telling), and
+ * what they mean to do next. The detail below stays for whoever wants it.
+ */
+function Glance({ state, view, claimId }: { state: RunState; view: VillagerView; claimId: string | null }) {
+  const def = claimId ? findClaimDef(state, claimId) : undefined;
+  const b = def ? view.beliefs.find((x) => x.claimId === def.id) : view.beliefs[0];
+  const next = getIntents(state, view.id).find((i) => i.chosen);
+  const first = firstName(view.name);
+  const seed = def && playable(state, def.id) && state.claims.find((c) => c.id === def.id)?.available ? previewAction(state, { type: 'SEED', claim: def.id, target: view.id }) : null;
+  const moved = seed?.ok ? seed.deltas.find((d) => d.id === view.id && d.claim === def!.id) : undefined;
+  const skeptic = (state.villagers.find((x) => x.id === view.id)?.traits.skepticism ?? 0) >= 70;
+  let listen: string;
+  if (!def) listen = 'Choose a story card to see whether they would listen.';
+  else if (seed?.ok) listen = `Yes: hearing it from you now would move them ${moved ? `${moved.before} → ${moved.after}` : 'a little'}${skeptic ? ', but words barely move a skeptic; seeing it work does' : ''}.`;
+  else if (seed?.error?.code === 'NO_TRUST' || seed?.error?.code === 'NO_PATH') listen = `Not from you: ${seed.error.message} A believer they trust can carry it.`;
+  else listen = seed?.error?.message ?? 'Not with this story.';
+  return (
+    <dl className="glance" data-testid="villager-glance">
+      <div>
+        <dt>Thinks</dt>
+        <dd data-testid="glance-thinks">{def && !b ? <>Has not heard “{def.short}”.</> : b ? <>“{b.short}”: <b>{b.label}</b>{b.conv !== null ? ` (${b.conv})` : ''}</> : 'Has not heard any of your stories yet.'}</dd>
+      </div>
+      {b?.why && (
+        <div>
+          <dt>Why</dt>
+          <dd data-testid="glance-why">
+            {b.why}.{' '}
+            {b.whyEvent !== null && <button type="button" className="link-btn" onClick={() => showEvent(state, b.whyEvent!)} data-testid="glance-why-link" aria-label={`Why does ${first} think this? Show the event`}>Why?</button>}
+          </dd>
+        </div>
+      )}
+      <div>
+        <dt>Would listen?</dt>
+        <dd data-testid="glance-listen">{listen}</dd>
+      </div>
+      {next && (
+        <div>
+          <dt>Next</dt>
+          <dd data-testid="glance-next">{next.label}<span className="muted"> — {next.why}.</span></dd>
+        </div>
+      )}
+    </dl>
+  );
+}
+
+export function landmarkBlurb(l: Landmark): string {
   switch (l.kind) {
     case 'beacon': return l.lit ? `Burning: ${l.fuelNights} night${l.fuelNights === 1 ? '' : 's'} of fuel left.` : 'Cold brazier. Lighting it costs fuel and carries a spark risk.';
     case 'bridge': return `Integrity ${l.hp}/${l.maxHp}.`;
@@ -273,33 +346,40 @@ function landmarkBlurb(l: Landmark): string {
   }
 }
 
+/** the rituals and gatherings a place offers, with the active story */
+export function landmarkOpts(state: RunState, id: string, claimId: string | null): Opt[] {
+  const l = state.world.landmarks.find((x) => x.id === id);
+  const out: Opt[] = [];
+  if (!l) return out;
+  for (const r of state.scn.rituals.filter((q) => q.landmark === l.kind)) {
+    const claims: (string | undefined)[] = [undefined];
+    if (claimId) {
+      const def = findClaimDef(state, claimId);
+      if (def?.ritual === r.id) claims.unshift(claimId);
+    }
+    for (const c of claims) {
+      const o = mk(state, { type: 'RITUAL', ritual: r.id, landmark: l.id, claim: c });
+      if (c) {
+        const omen = stagingOmen(state, r, c).value;
+        o.badge = omen > 0 ? 'good' : omen < 0 ? 'bad' : null;
+      }
+      out.push(o);
+    }
+  }
+  if (claimId && ['chapel', 'market', 'hall', 'shelter', 'well'].includes(l.kind) && playable(state, claimId)) out.push(mk(state, { type: 'GATHER', claim: claimId, site: l.id }));
+  return out;
+}
+
 function LandmarkCard({ id }: { id: string }) {
   const state = useStore((s) => s.state)!;
   const ui = useStore((s) => s.ui);
   const l = state.world.landmarks.find((x) => x.id === id);
   const claimId = ui.activeClaim;
-  const opts = ((): Opt[] => {
-    const out: Opt[] = [];
-    if (!l) return out;
-    for (const r of state.scn.rituals.filter((q) => q.landmark === l.kind)) {
-      const claims: (string | undefined)[] = [undefined];
-      if (claimId) {
-        const def = findClaimDef(state, claimId);
-        if (def?.ritual === r.id) claims.unshift(claimId);
-      }
-      for (const c of claims) {
-        const o = mk(state, { type: 'RITUAL', ritual: r.id, landmark: l.id, claim: c });
-        if (c) o.badge = omenFor(state, r.omen).value > 0 ? 'good' : omenFor(state, r.omen).value < 0 ? 'bad' : null;
-        out.push(o);
-      }
-    }
-    if (claimId && ['chapel', 'market', 'hall', 'shelter', 'well'].includes(l.kind) && playable(state, claimId)) out.push(mk(state, { type: 'GATHER', claim: claimId, site: l.id }));
-    return out;
-  })();
+  const opts = landmarkOpts(state, id, claimId);
   if (!l) return null;
   const def: ClaimDef | undefined = claimId ? findClaimDef(state, claimId) : undefined;
   const ritual = def?.ritual ? state.scn.rituals.find((r) => r.id === def.ritual) : undefined;
-  const omen = ritual && ritual.landmark === l.kind ? omenFor(state, ritual.omen) : null;
+  const omen = ritual && ritual.landmark === l.kind ? stagingOmen(state, ritual, claimId) : null;
   const occupants = state.villagers.filter((v) => v.status !== 'dead' && v.place === l.id);
   return (
     <div data-testid="landmark-card">
@@ -355,7 +435,12 @@ export function LawsPanel() {
           <div className="kv"><span>Support</span><Bar value={l.pressure * 100} kind="gold" marks={[l.on * 100, l.off * 100]} label={`Support for ${l.short} in ${l.regionName}`} /><b>{Math.round(l.pressure * 100)}%</b></div>
           <div className="kv"><span>Awakening</span><Bar value={l.progress} kind="blue" label="Awakening progress" /><b>{l.progress}%</b></div>
           <div className="small">Firm believers: <b>{l.supporters.length}</b> / {l.minSupporters} needed{l.supporters.length ? ` (${l.supporters.map((x) => firstName(x.name)).join(', ')})` : ''}.</div>
+          {(() => {
+            const w = state.v2?.minds && l.supporters.length ? lawWitnesses(state, l.id) : null;
+            return w ? <div className="small" data-testid="law-witnesses">{w.saw} of {w.supporters} saw it work themselves{w.saw === 0 ? ': support built on hearsay alone is easily shaken' : ''}.</div> : null;
+          })()}
           <div className="small muted">{l.note}</div>
+          {state.v2 && findClaimDef(state, l.claimId)?.reality && !l.rival && <LawProvenance state={state} claim={l.claimId} />}
           <ul>
             <li>{l.benefit}</li>
             <li style={{ color: '#ffb3bf' }}>{l.risk}</li>
@@ -366,7 +451,7 @@ export function LawsPanel() {
             <div className="small" style={{ marginTop: '0.3rem' }}>
               <b>Win over next:</b>{' '}
               {l.nextSteps.map((n) => (
-                <button key={n.id} className="chip gold" onClick={() => store.select({ kind: 'villager', id: n.id })} style={{ cursor: 'pointer', margin: '2px' }}>{firstName(n.name)} — {n.why}</button>
+                <button key={n.id} className="chip gold" onClick={() => { store.select({ kind: 'villager', id: n.id }); store.set({ tab: 'selected' }); }} style={{ cursor: 'pointer', margin: '2px' }}>{firstName(n.name)} — {n.why}</button>
               ))}
             </div>
           )}
@@ -386,6 +471,11 @@ export function VillagePanel() {
   return (
     <div data-testid="village-panel">
       <Callouts />
+      {state.v2?.minds && (
+        <Suspense fallback={null}>
+          <VillageMinds />
+        </Suspense>
+      )}
       <h3>The village</h3>
       <p className="small muted">{claim ? 'Showing belief in the active story.' : 'Choose a story to see who believes it.'} Select anyone to inspect them.</p>
       {people.map((v) => {
@@ -396,7 +486,9 @@ export function VillagePanel() {
             key={v.id}
             className={`list-btn ${ui.selection?.id === v.id ? 'sel' : ''}`}
             onClick={() => {
+              // asking for someone from the list is asking for their full card; a tap on the map shows the small one beside them instead
               store.select({ kind: 'villager', id: v.id });
+              store.set({ tab: 'selected' });
               getRenderer()?.focusVillager(v.id);
             }}
           >
@@ -417,6 +509,7 @@ export function VillagePanel() {
           data-place={l.id}
           onClick={() => {
             store.select({ kind: 'landmark', id: l.id });
+            store.set({ tab: 'selected' });
             getRenderer()?.focusTile(l.x, l.y, 1.3);
           }}
         >
@@ -522,16 +615,49 @@ export function ForecastPanel() {
 
 // ------------------------------------------------------------------ log
 
+/** The event a "Why?" link asked about, with what caused it (the engine's own cause links, a few steps back). */
+function FocusedEvent({ state, id }: { state: RunState; id: number }) {
+  const e = state.log.find((x) => x.id === id);
+  if (!e) return null;
+  const chain: GameEvent[] = [];
+  let causes = e.cause ?? [];
+  while (causes.length && chain.length < 4) {
+    const c = state.log.find((x) => x.id === causes[0]);
+    if (!c || chain.includes(c)) break;
+    chain.push(c);
+    causes = c.cause ?? [];
+  }
+  return (
+    <section className="card log-focus" data-testid="log-focus" aria-label="The event you asked about">
+      <p className="small" style={{ margin: 0 }}><span className="log-day">Day {e.day}</span> {e.text}</p>
+      {chain.length > 0 && (
+        <ul className="small muted" style={{ margin: '0.3rem 0 0' }} data-testid="log-focus-causes">
+          {chain.map((c) => <li key={c.id}>Because, day {c.day}: {c.text}</li>)}
+        </ul>
+      )}
+      <button type="button" className="btn small" style={{ marginTop: '0.4rem' }} onClick={() => store.set({ logFocus: undefined })}>Show the whole log</button>
+    </section>
+  );
+}
+
 export function LogPanel() {
   const state = useStore((s) => s.state)!;
+  const focus = useStore((s) => s.ui.logFocus);
   const events = state.log.filter((e) => e.importance >= 1).slice(-120).reverse();
   return (
     <div data-testid="log-panel">
+      {focus !== undefined && <FocusedEvent state={state} id={focus} />}
+      {state.v2?.minds && (
+        <Suspense fallback={null}>
+          <InfluenceJournal />
+        </Suspense>
+      )}
       <h3>What has happened</h3>
       {events.map((e) => (
         <button
           key={e.id}
-          className={`log-item i${e.importance}`}
+          aria-current={e.id === focus ? 'true' : undefined}
+          className={`log-item i${e.importance}${e.id === focus ? ' focused' : ''}`}
           onClick={() => {
             if (e.tile) getRenderer()?.focusTile(e.tile[0], e.tile[1], 1.4);
             else if (e.target) {

@@ -1,7 +1,9 @@
 import type { Duty, RunState } from '../engine/index.ts';
-import { claimDef } from '../engine/core/lookup.ts';
+import { allClaimDefs, claimDef } from '../engine/core/lookup.ts';
 import { passableMask } from '../engine/world/nav.ts';
 import { triggerSources } from '../engine/laws/effects.ts';
+import { triggerEvents } from '../engine/reality/ast.ts';
+import { fires } from '../engine/reality/execute.ts';
 
 /**
  * A read-only picture of the run for the renderer. The renderer never reads the run state directly and never writes to it: it gets this
@@ -102,8 +104,22 @@ export interface SceneSnapshot {
   ties: SceneTie[];
   regions: { id: string; rects: [number, number, number, number][] }[];
   packs: { id: string; x: number; y: number; size: number }[];
+  /** the regions where each story can become law, so choosing a story can show the ground it would govern */
+  claimRegions: Record<string, string[]>;
   /** what kind of danger the chapter has, so the sky can say so */
   threat: string;
+  /** a Generative Reality run's hens, loose stones and the bank raised with them (null in Classic) */
+  reality: SceneReality | null;
+}
+
+export interface SceneReality {
+  coops: { id: string; x: number; y: number }[];
+  hens: { id: string; x: number; y: number; alt: number; stray: boolean }[];
+  stones: { id: string; x: number; y: number; state: 'loose' | 'placed'; wet: number; base: number }[];
+  /** tile index and how many levels the bank stands raised there */
+  bank: [number, number][];
+  /** what written laws did last night, as the executor recorded it: the effects the renderer may animate, and nothing else */
+  night: { event: number; law: string; claim: string; op: string; targets: string[]; amount: number | null; day: number }[];
 }
 
 export function getSceneSnapshot(s: RunState): SceneSnapshot {
@@ -137,9 +153,21 @@ export function getSceneSnapshot(s: RunState): SceneSnapshot {
       let regionWide = false;
       try {
         const d = claimDef(s, l.claimId);
-        spec = { trigger: d.spec.trigger.kind, radius: d.spec.radius, subject: d.spec.subject, effect: d.spec.effect, rival: !!d.rival };
-        regionWide = ['night', 'evidence', 'always'].includes(d.spec.trigger.kind) && d.spec.subject !== 'stone';
-        sources = regionWide ? [] : triggerSources(s, l, d).map((q) => ({ id: q.id, x: q.x, y: q.y }));
+        if (d.reality) {
+          // a written belief carries a neutral V1 spec only for its thresholds: describe it by its own clauses, and power it from what the
+          // reality executor itself would find tonight (the rung bell, the lit lanterns), never from that placeholder
+          const c = d.reality.ast.clauses[0];
+          const ev = d.reality.ast.clauses.flatMap((cl) => triggerEvents(cl.when));
+          const trigger = ev.includes('lantern') ? 'lit_beacon' : ev.includes('smoke_fire') ? 'smoke_fire' : ev.includes('bell') ? 'bell' : ev.includes('watchers') ? 'watchers' : 'always';
+          spec = { trigger, radius: c.target.near?.radius ?? 0, subject: `reality:${c.target.kind}`, effect: c.effect.op, rival: !!d.rival };
+          regionWide = trigger === 'always';
+          const seen = new Set<string>();
+          sources = regionWide ? [] : d.reality.ast.clauses.flatMap((cl) => fires(s, cl.when, l).sources).filter((q) => (seen.has(q.id) ? false : (seen.add(q.id), true))).map((q) => ({ id: q.id, x: q.x, y: q.y }));
+        } else {
+          spec = { trigger: d.spec.trigger.kind, radius: d.spec.radius, subject: d.spec.subject, effect: d.spec.effect, rival: !!d.rival };
+          regionWide = ['night', 'evidence', 'always'].includes(d.spec.trigger.kind) && d.spec.subject !== 'stone';
+          sources = regionWide ? [] : triggerSources(s, l, d).map((q) => ({ id: q.id, x: q.x, y: q.y }));
+        }
       } catch {
         /* a law whose story is gone draws nothing special */
       }
@@ -148,7 +176,17 @@ export function getSceneSnapshot(s: RunState): SceneSnapshot {
     ties: s.edges.map((e) => ({ a: e.a, b: e.b, ab: e.ab, ba: e.ba, kind: e.kind })),
     regions: w.regions.map((r) => ({ id: r.id, rects: r.rects.map((q) => [q[0], q[1], q[2], q[3]] as [number, number, number, number]) })),
     packs: w.packs.map((p) => ({ id: p.id, x: p.x, y: p.y, size: p.size })),
+    claimRegions: Object.fromEntries(allClaimDefs(s).map((d) => [d.id, d.regions.slice()])),
     threat: s.scn.threatKind,
+    reality: s.v2
+      ? {
+          coops: s.v2.coops.map((c) => ({ id: c.id, x: c.x, y: c.y })),
+          hens: s.v2.chickens.filter((c) => c.alive).map((c) => ({ id: c.id, x: c.x, y: c.y, alt: c.alt, stray: c.stray })),
+          stones: s.v2.stones.filter((x) => x.state !== 'lost').map((x) => ({ id: x.id, x: x.x, y: x.y, state: x.state as 'loose' | 'placed', wet: x.wet, base: x.base })),
+          bank: Object.entries(s.v2.bank).filter(([, h]) => h > 0).map(([k, h]) => [Number(k), h] as [number, number]).sort((a, b) => a[0] - b[0]),
+          night: s.v2.lastNight.map((a) => ({ event: a.event, law: a.law, claim: a.claim, op: a.op, targets: a.targets.slice(), amount: a.amount ?? null, day: a.day })),
+        }
+      : null,
   };
 }
 
@@ -162,6 +200,8 @@ export interface SceneChanges {
   landmarks: string[];
   villagers: string[];
   laws: boolean;
+  /** the hens, stones or raised bank of a Generative Reality run changed */
+  reality: boolean;
 }
 
 const sameArr = (a: ArrayLike<number>, b: ArrayLike<number>): boolean => {
@@ -173,7 +213,7 @@ const sameArr = (a: ArrayLike<number>, b: ArrayLike<number>): boolean => {
 /** What the renderer has to touch to get from `prev` to `next`: a stable diff by entity id, so unchanged things are left alone. */
 export function getSceneChanges(prev: SceneSnapshot | null, next: SceneSnapshot): SceneChanges {
   if (!prev || prev.scenarioId !== next.scenarioId || prev.seed !== next.seed || prev.w !== next.w || prev.h !== next.h || prev.day > next.day) {
-    return { rebuild: true, terrain: true, water: true, fire: true, landmarks: next.landmarks.map((l) => l.id), villagers: next.villagers.map((v) => v.id), laws: true };
+    return { rebuild: true, terrain: true, water: true, fire: true, landmarks: next.landmarks.map((l) => l.id), villagers: next.villagers.map((v) => v.id), laws: true, reality: true };
   }
   const lm: string[] = [];
   const old = new Map(prev.landmarks.map((l) => [l.id, l]));
@@ -196,5 +236,6 @@ export function getSceneChanges(prev: SceneSnapshot | null, next: SceneSnapshot)
     landmarks: lm,
     villagers: vv,
     laws: JSON.stringify(prev.laws) !== JSON.stringify(next.laws),
+    reality: JSON.stringify(prev.reality) !== JSON.stringify(next.reality),
   };
 }

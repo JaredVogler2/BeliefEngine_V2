@@ -1,0 +1,427 @@
+{
+ "name": "rules2-harvest",
+ "from": 1,
+ "seeds": 30,
+ "difficulty": "normal",
+ "scenarios": [
+  "harvest"
+ ],
+ "policies": [
+  "noop",
+  "spam-broad",
+  "evidence-first",
+  "bridge-persuasion",
+  "inventive-compound",
+  "careful-synergy",
+  "backfire-probe",
+  "ward-greedy",
+  "rival-antagonist"
+ ],
+ "cells": [
+  {
+   "scenario": "harvest",
+   "policy": "noop",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 9,
+   "wroteRate": 0,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 0,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 8,
+   "pooled": 0,
+   "side": 8,
+   "reach": 0,
+   "heard": 0,
+   "passDays": 9,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 42.85714285714287,
+   "msPerRun": 22.926249766666682,
+   "fails": {
+    "fed": 30,
+    "food": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": null,
+   "on": null,
+   "min": null
+  },
+  {
+   "scenario": "harvest",
+   "policy": "spam-broad",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 8.5,
+   "nights": 1.5,
+   "apSpent": 25.5,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 8,
+   "pooled": 0,
+   "side": 8,
+   "reach": 0.6809523809523808,
+   "heard": 1,
+   "passDays": 0.5,
+   "effects": 1.5,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0.3333333333333333
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 42.7857142857143,
+   "msPerRun": 960.0928292666665,
+   "fails": {
+    "fed": 30,
+    "food": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 9.6,
+   "on": 0.5799999999999998,
+   "min": 3
+  },
+  {
+   "scenario": "harvest",
+   "policy": "evidence-first",
+   "n": 30,
+   "wins": 13,
+   "winRate": 0.43333333333333335,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 5.766666666666667,
+   "nights": 4.233333333333333,
+   "apSpent": 16.3,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 6.433333333333334,
+   "pooled": 0,
+   "side": 6.433333333333334,
+   "reach": 0.9166666666666662,
+   "heard": 1,
+   "passDays": 3.2333333333333334,
+   "effects": 4.233333333333333,
+   "tests": {
+    "met": 0.3333333333333333,
+    "failed": 0,
+    "lapsed": 0.1
+   },
+   "demos": {
+    "ok": 4.733333333333333,
+    "failed": 0
+   },
+   "keeperTrust": 44.93095238095237,
+   "msPerRun": 612.8987972333323,
+   "fails": {
+    "food": 17,
+    "fed": 3
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 6.900000000000004,
+   "on": 0.5799999999999998,
+   "min": 3
+  },
+  {
+   "scenario": "harvest",
+   "policy": "bridge-persuasion",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 7.5,
+   "nights": 2.5,
+   "apSpent": 23,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 4,
+   "pooled": 0,
+   "side": 4,
+   "reach": 0.9547619047619045,
+   "heard": 1,
+   "passDays": 0,
+   "effects": 2.5,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0.6
+   },
+   "demos": {
+    "ok": 2.5,
+    "failed": 0
+   },
+   "keeperTrust": 46.29999999999999,
+   "msPerRun": 955.1137576999994,
+   "fails": {
+    "fed": 30,
+    "food": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 9,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "harvest",
+   "policy": "inventive-compound",
+   "n": 30,
+   "wins": 3,
+   "winRate": 0.1,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 6.933333333333334,
+   "nights": 3.066666666666667,
+   "apSpent": 19.866666666666667,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 4,
+   "pooled": 0,
+   "side": 4,
+   "reach": 0.8119047619047619,
+   "heard": 1,
+   "passDays": 1,
+   "effects": 6.133333333333334,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 1.0333333333333334,
+    "failed": 0
+   },
+   "keeperTrust": 44.333333333333336,
+   "msPerRun": 831.2063379000004,
+   "fails": {
+    "fed": 27,
+    "food": 27
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 17.5,
+   "on": 0.6,
+   "min": 4
+  },
+  {
+   "scenario": "harvest",
+   "policy": "careful-synergy",
+   "n": 30,
+   "wins": 13,
+   "winRate": 0.43333333333333335,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 21.8,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 6.533333333333333,
+   "pooled": 0,
+   "side": 10.766666666666667,
+   "reach": 0,
+   "heard": 0,
+   "passDays": 0.2,
+   "effects": 0,
+   "tests": {
+    "met": 0.6666666666666666,
+    "failed": 0,
+    "lapsed": 0.16666666666666666
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 45.12619047619048,
+   "msPerRun": 1266.9204687666652,
+   "fails": {
+    "food": 17,
+    "fed": 6
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 6,
+   "on": 0.5799999999999998,
+   "min": 3
+  },
+  {
+   "scenario": "harvest",
+   "policy": "backfire-probe",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 7.9,
+   "nights": 2.1,
+   "apSpent": 22.7,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 8,
+   "pooled": 0,
+   "side": 8,
+   "reach": 0.6166666666666665,
+   "heard": 1,
+   "passDays": 1.1,
+   "effects": 2.1,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 37.00714285714287,
+   "msPerRun": 1767.600390833331,
+   "fails": {
+    "fed": 30,
+    "food": 30
+   },
+   "opposed": 1,
+   "harmed": 2.1,
+   "power": 4.599999999999997,
+   "on": 0.5500000000000003,
+   "min": 3
+  },
+  {
+   "scenario": "harvest",
+   "policy": "ward-greedy",
+   "n": 30,
+   "wins": 28,
+   "winRate": 0.9333333333333333,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 5.433333333333334,
+   "nights": 4.566666666666666,
+   "apSpent": 15.3,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 5.5,
+   "pooled": 0,
+   "side": 5.5,
+   "reach": 0.9119047619047614,
+   "heard": 1,
+   "passDays": 3.566666666666667,
+   "effects": 4.566666666666666,
+   "tests": {
+    "met": 0.5666666666666667,
+    "failed": 0,
+    "lapsed": 0.13333333333333333
+   },
+   "demos": {
+    "ok": 3.466666666666667,
+    "failed": 0
+   },
+   "keeperTrust": 44.38095238095238,
+   "msPerRun": 1103.173135566666,
+   "fails": {
+    "food": 2
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 6.900000000000004,
+   "on": 0.5799999999999998,
+   "min": 3
+  },
+  {
+   "scenario": "harvest",
+   "policy": "rival-antagonist",
+   "n": 30,
+   "wins": 25,
+   "winRate": 0.8333333333333334,
+   "endDay": 9,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 5.5,
+   "nights": 4.5,
+   "apSpent": 15.5,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 0,
+   "livestock": 0,
+   "fields": 5.666666666666667,
+   "pooled": 0,
+   "side": 5.666666666666667,
+   "reach": 0.9142857142857139,
+   "heard": 1,
+   "passDays": 3.5,
+   "effects": 4.5,
+   "tests": {
+    "met": 0.8,
+    "failed": 0,
+    "lapsed": 0.6333333333333333
+   },
+   "demos": {
+    "ok": 3.533333333333333,
+    "failed": 0
+   },
+   "keeperTrust": 44.311904761904756,
+   "msPerRun": 1030.883333699999,
+   "fails": {
+    "food": 5
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 6.900000000000004,
+   "on": 0.5799999999999998,
+   "min": 3
+  }
+ ],
+ "diversity": {
+  "harvest": {
+   "viable": [
+    "evidence-first",
+    "careful-synergy",
+    "ward-greedy",
+    "rival-antagonist"
+   ],
+   "entropy": 2.07
+  }
+ }
+}

@@ -10,6 +10,7 @@ import { runSickness } from './sickness.ts';
 import { runWolves } from './wolves.ts';
 import { landmarkAtTile, runFire } from './fire.ts';
 import { T, idx } from './grid.ts';
+import { poolSinks } from '../reality/project.ts';
 
 function lawsFor(s: RunState, subjects: string[]): string[] {
   const out: string[] = [];
@@ -69,6 +70,17 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
           text: `The rain the bells turned away pools on the low ground of ${w.regions.find((r) => r.id === region)?.name ?? region}: ${pooled} tiles take ${amount} extra depth.`,
         });
     }
+    // Generative Reality moves water by volume: each step is six tile-depths, laid one deep on the region's lowest dry ground
+    for (const pool of poolSinks(w, water, mods.sinks ?? []))
+      if (pool.tiles.length)
+        emit(ctx, {
+          step: 'hazard', code: 'WATER_POOLED', importance: 2,
+          ...(pool.laws[0] ? { law: pool.laws[0], claim: s.laws.find((l) => l.id === pool.laws[0])?.claimId } : {}),
+          // where it stands, for the map and the 3D world to show exactly that ground: the middle of the pooled tiles, and how many
+          tile: [Math.round(pool.tiles.reduce((a, i) => a + (i % w.w), 0) / pool.tiles.length), Math.round(pool.tiles.reduce((a, i) => a + Math.floor(i / w.w), 0) / pool.tiles.length)] as [number, number],
+          delta: { tiles: [0, pool.tiles.length] },
+          text: `Water moved by belief pools on the low ground of ${w.regions.find((r) => r.id === pool.region)?.name ?? pool.region}: ${pool.tiles.length} tiles stand a tile deep.`,
+        });
   }
   w.water = water;
 
@@ -78,9 +90,9 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
   // ---- bridge
   const bridge = w.landmarks.find((l) => l.kind === 'bridge' && l.hp > 0);
   if (bridge && floodActive && s.scn.features.bridge) {
-    const raw = Math.max(0, L - 1) * (s.scn.consts.dmgBridge ?? 11);
+    const raw = Math.max(0, L - 1 - (mods.bridgeFlow ?? 0)) * (s.scn.consts.dmgBridge ?? 11);
     const watched = (bridge.data.watchers ?? 0) > 0 ? mods.bridgeShield : 0;
-    const dmg = Math.round(raw * (1 - watched));
+    const dmg = mods.bridgeHardness === undefined ? Math.round(raw * (1 - watched)) : Math.round(raw * (1 - watched) * (1 - mods.bridgeHardness));
     const saved = raw - dmg;
     const before = bridge.hp;
     bridge.hp = Math.max(0, bridge.hp - dmg);
@@ -130,7 +142,8 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
     const d = water[i];
     const d0 = cfWater[i];
     let dmg = homeDamage(d);
-    if (w.fire[i] >= 1) dmg += Math.round(40 * (1 - (mods.fireDamageCut[l.district] ?? 0)));
+    if (mods.homeShield?.[l.id] !== undefined) dmg = Math.round(dmg * (1 - mods.homeShield[l.id]));
+    if (w.fire[i] >= 1) dmg += mods.homeFireCut?.[l.id] === undefined ? Math.round(40 * (1 - (mods.fireDamageCut[l.district] ?? 0))) : Math.round(40 * (1 - (mods.fireDamageCut[l.district] ?? 0)) * (1 - mods.homeFireCut[l.id]));
     for (const ss of mods.stoneStress) if (Math.abs(ss.x - l.x) + Math.abs(ss.y - l.y) <= ss.r) dmg += ss.amount;
     if (dmg <= 0) {
       if (d0 >= 1 && floodLaws.length) {
@@ -194,7 +207,7 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
     let depth = water[i];
     if (v.place === 'br') depth = Math.max(0, L - (s.scn.consts.deckLevel ?? 6));
     const cf = cfWater[i];
-    const fireHere = w.fire[i] >= 1;
+    const fireHere = w.fire[i] >= 1 && !(mods.fireproof?.includes(v.id) ?? false);
     if (depth >= (s.scn.consts.waterDeath ?? 2)) {
       kill(ctx, v, 'drowned', `${v.name} drowned. The water stood ${depth} deep at ${placeName(s, v)}. ${v.duty === 'trapped' ? 'There was no way out.' : ''}`.trim());
     } else if (fireHere && w.fire[i] >= 2 && v.health <= 30) {

@@ -4,6 +4,33 @@ import { browserState, chooseClaim, closeSheet, replayTraceViaUi, selectVillager
 test.describe('phone (390x844, touch)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 999) > 600, 'phone project only');
 
+  test('a tap on End Day while the details panel is still sliding away reaches End Day (a closing panel never takes a tap)', async ({ page }) => {
+    await startRedbank(page, 3);
+    // the slide slowed from a fifth of a second to a few seconds, so the moment the panel is over the button can be caught every time
+    await page.addStyleTag({ content: '.side, .side.open { transition: transform 3s linear, visibility 0s linear 3s !important; }' });
+    await page.getByTestId('sheet-toggle').tap();
+    await expect(page.locator('.side.open')).toBeVisible();
+    await page.waitForTimeout(3300);
+    const end = (await page.getByTestId('end-day').boundingBox())!;
+    const x = end.x + end.width / 2;
+    const y = end.y + end.height / 2;
+    // close it: on a phone the panel passes down over the bottom bar as it goes. Tap End Day while the panel is visibly over it
+    await page.getByTestId('sheet-toggle').tap();
+    await expect
+      .poll(
+        () =>
+          page.evaluate((py) => {
+            const side = document.querySelector('.side') as HTMLElement;
+            const b = side.getBoundingClientRect();
+            return getComputedStyle(side).visibility === 'visible' && b.top <= py && b.bottom >= py;
+          }, y),
+        { intervals: [15], timeout: 5000 },
+      )
+      .toBe(true);
+    await page.touchscreen.tap(x, y);
+    await expect(page.getByTestId('confirm-end')).toBeVisible();
+  });
+
   test('first action in a few taps, end day, lens, save and resume', async ({ page }) => {
     const errors = watchConsole(page);
     await startRedbank(page, 3);

@@ -13,8 +13,19 @@ import { z } from 'zod';
 import {
   GEN_VERSION, GameSession, MAX_SEED, RULES_VERSION, buildDebrief, nightReport, findCounterfactual, deserializeRun, describeAction, eventHash, expeditionId, getAvailableActions, getForecast, getHud, getLawViews, getScenarioDef,
   getVillagerView, listScenarios, parseExpeditionId, previewAction, serializeRun, stateHash, influenceRanks, getHand, objectiveStatuses, interpretBelief, allOffers, MAX_CUSTOM_CLAIMS,
+  MAX_REALITY_CLAIMS, optionsFromState, stagingOmen, deriveLedger, checkLedger, ledgerSummary,
 } from '../src/engine/index.ts';
+import type { InferenceMeta, Ledger } from '../src/engine/index.ts';
 import type { Draft } from '../src/engine/index.ts';
+import type { RealityDraft } from '../src/engine/reality/build.ts';
+import { readBelief } from '../src/engine/reality/read.ts';
+import { realityRules } from '../src/engine/reality/state.ts';
+import { findClaimDef } from '../src/engine/core/lookup.ts';
+import type { AiClient } from '../src/ai/client.ts';
+import type { OnlineReader } from './online.ts';
+import {
+  ERRORS_VERSION, candidatesOf, describeCandidate, errorKind, needsAcknowledgement, objectView, regionView, ruleExplanation, socialGraph, variantOf, variantOfOptions, variantOptions, villagerPublic, writing, type Variant,
+} from './v2.ts';
 import type { Action, CreateRunOptions, Difficulty, GameEvent, RunState } from '../src/engine/index.ts';
 import { replayVersions, versionDrift, type ReplayVersions } from '../src/engine/save/versions.ts';
 import { claimDef } from '../src/engine/core/lookup.ts';
@@ -50,10 +61,13 @@ export interface ToolError {
   message: string;
   alternatives?: string[];
   currentRevision?: number;
+  /** the stable category (mcp/v2.ts ERROR_KINDS, errorsVersion 2); `code` is the detail */
+  kind?: string;
+  errorsVersion?: number;
 }
 export type ToolResult = { ok: true; data: Record<string, unknown>; text: string } | { ok: false; error: ToolError };
 const ok = (text: string, data: Record<string, unknown>): ToolResult => ({ ok: true, text, data });
-const fail = (code: string, message: string, extra: Partial<ToolError> = {}): ToolResult => ({ ok: false, error: { code, message, ...extra } });
+const fail = (code: string, message: string, extra: Partial<ToolError> = {}): ToolResult => ({ ok: false, error: { code, message, ...extra, kind: errorKind(code), errorsVersion: ERRORS_VERSION } });
 
 // ------------------------------------------------------------------ runs
 
@@ -74,25 +88,6 @@ interface RunRecord {
   base?: string;
 }
 
-/** Re-run a run's own action log from its starting point (a fresh village, or the imported save). Null if anything is rejected. */
-function replayFromStart(options: CreateRunOptions, base: string | undefined, actions: Action[]): RunState | null {
-  let session: GameSession;
-  if (base) {
-    const l = deserializeRun(base);
-    if (!l.ok) return null;
-    session = new GameSession(l.state);
-  } else session = GameSession.create(options);
-  try {
-    for (const a of actions) {
-      if (a.type === 'END_DAY') session.endDay();
-      else if (!session.act(a).ok) return null;
-    }
-  } catch {
-    return null;
-  }
-  return session.state;
-}
-
 export interface ServiceOptions {
   /** directory for run files; null keeps everything in memory (tests) */
   home: string | null;
@@ -100,7 +95,12 @@ export interface ServiceOptions {
   /** register the clearly-flagged debug tools (never on by default, never on a public endpoint) */
   debugTools?: boolean;
   clock?: () => number;
+  /** the game's own inference service, in-process, when the person running the server switched it on (mcp/online.ts); null: offline only */
+  online?: OnlineReader | null;
 }
+
+/** How an agent asks for a model's reading or voice: never (default), if available (the offline reader otherwise), or only then. */
+export type OnlineChoice = 'off' | 'prefer' | 'require';
 
 const SAVE_FORMAT = 'belief-engine-mcp-run';
 const IDEM_KEEP = 100;
@@ -123,10 +123,12 @@ const MAX_TOKENS = 200;
 
 interface BeliefToken {
   runId: string;
-  /** the revision it was interpreted at: informational (the engine rebuilds and re-checks the belief against the village as it is at confirm time) */
+  /** the revision it was interpreted at: informational for Inventor drafts (rebuilt at confirm time); binding for written reality beliefs */
   revision: number;
   astHash: string;
-  draft: Draft;
+  /** an Inventor draft (submit_belief), or a reality draft (propose_belief) with whether writing it needs the agent's explicit yes */
+  draft?: Draft;
+  reality?: { draft: RealityDraft; needsYes: boolean; meta?: InferenceMeta };
   expiresAt: number;
   /** set once confirmed, so confirming the same token again returns the same answer instead of paying twice */
   done?: ToolResult;
@@ -144,10 +146,12 @@ export class GameService {
   private readonly clock: () => number;
   /** confirmation tokens for interpreted beliefs: in memory only, short-lived, bound to one run and one structure */
   private tokens = new Map<string, BeliefToken>();
-  /** runs on disk that were refused on load, with the reason (a version difference), so the caller is told why instead of "no such run" */
-  private refused = new Map<string, string>();
+  /** runs on disk that were refused on load, with the reason (a version difference, a ledger that does not match), so the caller is told why */
+  private refused = new Map<string, { code: string; message: string }>();
+  private readonly online: OnlineReader | null;
 
   constructor(opts: ServiceOptions) {
+    this.online = opts.online ?? null;
     this.home = opts.home;
     this.maxRuns = opts.maxRuns ?? 50;
     this.debugTools = !!opts.debugTools;
@@ -166,6 +170,7 @@ export class GameService {
     const body = JSON.stringify({
       format: SAVE_FORMAT, v: 1, id: r.id, mode: r.mode, options: r.options, revision: r.revision, createdAt: r.createdAt, updatedAt: r.updatedAt,
       versions: r.base ? undefined : replayVersions(r.options), actions: r.actions, idem: [...r.idem.entries()].slice(-IDEM_KEEP), base: r.base, state: serializeRun(r.session.state),
+      ledger: r.session.ledger,
     });
     const tmp = this.file(r.id) + '.tmp';
     writeFileSync(tmp, body);
@@ -180,21 +185,34 @@ export class GameService {
     try {
       const raw = JSON.parse(readFileSync(f, 'utf8')) as {
         format: string; id: string; mode: Mode; options: CreateRunOptions; revision: number; createdAt: number; updatedAt: number; actions: Action[]; idem: [string, ToolResult][]; state: string; base?: string;
-        versions?: Partial<ReplayVersions>;
+        versions?: Partial<ReplayVersions>; ledger?: Ledger;
       };
       if (raw.format !== SAVE_FORMAT || raw.id !== runId) return null;
       // a run recorded under other rules, content or belief language is not silently re-played into a different result: say what differs
       const drift = raw.base ? [] : versionDrift(raw.versions, replayVersions(raw.options));
       if (drift.length) {
-        this.refused.set(runId, `This run was recorded under different versions than this engine has, so replaying it would not reproduce what happened: ${drift.join('; ')}. The file is kept untouched on disk; open it with the engine version that recorded it.`);
+        this.refused.set(runId, { code: 'RUN_VERSION_MISMATCH', message: `This run was recorded under different versions than this engine has, so replaying it would not reproduce what happened: ${drift.join('; ')}. The file is kept untouched on disk; open it with the engine version that recorded it.` });
         return null;
       }
       const loaded = deserializeRun(raw.state);
       if (!loaded.ok) return null;
-      const replayed = replayFromStart(raw.options, raw.base, raw.actions);
-      if (!replayed || stateHash(replayed) !== stateHash(loaded.state)) return null; // tampered or corrupt: never trust it
+      // replay the run's own log from where it started (no network, no model): it must reach the saved state exactly
+      let start: CreateRunOptions | RunState = raw.options;
+      if (raw.base) {
+        const b = deserializeRun(raw.base);
+        if (!b.ok) return null;
+        start = b.state;
+      }
+      const derived = deriveLedger(start, raw.actions);
+      if (derived.rejected.length || derived.hash !== stateHash(loaded.state)) return null; // tampered or corrupt: never trust it
+      // and its record of external inputs must be what that replay used (a file from before the ledger has none: derived here)
+      const check = checkLedger(raw.ledger, derived, derived.hash);
+      if (!check.ok && !(check.code === 'LEDGER_MISSING' && raw.ledger === undefined)) {
+        this.refused.set(runId, { code: check.code, message: `${check.message} ${check.recovery} The file is kept untouched on disk.` });
+        return null;
+      }
       return {
-        id: runId, mode: raw.mode, options: raw.options, session: new GameSession(loaded.state), revision: raw.revision, actions: raw.actions,
+        id: runId, mode: raw.mode, options: raw.options, session: new GameSession(loaded.state, derived.ledger), revision: raw.revision, actions: raw.actions,
         idem: new Map(raw.idem), createdAt: raw.createdAt, updatedAt: raw.updatedAt, base: raw.base,
       };
     } catch {
@@ -214,7 +232,7 @@ export class GameService {
       }
     }
     const why = this.refused.get(runId);
-    if (!r && why) return fail('RUN_VERSION_MISMATCH', why);
+    if (!r && why) return fail(why.code, why.message);
     return r ?? fail('UNKNOWN_RUN', 'No such run on this server. Start one with create_game, or import_game.');
   }
 
@@ -245,6 +263,8 @@ export class GameService {
       // who may act on this run (delegate: the agent, coach: read-only); not the game mode, which is gameMode
       controller: r.mode,
       gameMode: s.mode,
+      variant: variantOf(s),
+      ...(s.v2 ? { generative: { realityRules: realityRules(s), canWriteBeliefs: !s.v2.living, beliefsWritten: s.claims.filter((c) => c.def?.reality && !c.def.rival).length, maxBeliefs: MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0), ranked: !s.v2.lab } } : {}),
       scenario: { id: s.scenarioId, name: s.scn.name },
       seed: s.seed,
       difficulty: s.difficulty,
@@ -307,11 +327,20 @@ export class GameService {
         { mode: 'expedition', how: `create_game({mode: "expedition", seed: 0..${MAX_SEED}}) builds the generated village x${GEN_VERSION}.<seed>; the same seed always gives the same village` },
       ],
       difficulties: ['story', 'normal', 'hard'],
+      variants: [
+        { variant: 'classic', what: 'the hand-made stories, offline; Classic records' },
+        { variant: 'generative', what: 'Generative Chronicle: write beliefs of your own (propose_belief, confirm_belief); its own records' },
+        { variant: 'living', what: 'Living Village: the chapter\'s own stories with villagers who remember, argue and demand proof; no writing; its own records' },
+        { variant: 'lab', what: 'Reality Lab: stronger written beliefs (three clauses, wider reach), never ranked' },
+      ],
     });
   }
 
-  createGame(a: { scenarioId?: string; seed?: number; difficulty?: Difficulty; mode?: 'story' | 'expedition'; controller?: Mode; inventor?: boolean }): ToolResult {
+  createGame(a: { scenarioId?: string; seed?: number; difficulty?: Difficulty; mode?: 'story' | 'expedition'; controller?: Mode; inventor?: boolean; variant?: Variant }): ToolResult {
     const difficulty = a.difficulty ?? 'normal';
+    const variant = a.variant ?? 'classic';
+    if (a.inventor && variant !== 'classic')
+      return fail('INVALID_ARGUMENT', 'Inventor is the Classic composer. A Generative run writes beliefs of its own with propose_belief; leave inventor out.', { alternatives: ['create_game { variant: "generative" }', 'create_game { inventor: true } (Classic)'] });
     const mode = a.mode ?? 'story';
     let seed = a.seed;
     if (seed === undefined) seed = randomBytes(4).readUInt32LE(0) % (mode === 'expedition' ? MAX_SEED + 1 : 1_000_000);
@@ -323,7 +352,7 @@ export class GameService {
     if (!scenarioId) return fail('BAD_SCENARIO', 'Give a scenarioId (see list_scenarios) or mode "expedition" with a seed.', { alternatives: listScenarios().map((l) => l.id) });
     if (!listScenarios().some((l) => l.id === scenarioId) && !parseExpeditionId(scenarioId)) return fail('BAD_SCENARIO', `Unknown scenario "${scenarioId}".`, { alternatives: listScenarios().map((l) => l.id) });
     if (!Number.isInteger(seed)) return fail('BAD_SEED', 'The seed must be a whole number.');
-    const options: CreateRunOptions = { scenarioId, seed, difficulty, mode: mode === 'expedition' ? 'expedition' : 'story', ...(a.inventor ? { inventor: true } : {}) };
+    const options: CreateRunOptions = { scenarioId, seed, difficulty, mode: mode === 'expedition' ? 'expedition' : 'story', ...(a.inventor ? { inventor: true } : {}), ...variantOptions(variant) };
     let session: GameSession;
     try {
       session = GameSession.create(options);
@@ -333,7 +362,8 @@ export class GameService {
     const r = this.register(options, a.controller ?? 'delegate', session);
     if (!('id' in r)) return r;
     const s = r.session.state;
-    return ok(`Started ${s.scn.name} (seed ${s.seed}, ${s.difficulty}${a.inventor ? ', Inventor run: unranked' : ''}). Day 1 of ${s.maxDay}; ${s.ap} Influence. Choose an opening story first.`, {
+    const label = { classic: '', generative: ', Generative Chronicle: write beliefs with propose_belief', living: ', Living Village', lab: ', Reality Lab: unranked' }[variant];
+    return ok(`Started ${s.scn.name} (seed ${s.seed}, ${s.difficulty}${a.inventor ? ', Inventor run: unranked' : ''}${label}). Day 1 of ${s.maxDay}; ${s.ap} Influence. Choose an opening story first.`, {
       runId: r.id,
       access: { scope: 'this server process and its home directory only', controller: r.mode, note: 'Run ids are unguessable but are not a security boundary; do not expose this server over a network.' },
       briefing: s.scn.briefing,
@@ -412,7 +442,7 @@ export class GameService {
     const v = getVillagerView(s, a.villagerId);
     const acts = getAvailableActions(s, { villager: a.villagerId }).filter((o) => o.cost > 0).slice(0, 12).map((o) => ({ action: conciseAction(o.action), label: o.label, cost: o.cost }));
     return ok(`${v.name}, ${v.role}. ${v.scouted ? 'Their convictions are known right now.' : 'Their private convictions are hidden (scout them or speak to them to see exact numbers).'}`, {
-      runId: r.id, revision: r.revision, villager: v, feasibleActions: acts,
+      runId: r.id, revision: r.revision, villager: villagerPublic(s, a.villagerId), feasibleActions: acts,
     });
   }
 
@@ -643,25 +673,30 @@ export class GameService {
     });
   }
 
-  /** Pay for and write one interpreted belief. The same COMPOSE action the browser performs. Confirming a token twice answers the same, once. */
-  confirmBelief(a: { runId: string; token: string; expectedRevision?: number; idempotencyKey?: string }): ToolResult {
+  /**
+   * Pay for and write one interpreted belief: the same COMPOSE action the browser performs. Confirming a token twice answers the same,
+   * once. A written reality belief is bound to the village as it was read (a token from an older revision is refused: read it again,
+   * reading is free) and, like the browser's checkbox, one that does not do everything the sentence said needs `acknowledge: true`.
+   */
+  confirmBelief(a: { runId: string; token: string; expectedRevision?: number; idempotencyKey?: string; acknowledge?: boolean; title?: string }): ToolResult {
     const r = this.get(a.runId);
     if (!('id' in r)) return r;
     const now = this.clock();
     const t = this.tokens.get(a.token);
     if (!t || t.runId !== r.id || t.expiresAt <= now)
-      return fail('TOKEN_INVALID', 'That confirmation token is unknown, expired, or belongs to another run. Call submit_belief again.', { alternatives: ['submit_belief'] });
+      return fail('TOKEN_INVALID', 'That confirmation token is unknown, expired, or belongs to another run. Call submit_belief (Inventor) or propose_belief again.', { alternatives: ['propose_belief', 'submit_belief'] });
     if (t.done) return t.done.ok ? { ...t.done, data: { ...t.done.data, replayedFromToken: true } } : t.done;
     const early = this.guard(r, a);
     if (early) return early;
-    const act: Action = { type: 'COMPOSE', claim: t.draft.claim };
+    if (t.reality) return this.confirmReality(r, t, a);
+    const act: Action = { type: 'COMPOSE', claim: t.draft!.claim };
     const res = r.session.act(act);
     if (!res.ok) return fail(res.error.code, res.error.message, { alternatives: res.error.alternatives, currentRevision: r.revision });
     r.actions.push(act);
     r.revision += 1;
     r.updatedAt = this.clock();
     const s = r.session.state;
-    const claim = t.draft.claim;
+    const claim = t.draft!.claim;
     const result = ok(res.summary || `Wrote “${claim.short}”.`, {
       runId: r.id, revision: r.revision, accepted: true, cost: res.cost, remainingInfluence: s.ap,
       claim: { id: claim.id, short: claim.short, text: claim.text, regions: claim.regions, ritual: claim.ritual ?? null, supportNeededPercent: Math.round(claim.spec.thresholds.on * 100), firmBelieversNeeded: claim.spec.thresholds.minSupporters },
@@ -676,6 +711,231 @@ export class GameService {
     this.tokens.set(a.token, t);
     this.save(r);
     return this.remember(r, a.idempotencyKey, result);
+  }
+
+  // ---------------------------------------------------------------- Generative Reality (phase 13)
+
+  /** Whether online reading can be used, and on what: the offline reader is always there; a model only if the server was started with it. */
+  async interpreterStatus(): Promise<ToolResult> {
+    const offline = { available: true, reader: 'offline-v2', note: 'The game\'s own reader, on this machine: free, deterministic, always available.' };
+    if (!this.online) {
+      return ok('Online reading is off on this MCP server (it was not started with BE_AI_ENABLED=1). The offline reader works as always.', {
+        offline, online: { available: false, reason: 'disabled', provider: null, note: 'The person running this server can switch on the game\'s inference service with environment variables (docs/MCP_V2.md); no tool argument can.' },
+      });
+    }
+    const st = await this.online.client.status();
+    if ('ok' in st) return ok(`Online reading is unavailable: ${st.why} The offline reader works as always.`, { offline, online: { available: false, reason: st.reason, provider: this.online.provider } });
+    return ok(st.available ? `Online reading is available (${st.provider === 'mock' ? 'a scripted stand-in: no model is called' : 'a language model through the Vercel AI Gateway: each call is paid by whoever runs this server'}).` : `Online reading is unavailable (${st.reason}). The offline reader works as always.`, {
+      offline,
+      online: { available: st.available, reason: st.reason, provider: st.provider, models: st.models, limits: st.limits, privacy: st.privacy },
+    });
+  }
+
+  private pruneTokens(): void {
+    const now = this.clock();
+    for (const [k, t] of this.tokens) if (t.expiresAt <= now) this.tokens.delete(k);
+    while (this.tokens.size >= MAX_TOKENS) this.tokens.delete(this.tokens.keys().next().value as string);
+  }
+
+  /**
+   * A sentence to safe, bounded previews: what the game would make of it in this village, side by side with the words, with its cost,
+   * support, upkeep, side effects and what it leaves out, and a short-lived token per buildable interpretation. Free: no Influence, no
+   * revision. Inventor runs (Classic) read it with the Inventor composer instead (the same as submit_belief). With `online` the game's
+   * inference service reads it, when the server offers one, under its quotas; the engine rebuilds and checks every proposal either way.
+   */
+  async proposeBelief(a: { runId: string; text: string; region?: string; online?: OnlineChoice }): Promise<ToolResult> {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const s0 = r.session.state;
+    const how = writing(s0);
+    if (how === 'inventor') return this.submitBelief({ runId: a.runId, text: a.text, targetRegion: a.region });
+    if (!how)
+      return fail('CAPABILITY_NOT_ENABLED', s0.v2?.living ? 'A Living Village plays the chapter\'s own stories: beliefs of your own are written in a Generative Chronicle or the Reality Lab.' : 'Beliefs of your own are written in Generative runs (create_game { variant: "generative" }) or Classic Inventor runs.', {
+        alternatives: ['create_game { variant: "generative" }', 'create_game { variant: "lab" }', 'create_game { inventor: true }'],
+      });
+    if (s0.outcome) return fail('RUN_OVER', 'The run is over. Use get_results.', { alternatives: ['get_results', 'retry_or_new_game'] });
+    if (a.region && !s0.world.regions.some((x) => x.id === a.region)) return fail('BAD_REGION', `This village has no region "${a.region.slice(0, 40)}".`, { alternatives: s0.world.regions.map((x) => x.id) });
+    const want = a.online ?? 'off';
+    let reading = null as ReturnType<typeof readBelief> | null;
+    let online: Record<string, unknown> = { used: false, asked: want };
+    if (want !== 'off') {
+      if (!this.online) {
+        if (want === 'require') return fail('LLM_UNAVAILABLE', 'Online reading is off on this MCP server. Ask without `online` for the offline reading (free, always available).', { alternatives: ['propose_belief without online', 'get_interpreter_status'] });
+        online = { used: false, asked: want, why: 'Online reading is off on this server; this is the offline reading.' };
+      } else {
+        const res = await this.online.client.interpretReality(s0, a.text, { region: a.region ?? null });
+        // the run may have moved while the reading was out: a reading is only kept for the village it was asked about
+        if (r.session.state !== s0) return fail('STALE_REVISION', 'The run changed while the reading was being made. Ask again.', { currentRevision: r.revision, alternatives: ['propose_belief'] });
+        if (res.ok) {
+          reading = res.reading;
+          online = { used: true, provider: res.meta.provider, model: res.meta.model, cached: res.meta.cached, id: res.meta.id, latencyMs: res.meta.latencyMs };
+        } else if (want === 'require') {
+          return fail(res.reason, `${res.why} Nothing was spent.`, { alternatives: ['propose_belief without online (the offline reader)'] });
+        } else online = { used: false, asked: want, why: `${res.why} This is the offline reading; nothing was spent.`, reason: res.reason };
+      }
+    }
+    let meta: InferenceMeta | undefined;
+    if (online.used) meta = { provider: String(online.provider ?? ''), model: String(online.model ?? ''), id: String(online.id ?? ''), cached: online.cached === true, ...(typeof online.latencyMs === 'number' ? { latencyMs: online.latencyMs } : {}) };
+    reading ??= readBelief(s0, a.text, a.region ? { region: a.region } : {});
+    this.pruneTokens();
+    const now = this.clock();
+    const interpretations = candidatesOf(reading).map((c) => {
+      const yes = needsAcknowledgement(reading!, c);
+      let token: string | null = null;
+      if (c.build.ok) {
+        token = randomBytes(16).toString('hex');
+        this.tokens.set(token, { runId: r.id, revision: r.revision, astHash: c.build.draft.claim.reality?.hash ?? '', reality: { draft: c.build.draft, needsYes: yes, ...(meta && c.ast.source.reader === 'model' ? { meta } : {}) }, expiresAt: now + TOKEN_TTL_MS });
+      }
+      return describeCandidate(s0, c, token, yes);
+    });
+    const buildable = interpretations.filter((i) => i.buildable).length;
+    const kindText = { supported: 'Understood', partial: 'Partly possible', ambiguous: 'It can be read more than one way', unsupported: 'It cannot be made real here' }[reading.kind];
+    return ok(`${kindText}. ${buildable} interpretation${buildable === 1 ? '' : 's'} can be written${reading.kind === 'unsupported' && buildable ? ' (beliefs about the same things, not what you wrote)' : ''}; nothing is written until confirm_belief.`, {
+      runId: r.id, revision: r.revision, kind: reading.kind, text: reading.text,
+      ...(reading.kind === 'ambiguous' ? { question: reading.question } : {}),
+      ...(reading.kind === 'partial' || reading.kind === 'unsupported' ? { cannotBeMadeReal: reading.reasons } : {}),
+      notes: reading.notes, interpretations, online, influence: { remaining: s0.ap },
+      written: { count: s0.claims.filter((c) => c.def?.reality && !c.def.rival).length, max: MAX_REALITY_CLAIMS + (s0.v2!.lab ? 2 : 0) },
+      confirmWith: buildable ? 'confirm_belief { runId, token, expectedRevision, idempotencyKey, acknowledge? (when needsAcknowledgement), title? }' : undefined,
+      tokenValidSeconds: TOKEN_TTL_MS / 1000,
+      note: 'Interpretations are proposals. The engine rebuilds the belief from its structure when you confirm, at this revision only; nothing here can make it stronger or cheaper.',
+    });
+  }
+
+  private confirmReality(r: RunRecord, t: BeliefToken, a: { idempotencyKey?: string; acknowledge?: boolean; title?: string }): ToolResult {
+    const d = t.reality!.draft;
+    if (t.reality!.needsYes && !a.acknowledge)
+      return fail('UNSUPPORTED_EFFECT', `This reading does not do everything the sentence said${d.omitted.length ? ` (left out: ${d.omitted.map((o) => `“${o.text}”`).join(', ')})` : ''}, or it is a belief other than the one written. Confirm with acknowledge: true to write it anyway.`, {
+        alternatives: ['confirm_belief { ..., acknowledge: true }', 'propose_belief with other words'],
+      });
+    if (t.revision !== r.revision)
+      return fail('STALE_REVISION', `The village changed since this belief was read (revision ${t.revision}, now ${r.revision}). Read it again: propose_belief is free.`, { currentRevision: r.revision, alternatives: ['propose_belief'] });
+    const title = (a.title ?? '').replace(/[<>]/g, '').trim().slice(0, 40);
+    const claim = title ? { ...d.claim, short: title } : d.claim;
+    const act: Action = { type: 'COMPOSE', claim, ...(t.reality!.meta ? { meta: t.reality!.meta } : {}) };
+    const res = r.session.act(act);
+    if (!res.ok) return fail(res.error.code, res.error.message, { alternatives: res.error.alternatives, currentRevision: r.revision });
+    r.actions.push(act);
+    r.revision += 1;
+    r.updatedAt = this.clock();
+    const s = r.session.state;
+    const written = findClaimDef(s, d.claim.id)!;
+    const later = written.unlockDay !== undefined && s.day < written.unlockDay ? written.unlockDay : null;
+    const result = ok(res.summary || `Wrote “${written.short}”.`, {
+      runId: r.id, revision: r.revision, accepted: true, cost: res.cost, remainingInfluence: s.ap,
+      claim: { id: written.id, short: written.short, text: written.text, regions: written.regions, demonstratedAt: written.ritual ?? null, supportNeededPercent: Math.round(written.spec.thresholds.on * 100), firmBelieversNeeded: written.spec.thresholds.minSupporters, readBy: written.reality!.ast.source },
+      events: res.events.map(brief),
+      availableFromDay: later ?? s.day,
+      next: later
+        ? `The village will not take this belief up until day ${later} (the day the story it copies unlocks): spend today on something else, and come back to list_actions { claimId: "${written.id}" } then.`
+        : 'It becomes law only once enough of the people who vote on it believe it: tell them (take_action SEED, or speak_to_villager persuade), let believers carry it (MESSENGER), and stage proof where it acts (stage_evidence). list_actions { claimId } shows this belief\'s actions.',
+      nextValidActions: getAvailableActions(s, {}).filter((o) => (o.action as { claim?: string }).claim === written.id).slice(0, 8).map((o) => ({ action: conciseAction(o.action), label: o.label, cost: o.cost, enabled: o.enabled })),
+    });
+    t.done = result;
+    this.save(r);
+    return this.remember(r, a.idempotencyKey, result);
+  }
+
+  /**
+   * Talk with a villager (V2 runs): ask what they think of a story, argue for it, challenge it, or ask what they make of things. The
+   * effect is the engine's (trust and evidence rules, and the Influence an argument costs); the words are the villager's own, from
+   * what they saw and were told, or a model's line under the inference service's quotas when `online` is asked for and offered,
+   * checked against their memories and recorded in the action so a replay needs no model.
+   */
+  async speakToVillager(a: { runId: string; villagerId: string; mode: 'ask' | 'persuade' | 'challenge' | 'guess'; claimId?: string; online?: OnlineChoice; expectedRevision?: number; idempotencyKey?: string }): Promise<ToolResult> {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const early = this.guard(r, a);
+    if (early) return early;
+    const s0 = r.session.state;
+    if (!s0.v2?.minds) return fail('CAPABILITY_NOT_ENABLED', 'Conversations are part of V2 runs (variant generative, living or lab). In Classic, tell stories with take_action SEED.', { alternatives: ['create_game { variant: "living" }', 'take_action SEED'] });
+    if (!s0.villagers.some((v) => v.id === a.villagerId)) return fail('UNKNOWN_VILLAGER', `No villager "${a.villagerId}".`, { alternatives: s0.villagers.slice(0, 20).map((v) => v.id) });
+    if (a.claimId && !findClaimDef(s0, a.claimId)) return fail('UNKNOWN_CLAIM', `No claim "${a.claimId}".`, { alternatives: s0.claims.filter((c) => c.available).map((c) => c.id) });
+    const want = a.online ?? 'off';
+    let reply: { line: string; cites: string[] } | undefined;
+    let online: Record<string, unknown> = { used: false, asked: want };
+    if (want !== 'off') {
+      if (!this.online) {
+        if (want === 'require') return fail('LLM_UNAVAILABLE', 'Online voices are off on this MCP server. Ask without `online`: the villager answers in their own words.', { alternatives: ['speak_to_villager without online'] });
+        online = { used: false, asked: want, why: 'Online voices are off on this server; the villager answers in their own words.' };
+      } else {
+        const client: AiClient = this.online.client;
+        const res = await client.talkReply(s0, a.villagerId, a.mode, a.claimId ?? null);
+        if (r.session.state !== s0) return fail('STALE_REVISION', 'The run changed while the villager was being asked. Ask again.', { currentRevision: r.revision, alternatives: ['speak_to_villager'] });
+        if (res.ok) {
+          reply = { line: res.line, cites: res.cites };
+          online = { used: true, provider: this.online.provider };
+        } else if (want === 'require') return fail(res.reason, `${res.why} Nothing was spent.`, { alternatives: ['speak_to_villager without online'] });
+        else online = { used: false, asked: want, why: `${res.why} The villager answers in their own words.`, reason: res.reason };
+      }
+    }
+    const act: Action = { type: 'TALK', target: a.villagerId, mode: a.mode, ...(a.claimId ? { claim: a.claimId } : {}), ...(reply ? { reply } : {}) };
+    const res = r.session.act(act);
+    if (!res.ok) return fail(res.error.code, res.error.message, { alternatives: res.error.alternatives, currentRevision: r.revision });
+    r.actions.push(act);
+    r.revision += 1;
+    r.updatedAt = this.clock();
+    const said = res.events.find((e) => e.code === 'KEEPER_TALKED');
+    const result = ok(said?.text ?? res.summary ?? 'Spoken.', {
+      runId: r.id, revision: r.revision, accepted: true, cost: res.cost, remainingInfluence: r.session.state.ap, reply: said?.text ?? null,
+      voice: reply ? 'model (checked against their memories)' : 'their own words (offline)', online, events: res.events.map(brief),
+    });
+    this.save(r);
+    return this.remember(r, a.idempotencyKey, result);
+  }
+
+  /** Stage proof of a story or written belief at the place its rite is performed: the same RITUAL action, with tonight's omen for it first. */
+  stageEvidence(a: { runId: string; claimId: string; landmarkId?: string; expectedRevision?: number; idempotencyKey?: string }): ToolResult {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const s = r.session.state;
+    const def = findClaimDef(s, a.claimId);
+    if (!def) return fail('UNKNOWN_CLAIM', `No claim "${a.claimId}".`, { alternatives: s.claims.filter((c) => c.available).map((c) => c.id) });
+    const ritual = def.ritual ? s.scn.rituals.find((x) => x.id === def.ritual) : undefined;
+    if (!ritual) return fail('NO_RITUAL', `“${def.short}” has no rite to stage it with: tell people instead, or let them see it work once it is law.`, { alternatives: ['take_action SEED', 'speak_to_villager persuade'] });
+    const places = s.world.landmarks.filter((l) => l.kind === ritual.landmark);
+    const place = a.landmarkId ? places.find((l) => l.id === a.landmarkId) : places[0];
+    if (!place) return fail('UNKNOWN_OBJECT', a.landmarkId ? `“${def.short}” is staged at a ${ritual.landmark}; "${a.landmarkId}" is not one.` : `This village has no ${ritual.landmark}.`, { alternatives: places.map((l) => l.id) });
+    const omen = stagingOmen(s, ritual, def.id);
+    const res = this.takeAction({ runId: a.runId, action: { type: 'RITUAL', ritual: ritual.id, landmark: place.id, claim: def.id }, expectedRevision: a.expectedRevision, idempotencyKey: a.idempotencyKey });
+    if (!res.ok) return res;
+    return ok(`${res.text} Omen: ${omen.text}`, { ...res.data, omen: { value: omen.value, text: omen.text }, place: { id: place.id, name: place.name }, ritual: ritual.id });
+  }
+
+  inspectObject(a: { runId: string; objectId: string }): ToolResult {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const s = r.session.state;
+    const active = s.claims.filter((c) => c.available).map((c) => c.id);
+    const v = objectView(s, a.objectId, active);
+    if (!v) return fail('UNKNOWN_OBJECT', `No landmark${s.v2 ? ', coop, stone or hen' : ''} "${a.objectId}".`, { alternatives: s.world.landmarks.slice(0, 20).map((l) => l.id) });
+    return ok(`${String(v.name ?? v.id)} (${String(v.landmarkKind ?? v.kind)}).`, { runId: r.id, revision: r.revision, object: v });
+  }
+
+  inspectRegion(a: { runId: string; regionId: string }): ToolResult {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const s = r.session.state;
+    const v = regionView(s, a.regionId);
+    if (!v) return fail('BAD_REGION', `Unknown region "${a.regionId}".`, { alternatives: s.world.regions.map((x) => x.id) });
+    return ok(`${String(v.name)}: ${String(v.alive)} people alive.`, { runId: r.id, revision: r.revision, region: v });
+  }
+
+  getSocialGraph(a: { runId: string; villagerId?: string }): ToolResult {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const g = socialGraph(r.session.state, a.villagerId);
+    if (!g) return fail('UNKNOWN_VILLAGER', `No villager "${a.villagerId}".`, { alternatives: r.session.state.villagers.slice(0, 20).map((v) => v.id) });
+    return ok(`${(g.nodes as unknown[]).length} people, ${(g.edges as unknown[]).length} ties${a.villagerId ? ` within two ties of ${a.villagerId}` : ''}. Trust values are the ones the browser shows; convictions are not in it.`, { runId: r.id, revision: r.revision, ...g });
+  }
+
+  getRuleExplanation(a: { runId: string; claimId: string }): ToolResult {
+    const r = this.get(a.runId);
+    if (!('id' in r)) return r;
+    const s = r.session.state;
+    const x = ruleExplanation(s, a.claimId);
+    if (!x) return fail('UNKNOWN_CLAIM', `No claim "${a.claimId}".`, { alternatives: s.claims.map((c) => c.id).slice(0, 30) });
+    return ok(`“${String(x.short)}”${x.written ? ' (written)' : ''}: what it does, what it cannot, what else it does${x.provenance ? ', and how it became real so far' : ''}.`, { runId: r.id, revision: r.revision, rule: x });
   }
 
   getHistory(a: { runId: string; fromDay?: number; afterEventId?: number; limit?: number; minImportance?: 0 | 1 | 2 | 3 }): ToolResult {
@@ -719,15 +979,20 @@ export class GameService {
       opts.seed = seed;
       opts.scenarioId = expeditionId(seed);
     }
-    return this.createGame({ scenarioId: opts.scenarioId, seed: opts.seed, difficulty: opts.difficulty, mode: o.mode === 'expedition' ? 'expedition' : 'story', controller: a.controller ?? r.mode, inventor: !!o.inventor });
+    return this.createGame({ scenarioId: opts.scenarioId, seed: opts.seed, difficulty: opts.difficulty, mode: o.mode === 'expedition' ? 'expedition' : 'story', controller: a.controller ?? r.mode, inventor: !!o.inventor, variant: variantOfOptions(o) });
   }
 
   exportReplay(a: { runId: string }): ToolResult {
     const r = this.get(a.runId);
     if (!('id' in r)) return r;
     const s = r.session.state;
+    // what a model proposed and the engine accepted is part of the action log itself (a written belief's structure, villagers' decisions,
+    // a villager's checked line), so the replay reproduces the run without asking any model again
+    const proposals = r.actions.filter((x) => (x.type === 'COMPOSE' && x.claim.reality?.ast.source.reader === 'model') || x.type === 'NPC_DECIDE' || (x.type === 'TALK' && !!x.reply)).length;
     return ok(`Replay of ${r.actions.length} accepted actions. Feed it to the browser engine or replayRun to reproduce the run exactly.`, {
       runId: r.id, revision: r.revision, replay: { ...r.options, actions: r.actions }, rulesVersion: RULES_VERSION, versions: replayVersions(r.options), stateHash: stateHash(s), eventHash: eventHash(s), finished: !!s.outcome,
+      modelProposals: { recorded: proposals, note: 'Model proposals the engine accepted are inside the actions; replaying needs no model and no network.' },
+      ledger: r.session.ledger, externalInputs: ledgerSummary(r.session.ledger).text,
     });
   }
 
@@ -737,7 +1002,7 @@ export class GameService {
     const loaded = deserializeRun(a.saveJson);
     if (!loaded.ok) return fail('BAD_SAVE', loaded.error);
     const s = loaded.state;
-    const options: CreateRunOptions = { scenarioId: s.scenarioId, seed: s.seed, difficulty: s.difficulty, mode: s.mode, ...(s.flags.inventor ? { inventor: true } : {}) };
+    const options: CreateRunOptions = optionsFromState(s);
     const r = this.register(options, a.controller ?? 'coach', new GameSession(s), []);
     if (!('id' in r)) return r;
     // an imported run's replay log starts at the import (the save is kept as its base), so it still verifies after a restart

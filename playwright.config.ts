@@ -33,11 +33,16 @@ export default defineConfig({
     },
   ],
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
+    // The classic flows run on the classic map: headless Chromium has only a software rasteriser, so the game gives it the 2D map by default.
+    { name: 'desktop', testIgnore: /world3d\.spec\.ts/, use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
     {
       name: 'phone',
+      testIgnore: /world3d\.spec\.ts/,
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
     },
+    // The 3D world (`?renderer=3d`), on software WebGL: slow, but the real scene through the real interface.
+    { name: 'desktop-3d', testMatch: /world3d\.spec\.ts/, timeout: 420_000, use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } } },
+    { name: 'phone-3d', testMatch: /world3d\.spec\.ts/, timeout: 420_000, use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } } },
     // Cross-browser smoke (opt in: needs `npx playwright install firefox webkit`, and on Linux `npx playwright install-deps webkit`).
     // Run with BE_CROSS_BROWSER=1 npm run test:e2e -- --project=firefox --project=webkit --project=iphone
     ...(process.env.BE_CROSS_BROWSER === '1'

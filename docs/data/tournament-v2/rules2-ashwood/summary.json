@@ -1,0 +1,419 @@
+{
+ "name": "rules2-ashwood",
+ "from": 1,
+ "seeds": 30,
+ "difficulty": "normal",
+ "scenarios": [
+  "ashwood"
+ ],
+ "policies": [
+  "noop",
+  "spam-broad",
+  "evidence-first",
+  "bridge-persuasion",
+  "inventive-compound",
+  "careful-synergy",
+  "backfire-probe",
+  "ward-greedy",
+  "rival-antagonist"
+ ],
+ "cells": [
+  {
+   "scenario": "ashwood",
+   "policy": "noop",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 8,
+   "wroteRate": 0,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 0,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 1.1333333333333333,
+   "livestock": 9,
+   "fields": 0,
+   "pooled": 0,
+   "side": 5,
+   "reach": 0,
+   "heard": 0,
+   "passDays": 8,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 40.76923076923074,
+   "msPerRun": 28.921814966666656,
+   "fails": {
+    "livestock": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": null,
+   "on": null,
+   "min": null
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "spam-broad",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 22,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 1.1333333333333333,
+   "livestock": 9,
+   "fields": 0,
+   "pooled": 0,
+   "side": 5,
+   "reach": 0.21025641025641031,
+   "heard": 1,
+   "passDays": 1,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 40.76923076923074,
+   "msPerRun": 869.5897785666664,
+   "fails": {
+    "livestock": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 11.199999999999994,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "evidence-first",
+   "n": 30,
+   "wins": 18,
+   "winRate": 0.6,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 4.5,
+   "nights": 4.5,
+   "apSpent": 16.433333333333334,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 2.566666666666667,
+   "livestock": 5.966666666666667,
+   "fields": 0,
+   "pooled": 0,
+   "side": 3.2333333333333334,
+   "reach": 0.8641025641025644,
+   "heard": 1,
+   "passDays": 1,
+   "effects": 6.366666666666666,
+   "tests": {
+    "met": 0.8333333333333334,
+    "failed": 0,
+    "lapsed": 0.5666666666666667
+   },
+   "demos": {
+    "ok": 3.066666666666667,
+    "failed": 0
+   },
+   "keeperTrust": 42.83333333333333,
+   "msPerRun": 464.94124630000044,
+   "fails": {
+    "livestock": 12
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 36.10000000000001,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "bridge-persuasion",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 0.8333333333333334,
+   "lawDay": 7.44,
+   "nights": 1.3,
+   "apSpent": 22.233333333333334,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 1.1333333333333333,
+   "livestock": 9,
+   "fields": 0,
+   "pooled": 0,
+   "side": 5,
+   "reach": 0.8743589743589746,
+   "heard": 1,
+   "passDays": 0.03333333333333333,
+   "effects": 1.6,
+   "tests": {
+    "met": 0.4666666666666667,
+    "failed": 0,
+    "lapsed": 0.3333333333333333
+   },
+   "demos": {
+    "ok": 3.033333333333333,
+    "failed": 0
+   },
+   "keeperTrust": 42.71282051282049,
+   "msPerRun": 949.3893294999995,
+   "fails": {
+    "livestock": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 18,
+   "on": 0.5500000000000003,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "inventive-compound",
+   "n": 30,
+   "wins": 9,
+   "winRate": 0.3,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 0.9666666666666667,
+   "lawDay": 7.655172413793103,
+   "nights": 1.3,
+   "apSpent": 21.733333333333334,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 2.5,
+   "livestock": 7.8,
+   "fields": 0,
+   "pooled": 0,
+   "side": 4.4,
+   "reach": 0.9102564102564105,
+   "heard": 1,
+   "passDays": 0.3,
+   "effects": 6.4,
+   "tests": {
+    "met": 0.03333333333333333,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 4.433333333333334,
+    "failed": 0
+   },
+   "keeperTrust": 43.72307692307694,
+   "msPerRun": 1027.2365365666662,
+   "fails": {
+    "livestock": 21
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 36.29999999999998,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "careful-synergy",
+   "n": 30,
+   "wins": 6,
+   "winRate": 0.2,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 20.933333333333334,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 1.1333333333333333,
+   "livestock": 8.2,
+   "fields": 0,
+   "pooled": 0,
+   "side": 4.6,
+   "reach": 0,
+   "heard": 0.16153846153846152,
+   "passDays": 0.03333333333333333,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0.7
+   },
+   "demos": {
+    "ok": 0.16666666666666666,
+    "failed": 0
+   },
+   "keeperTrust": 42.956410256410244,
+   "msPerRun": 2141.376718999997,
+   "fails": {
+    "livestock": 24
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 6,
+   "on": 0.5500000000000003,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "backfire-probe",
+   "n": 30,
+   "wins": 7,
+   "winRate": 0.23333333333333334,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 0.9666666666666667,
+   "lawDay": 7.206896551724138,
+   "nights": 1.7333333333333334,
+   "apSpent": 19.766666666666666,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 3.8666666666666667,
+   "livestock": 5.966666666666667,
+   "fields": 0,
+   "pooled": 0,
+   "side": 6.833333333333333,
+   "reach": 0.912820512820513,
+   "heard": 1,
+   "passDays": 0.6333333333333333,
+   "effects": 5.266666666666667,
+   "tests": {
+    "met": 0.03333333333333333,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 4.3,
+    "failed": 0
+   },
+   "keeperTrust": 43.65128205128205,
+   "msPerRun": 1190.1260224666669,
+   "fails": {
+    "livestock": 23
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 36.10000000000001,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "ward-greedy",
+   "n": 30,
+   "wins": 21,
+   "winRate": 0.7,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 7.1,
+   "nights": 1.9,
+   "apSpent": 20.266666666666666,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 1.1333333333333333,
+   "livestock": 6.2,
+   "fields": 0,
+   "pooled": 0,
+   "side": 3.6,
+   "reach": 0.9205128205128207,
+   "heard": 1,
+   "passDays": 0.6,
+   "effects": 5.433333333333334,
+   "tests": {
+    "met": 0.06666666666666667,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 4.133333333333334,
+    "failed": 0
+   },
+   "keeperTrust": 43.54871794871794,
+   "msPerRun": 1222.0707645999996,
+   "fails": {
+    "livestock": 9
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 36.10000000000001,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "ashwood",
+   "policy": "rival-antagonist",
+   "n": 30,
+   "wins": 21,
+   "winRate": 0.7,
+   "endDay": 8,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 7.1,
+   "nights": 1.9,
+   "apSpent": 20.3,
+   "survival": 1,
+   "homesLost": 0,
+   "hens": 1.1333333333333333,
+   "livestock": 6.2,
+   "fields": 0,
+   "pooled": 0,
+   "side": 3.6,
+   "reach": 0.9179487179487181,
+   "heard": 1,
+   "passDays": 0.6,
+   "effects": 5.3,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 4.2,
+    "failed": 0
+   },
+   "keeperTrust": 43.58461538461539,
+   "msPerRun": 1388.306415666666,
+   "fails": {
+    "livestock": 9
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 36.10000000000001,
+   "on": 0.6,
+   "min": 3
+  }
+ ],
+ "diversity": {
+  "ashwood": {
+   "viable": [
+    "evidence-first",
+    "ward-greedy",
+    "rival-antagonist"
+   ],
+   "entropy": 2.42
+  }
+ }
+}

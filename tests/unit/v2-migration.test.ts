@@ -85,8 +85,10 @@ describe('V2 migration tripwire: the classic game is V1, byte for byte in its re
   });
 
   it('ships the V2 switches as recorded: the default game needs no model, key or inference endpoint', () => {
-    // phase 03 turned on serverInference (an opt-in offer, tested in nl-online-client and v2-online.spec); the rest stay off until their gates
-    expect(V2_FEATURES).toEqual({ serverInference: true, generativeReality: false, villagerCognition: false });
+    // phase 03 turned on serverInference (an opt-in offer, tested in nl-online-client and v2-online.spec); phase 05 turned on
+    // generativeReality (an extra mode on the mode screen, tested in reality-* and v2-reality.spec; Classic stays the default and
+    // its hashes are pinned above); villager cognition stays off until its gate
+    expect(V2_FEATURES).toEqual({ serverInference: true, generativeReality: true, villagerCognition: false });
     expect(Object.keys(V2_FEATURES).sort()).toEqual(['generativeReality', 'serverInference', 'villagerCognition']);
   });
 });

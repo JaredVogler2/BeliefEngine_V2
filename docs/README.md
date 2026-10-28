@@ -15,11 +15,21 @@ the date and provenance before trusting a number: **only the V2 records were pro
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | how the migrated game is put together and where V2 work plugs in |
 | [`AI_SETUP.md`](AI_SETUP.md) | phase 03: the online-reading service, its security and cost controls, setup steps (names only), the LIVE smoke test, what is and is not verified |
 | [`AI_COSTS.md`](AI_COSTS.md) | phase 03: chosen models and catalog prices, per-call estimates (not measurements), the four spend limits |
+| [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) | phases 04 and 06: the AST v2 belief language, its world vocabulary and operators, price, grounding, the night executor, the new entities and the V1 bridge |
+| [`MINDS.md`](MINDS.md) | phase 07: villager minds (personality, goals, memories with provenance), who thinks and what they can do, the model's `npc v2` contract, and conversations |
+| [`REPLAY_V2.md`](REPLAY_V2.md) | phase 14: the external-decision ledger, how saves and MCP run files carry and check it, the debrief's offline replay check, privacy controls, and the evaluation corpus with its results ([`data/evals/REPORT.md`](data/evals/REPORT.md)) |
+| [`MCP_V2.md`](MCP_V2.md) | phase 13: the V2 tools on the local MCP server (variants, propose/confirm a written belief, conversations, staged proof, places, the trust graph, rule explanations), versioned error kinds, optional online reading, and the stdio proof on the browser's hash |
+| [`UX_V2.md`](UX_V2.md) | phase 12: the main menu's modes, the composer's draft, Stop and outage fallback, who tells it first, the villager glance and "Why?", phone sizes and keyboard, and what is verified where (real iPhone UNVERIFIED) |
+| [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md) | phase 11: the V2 modes and their separate records, what a written belief costs (rules 2), demonstrations, the strategic events, the balance tournament (rules 1 vs 2), the exploit fixed and the gate |
+| [`data/tournament-v2/`](data/tournament-v2/) | phase 11: the Generative Reality tournament's reports (seven policies and two probes, three chapters, 30 seeds, both rule sets) |
+| [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md) | phase 09: the whole chain from a typed sentence to a changed world (preview, confirmation, persuasion, threshold, catalyst, consequences, provenance), the three proof claims and what the measurements found |
+| [`3D_EFFECTS.md`](3D_EFFECTS.md) | phase 10: what written laws look like in 3D (the effect registry keyed by logged events, hens rising to the engine's height, the screenshot matrix, measured draw calls) and what is not met |
 | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md) | the art direction and the measurable visual bar for the 3D world |
 | [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md) | the staged plan to reach that bar on the existing Three.js renderer |
 | [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) | what the 3D world looks like today, from real browser captures, scored honestly |
 | [`screenshots/v2-baseline/`](screenshots/v2-baseline/) | those captures (real Three.js canvas and the 2D map, never mock-ups) |
 | [`screenshots/v2-phase03/`](screenshots/v2-phase03/) | the composer's consent notice and a simulated online reading, from the running production build |
+| `screenshots/v2-phase05/` … [`screenshots/v2-phase10/`](screenshots/v2-phase10/) | each later phase's frames from the production build (composer, minds, social layer, the belief-to-reality chain, the 3D effect matrix) |
 
 ## Inherited V1 reference (describes the game as migrated; still true unless a V2 record says otherwise)
 

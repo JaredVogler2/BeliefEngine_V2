@@ -7,19 +7,31 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 // The classic game loads first and on its own. The 3D world (Three.js and the scene code) is a separate chunk fetched only when the
-// player's browser can draw it, so it has its own budget and the first load of everyone else is unchanged.
-const BUDGET = { entryGzKb: 260, world3dGzKb: 270, cssGzKb: 12, totalFiles: 12 };
+// player's browser can draw it, so it has its own budget and the first load of everyone else is unchanged. The reality composer (the
+// reader v2 and its vocabulary) is another lazy chunk, fetched only when a Generative Reality run opens it.
+// Entry raised 260 → 300 in phase 07: the V2 engine (the reality executor and villager minds) is part of the deterministic core and
+// must be present wherever a day resolves, so it ships with the game (V2 then measured 266 KB). If first-load size matters more
+// later, the V2-only engine can move to a chunk installed before any V2 run starts (a hook in resolve.ts), never after.
+const BUDGET = { entryGzKb: 300, world3dGzKb: 270, realityGzKb: 40, mindGzKb: 20, cssGzKb: 12, totalFiles: 12 };
 const dir = 'dist/assets';
 const files = readdirSync(dir).map((f) => ({ f, raw: statSync(join(dir, f)).size, gz: gzipSync(readFileSync(join(dir, f))).length }));
 const sum = (ext: string) => files.filter((x) => x.f.endsWith(ext)).reduce((a, x) => a + x.gz, 0) / 1024;
-const world3d = files.filter((x) => x.f.endsWith('.js') && x.f.startsWith('World3D-')).reduce((a, x) => a + x.gz, 0) / 1024;
-const entry = sum('.js') - world3d;
+const chunk = (prefix: string) => files.filter((x) => x.f.endsWith('.js') && x.f.startsWith(prefix)).reduce((a, x) => a + x.gz, 0) / 1024;
+const world3d = chunk('World3D-');
+const reality = chunk('RealityCompose-');
+// a villager's mind and conversation panel: lazy, fetched when a V2 villager is opened
+const mind = chunk('MindPanel-');
+const entry = sum('.js') - world3d - reality - mind;
 const css = sum('.css');
-console.log(`entry JS ${entry.toFixed(0)} KB gzip (budget ${BUDGET.entryGzKb}), 3D world chunk ${world3d.toFixed(0)} KB gzip (budget ${BUDGET.world3dGzKb}), CSS ${css.toFixed(1)} KB gzip (budget ${BUDGET.cssGzKb}), ${files.length} files`);
+console.log(`entry JS ${entry.toFixed(0)} KB gzip (budget ${BUDGET.entryGzKb}), 3D world chunk ${world3d.toFixed(0)} KB gzip (budget ${BUDGET.world3dGzKb}), reality composer chunk ${reality.toFixed(0)} KB gzip (budget ${BUDGET.realityGzKb}), mind panel chunk ${mind.toFixed(0)} KB gzip (budget ${BUDGET.mindGzKb}), CSS ${css.toFixed(1)} KB gzip (budget ${BUDGET.cssGzKb}), ${files.length} files`);
 const problems: string[] = [];
 if (entry > BUDGET.entryGzKb) problems.push(`The entry JavaScript is ${entry.toFixed(0)} KB gzipped; the budget is ${BUDGET.entryGzKb}`);
 if (world3d > BUDGET.world3dGzKb) problems.push(`The 3D world chunk is ${world3d.toFixed(0)} KB gzipped; the budget is ${BUDGET.world3dGzKb}`);
 if (world3d === 0) problems.push('No 3D world chunk was found: the renderer must stay a lazy chunk named World3D-*');
+if (reality > BUDGET.realityGzKb) problems.push(`The reality composer chunk is ${reality.toFixed(0)} KB gzipped; the budget is ${BUDGET.realityGzKb}`);
+if (reality === 0) problems.push('No reality composer chunk was found: the reader v2 must stay a lazy chunk named RealityCompose-*');
+if (mind > BUDGET.mindGzKb) problems.push(`The mind panel chunk is ${mind.toFixed(0)} KB gzipped; the budget is ${BUDGET.mindGzKb}`);
+if (mind === 0) problems.push('No mind panel chunk was found: the villager mind panel must stay a lazy chunk named MindPanel-*');
 if (css > BUDGET.cssGzKb) problems.push(`CSS is ${css.toFixed(1)} KB gzipped; the budget is ${BUDGET.cssGzKb}`);
 if (files.length > BUDGET.totalFiles) problems.push(`${files.length} asset files; expected at most ${BUDGET.totalFiles}`);
 // nothing server-side may reach the browser: no credential names, no gateway, store or SDK code (src/ai/client.ts talks to /api only)

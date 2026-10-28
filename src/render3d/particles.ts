@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DISPLAY_GLSL, displayUniforms } from './post.ts';
 
 /**
  * A pool of soft point sprites for smoke, flames, embers and sparks. One draw call per pool, a fixed number of slots (a burst of
@@ -20,13 +21,14 @@ const VERT = /* glsl */ `
   }
 `;
 const FRAG = /* glsl */ `
+  ${DISPLAY_GLSL}
   varying vec4 vColor;
   void main() {
     vec2 p = gl_PointCoord - 0.5;
     float d = length(p);
-    float a = smoothstep(0.5, 0.12, d) * vColor.a;
+    float a = (1.0 - smoothstep(0.12, 0.5, d)) * vColor.a;
     if (a < 0.01) discard;
-    gl_FragColor = vec4(vColor.rgb, a);
+    gl_FragColor = vec4(postDisplay(vColor.rgb), a);
     #include <colorspace_fragment>
   }
 `;
@@ -86,7 +88,7 @@ export class Particles {
       transparent: true,
       depthWrite: false,
       blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
-      uniforms: { uScale: { value: viewScale.value } },
+      uniforms: { uScale: { value: viewScale.value }, ...displayUniforms },
     });
     this.points = new THREE.Points(this.geo, this.mat);
     this.points.frustumCulled = false;

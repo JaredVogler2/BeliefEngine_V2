@@ -1,13 +1,21 @@
+import { cleanMeta } from './meta.ts';
 import { emit, type Ctx } from './events.ts';
 import { cloneState } from './clone.ts';
-import { claimDef, findLandmark, findVillager, trustOf, neighborsOf, edgeBetween, allClaimDefs, evidenceMult, modActive, repeatMult } from './lookup.ts';
+import { claimDef, findClaimDef, findLandmark, findVillager, trustOf, neighborsOf, edgeBetween, allClaimDefs, evidenceMult, modActive, repeatMult } from './lookup.ts';
 import { pledgeKey } from '../progress/options.ts';
 import { MAX_CUSTOM_CLAIMS, buildClaim, composeCostOf } from '../nl/build.ts';
+import { MAX_REALITY_CLAIMS, buildRealityClaim } from '../reality/build.ts';
+import { realityComposeCost } from '../reality/cost.ts';
+import { coincidenceOf, NO_COINCIDENCE_OMEN, poweredBy, WAKING_OMEN, WRITTEN_OMEN_TEXT } from '../reality/demonstrate.ts';
+import { realityRules } from '../reality/state.ts';
 import { installClaim } from '../nl/stress.ts';
 import { NL_VERSION } from '../nl/ontology.ts';
 import { memoryFactor, remember } from './memory.ts';
 import type { Action, ActionError, ActionResult, ClaimDef, GameEvent, Landmark, RitualDef, RunState, Villager } from './types.ts';
 import { K, ensureBelief, evidenceGain, gossipDelta, REASON_TEXT, relevance, round1, seedGain } from '../social/persuasion.ts';
+import { judged, validateChoice } from '../mind/decide.ts';
+import { TALK_MODES, checkedReply, offlineReply, talkCost } from '../mind/talk.ts';
+import { thinkersPerDay, type Approach, type Intent, type Tone } from '../mind/types.ts';
 import { bfsDist, components, connected, passableMask } from '../world/nav.ts';
 import { idx } from '../world/grid.ts';
 
@@ -49,8 +57,11 @@ export function actionCost(s: RunState, a: Action): number {
     case 'TRADE':
       return s.scn.deals?.find((d) => d.id === a.deal)?.ap ?? 1;
     case 'COMPOSE':
-      // what a belief costs to write follows from its strength (nl/balance.ts), never from what the request says it costs
-      return composeCostOf(a.claim?.custom?.ast);
+      // what a belief costs to write follows from its strength (nl/balance.ts, reality/balance.ts), never from what the request says
+      return a.claim?.reality ? realityComposeCost(s, a.claim.reality.ast) : composeCostOf(a.claim?.custom?.ast);
+    case 'TALK':
+      return talkCost(a.mode);
+    case 'NPC_DECIDE':
     case 'END_DAY':
       return 0;
   }
@@ -86,6 +97,22 @@ export function omenFor(s: RunState, kind: RitualDef['omen']): { value: -1 | 0 |
     case 'none':
       return { value: 0, text: '' };
   }
+}
+
+/**
+ * The omen for staging a ritual as proof of a story. An authored story reads its ritual's omen (V1); a written belief under rules 2
+ * reads it from what the belief does (reality/demonstrate.ts), and is a kind night as soon as it is waking, because then it acts.
+ */
+export function stagingOmen(s: RunState, ritual: RitualDef, claim?: string | null): { value: -1 | 0 | 1; text: string } {
+  const def = claim ? findClaimDef(s, claim) : undefined;
+  if (!def?.reality || realityRules(s) < 2) return omenFor(s, ritual.omen);
+  if (s.laws.some((l) => l.claimId === def.id && (l.progress > 0 || l.status === 'active' || l.status === 'wavering'))) return { value: 1, text: WAKING_OMEN };
+  // a rite that powers none of its clauses (a copy proved the way its authored twin is) reads that rite's own omen
+  const kind = coincidenceOf(def.reality.ast, ritual.id);
+  if (kind === 'none' && ritual.omen !== 'none' && !poweredBy(def.reality.ast, ritual.id)) return omenFor(s, ritual.omen);
+  if (kind === 'none') return { value: -1, text: NO_COINCIDENCE_OMEN };
+  const value = omenFor(s, kind).value;
+  return { value, text: WRITTEN_OMEN_TEXT[kind][value] };
 }
 
 function spokeToday(s: RunState, vid: string): boolean {
@@ -125,7 +152,9 @@ export function applyAction(state: RunState, action: Action): ActionResult {
   s.ap -= cost;
   s.stats.apSpent += cost;
   s.stats.actions += 1;
-  s.today.push({ day: s.day, action, cost });
+  // the day's record keeps the action as the engine took it: any inference metadata it carries is cleaned first (core/meta.ts)
+  const recorded = 'meta' in action && action.meta !== undefined ? ({ ...action, meta: cleanMeta(action.meta) } as Action) : action;
+  s.today.push({ day: s.day, action: recorded, cost });
   return { ok: true, state: s, events: ctx.events, cost, summary: ctx.events.filter((e) => e.step === 'action' && e.importance >= 1).map((e) => e.text).join(' ') };
 }
 
@@ -276,6 +305,10 @@ function perform(ctx: Ctx, a: Action): Fail | null {
       return doTrade(ctx, a);
     case 'COMPOSE':
       return doCompose(ctx, a);
+    case 'NPC_DECIDE':
+      return doNpcDecide(ctx, a);
+    case 'TALK':
+      return doTalk(ctx, a);
     case 'END_DAY':
       return fail('USE_END_DAY', 'End the day with resolveDay().');
   }
@@ -286,8 +319,109 @@ function perform(ctx: Ctx, a: Action): Fail | null {
  * what it contradicts, whether it passes the safety test) is rebuilt here by the same function the composer used, so a stale,
  * edited or invented claim is refused and nothing the client says about its own strength is believed.
  */
+/**
+ * Decisions a model proposed for the villagers due to think today. Each is held to the live run (validateChoice); the accepted
+ * ones are kept for dusk, the rest are named and left to the game's own policy. A request built against an older village
+ * (another action happened since) is refused whole: the policy decides instead, and nothing asks the model again.
+ */
+function doNpcDecide(ctx: Ctx, a: Extract<Action, { type: 'NPC_DECIDE' }>): Fail | null {
+  const s = ctx.s;
+  const minds = s.v2?.minds;
+  if (!minds) return fail('NO_MINDS', 'Villager decisions belong to Generative Reality runs.');
+  if (a.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since these decisions were asked for. The villagers will decide for themselves at dusk.');
+  if (!Array.isArray(a.decisions) || a.decisions.length < 1 || a.decisions.length > thinkersPerDay(s)) return fail('BAD_DECISIONS', `Send 1 to ${thinkersPerDay(s)} decisions.`);
+  const accepted: string[] = [];
+  const refused: string[] = [];
+  for (const d of a.decisions) {
+    const who = findVillager(s, String(d?.citizenId ?? ''))?.name ?? String(d?.citizenId ?? '?').slice(0, 40);
+    if (minds.decided[d.citizenId]) {
+      refused.push(`${who} (already decided today)`);
+      continue;
+    }
+    if (minds.modelUsed >= minds.modelCap) {
+      refused.push(`${who} (this run's allowance of model decisions is spent)`);
+      continue;
+    }
+    const r = validateChoice(s, { ...d, intent: d.intent as Intent, tone: d.tone as Tone, approach: d.approach as Approach, source: 'model' });
+    if (!r.ok) {
+      refused.push(`${who} (${r.why})`);
+      continue;
+    }
+    minds.decided[d.citizenId] = r.choice;
+    minds.modelUsed += 1;
+    accepted.push(who);
+  }
+  emit(ctx, {
+    step: 'action', code: 'NPC_DECISIONS', importance: 1,
+    text: `${accepted.length ? `${accepted.join(', ')} will act on what they decided` : 'No proposed decision could be used'}${refused.length ? `; the game decides for ${refused.join('; ')}` : ''}.`,
+  });
+  return null;
+}
+
+/**
+ * The Keeper talks with a villager. They answer from their own memories (or a model's line, checked against those memories); what
+ * changes is decided here: asking changes nothing but what you learn; arguing for a story is the Keeper's word (V1's seeding,
+ * stronger if they saw it work, weaker if they saw it fail); challenging one weighs trust and stubbornness against what they saw.
+ */
+function doTalk(ctx: Ctx, a: Extract<Action, { type: 'TALK' }>): Fail | null {
+  const s = ctx.s;
+  if (!s.v2?.minds) return fail('NO_MINDS', 'Conversations belong to Generative Reality runs. In this run, tell villagers a story.');
+  if (!(TALK_MODES as readonly string[]).includes(a.mode)) return fail('BAD_MODE', 'Ask, argue, challenge, or ask what they make of things.');
+  const v = findVillager(s, a.target);
+  if (!v || v.status === 'dead') return fail('BAD_TARGET', 'That person cannot be reached.');
+  if (!keeperCanReach(s, v.x, v.y)) return fail('NO_PATH', `${v.name} is cut off. Without the bridge you cannot reach them.`);
+  const claim = a.claim ?? null;
+  if (a.mode !== 'guess' && !claim) return fail('NO_CLAIM', 'Choose the story to talk about.');
+  const def = claim ? findClaimDef(s, claim) : undefined;
+  if (claim && !def) return fail('BAD_CLAIM', 'The village does not know that story.');
+  const arguing = a.mode === 'persuade' || a.mode === 'challenge';
+  if (arguing ? spokeToday(s, v.id) : (s.flags[`talk:${v.id}`] ?? -1) === s.day) return fail('ALREADY_SPOKE', `You have already ${arguing ? 'argued with' : 'talked with'} ${v.name} today.`);
+  if (arguing && v.keeperTrust < 8) return fail('NO_TRUST', `${v.name} will not hear you.`);
+  // asking never plants a story: only arguing about it does
+  const b = claim ? (arguing ? ensureBelief(v, claim) : (v.beliefs[claim] ?? null)) : null;
+  const seen = claim ? judged(s, v.id, claim) : 0;
+  let before = b?.conv ?? 0;
+  if (a.mode === 'persuade' && b && claim) {
+    if (!claimAvailable(s, claim)) return fail('CLAIM_LOCKED', 'You have not learned that story yet.');
+    if (def!.rival && !def!.adoptable) return fail('RIVAL_CLAIM', 'That is a rival rumour. You can only challenge it.');
+    if (b.conv >= 88) return fail('ALREADY_CONVINCED', `${v.name} already believes it.`);
+    const gain = seedGain(v, b) * repeatMult(s) * memoryFactor(v, claim) * (seen > 0 ? 1.2 : seen < 0 ? 0.6 : 1);
+    before = b.conv;
+    b.conv = round1(b.conv + gain);
+    b.heard += 1;
+    b.lastSource = 'keeper';
+    ensureIntroduced(s, claim);
+    s.stats.seeds++;
+  } else if (a.mode === 'challenge' && b) {
+    if (b.conv < 10) return fail('NOTHING_TO_COUNTER', `${v.name} does not hold that story.`);
+    const reduce = 14 * (0.5 + (0.6 * v.keeperTrust) / 100) * (1 - (0.5 * v.traits.stubbornness) / 100) * (seen > 0 ? 0.5 : 1) * (b.evidence >= 40 ? 0.6 : 1);
+    before = b.conv;
+    b.conv = round1(Math.max(-20, b.conv - reduce));
+    s.stats.counters++;
+  }
+  if (b) {
+    b.lastDay = s.day;
+    b.stale = 0;
+  }
+  if (arguing) s.flags[`spoke:${v.id}`] = s.day;
+  else s.flags[`talk:${v.id}`] = s.day;
+  const moved = b ? b.conv - before : 0;
+  const reply = checkedReply(s, v.id, a.reply) ?? offlineReply(s, v, a.mode, claim, moved);
+  const first = v.name.split(' ')[0];
+  const opener = a.mode === 'ask' ? `You ask ${v.name} about “${def!.short}”.` : a.mode === 'persuade' ? `You argue for “${def!.short}” with ${v.name}.` : a.mode === 'challenge' ? `You challenge ${v.name} over “${def!.short}”.` : `You ask ${v.name} what they make of things${def ? ` (“${def.short}”)` : ''}.`;
+  const id = emit(ctx, {
+    step: 'action', code: 'KEEPER_TALKED', importance: arguing ? 2 : 1, target: v.id, reason: a.mode,
+    ...(claim ? { claim } : {}),
+    ...(arguing && b ? { delta: { conviction: [Math.round(before), Math.round(b.conv)] as [number, number] } } : {}),
+    text: `${opener} ${first}${reply.source === 'model' ? ' (voiced by a model)' : ''}: “${reply.line}”${arguing && b ? ` Conviction ${Math.round(before)} → ${Math.round(b.conv)}.` : ''}`,
+  });
+  if (b && moved > 0) b.cause = id;
+  return null;
+}
+
 function doCompose(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | null {
   const s = ctx.s;
+  if (a.claim?.reality) return doComposeReality(ctx, a);
   if (!s.flags.inventor) return fail('NOT_AVAILABLE', 'Writing your own belief is part of Inventor runs. Start one from the briefing (Inventor mode is unranked).');
   const made = s.claims.filter((c) => c.def?.custom).length;
   if (made >= MAX_CUSTOM_CLAIMS) return fail('TOO_MANY', `You can write at most ${MAX_CUSTOM_CLAIMS} beliefs in one run.`);
@@ -304,6 +438,33 @@ function doCompose(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | nu
   emit(ctx, {
     step: 'action', code: 'BELIEF_WRITTEN', importance: 2, claim: def.id,
     text: `You write a new belief into the village: “${def.short}”. It needs ${Math.round(def.spec.thresholds.on * 100)}% local support and ${def.spec.thresholds.minSupporters} firm believers before it can wake. ${def.unlockDay !== undefined && s.day < def.unlockDay ? `The village will take it up on day ${def.unlockDay}.` : 'Now tell someone.'}`,
+  });
+  return null;
+}
+
+/**
+ * Compose a Generative Reality belief. The request carries an AST v2 and the run revision it was previewed against; the claim is
+ * rebuilt here from that structure alone (validation, grounding in this village, balance, costs), so nothing the client says about
+ * its strength is believed, and a confirmation made against a village that has since changed is refused (STALE_REVISION).
+ */
+function doComposeReality(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fail | null {
+  const s = ctx.s;
+  const r = a.claim.reality!;
+  if (!s.v2) return fail('NOT_AVAILABLE', 'Beliefs in the reality language are written in Generative Reality runs.');
+  if (s.v2.living) return fail('NOT_AVAILABLE', 'A Living Village is won with its own stories and its people’s arguments: written beliefs belong to Generative Reality runs.');
+  const made = s.claims.filter((c) => c.def?.reality && !c.def.rival).length;
+  if (made >= MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)) return fail('TOO_MANY', `You can write at most ${MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)} beliefs in one run.`);
+  if (r.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since this belief was read. Read it again (reading is free).');
+  const built = buildRealityClaim(s, r.ast, { title: a.claim.short, rev: r.rev });
+  if (!built.ok) return fail(built.code, `${built.message}${built.issues.length ? ` ${built.issues.slice(0, 3).join('; ')}.` : ''}`);
+  const def = built.draft.claim;
+  if (def.reality!.hash !== r.hash) return fail('STALE_BELIEF', 'That belief was prepared under other rules. Read it again.');
+  if (s.claims.some((c) => c.id === def.id)) return fail('ALREADY_WRITTEN', 'You already wrote a belief that does exactly this.');
+  installClaim(s, def);
+  s.flags.composed = ((s.flags.composed as number | undefined) ?? 0) + 1;
+  emit(ctx, {
+    step: 'action', code: 'BELIEF_WRITTEN', importance: 2, claim: def.id,
+    text: `You write a new belief into the village: “${def.short}”. It needs ${Math.round(def.spec.thresholds.on * 100)}% local support and ${def.spec.thresholds.minSupporters} firm believers before it can wake. Now tell someone.`,
   });
   return null;
 }
@@ -373,7 +534,7 @@ function doRitual(ctx: Ctx, a: Extract<Action, { type: 'RITUAL' }>): Fail | null
   else if (ritual.physical === 'vigil') s.flags.vigilDay = s.day;
   else if (ritual.physical === 'night_labor') lm.data.moonlit = 1;
   s.stats.rituals++;
-  const omen = omenFor(s, ritual.omen);
+  const omen = stagingOmen(s, ritual, a.claim);
   const rid = emit(ctx, {
     step: 'action', code: 'RITUAL', importance: 2, claim: a.claim, tile: [lm.x, lm.y],
     text: `${ritual.verb} — ${lm.name}.${a.claim ? ` ${omen.text}` : ''}`,
@@ -535,6 +696,10 @@ function labelOf(s: RunState, a: Action): string {
       return s.scn.deals?.find((d) => d.id === a.deal)?.label ?? `Trade: ${a.deal}`;
     case 'COMPOSE':
       return `Write a belief: “${a.claim.short || a.claim.text}”`;
+    case 'NPC_DECIDE':
+      return `Villagers decide (${a.decisions.length})`;
+    case 'TALK':
+      return `${a.mode === 'ask' ? 'Ask' : a.mode === 'persuade' ? 'Argue with' : a.mode === 'challenge' ? 'Challenge' : 'Ask what they make of it:'} ${nm(a.target)}${a.claim ? ` about ${cl(a.claim)}` : ''}`;
     case 'END_DAY':
       return 'End the day';
   }
@@ -638,7 +803,7 @@ export function previewAction(s: RunState, action: Action): Preview {
   if (action.type === 'RITUAL') {
     const r = s.scn.rituals.find((x) => x.id === action.ritual);
     if (r && action.claim) {
-      const o = omenFor(s, r.omen);
+      const o = stagingOmen(s, r, action.claim);
       if (o.value < 0) warnings.push(o.text);
     }
     if (r?.physical === 'light') warnings.push('Lit flames can ignite adjacent fields, trees and cottages.');

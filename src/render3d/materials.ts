@@ -77,7 +77,9 @@ const PAINT: Record<string, Painter> = {
       for (let x = -1; x < cols; x++) {
         const px = x * tw + (y % 2) * (tw / 2);
         const py = y * th;
-        g.fillStyle = jitter(r, [92, 104, 118], 16);
+        // one brightness per slate, not a different tint per channel (that read as a purple and green cast)
+        const k = (r() - 0.5) * 34;
+        g.fillStyle = `rgb(${96 + k},${106 + k},${120 + k})`;
         g.beginPath();
         g.roundRect(px + 1, py + 1, tw - 2, th + 2, 2);
         g.fill();
@@ -85,7 +87,7 @@ const PAINT: Record<string, Painter> = {
         g.stroke();
       }
     }
-    speckle(g, S, r, 120, 'rgba(120,150,90,0.25)', 1.8);
+    speckle(g, S, r, 90, 'rgba(120,150,90,0.14)', 1.8);
   },
   thatch(g, S, r) {
     g.fillStyle = '#a98a3c';
@@ -230,6 +232,7 @@ const SPECS: Record<string, MatSpec> = {
   rope: { color: 0x9a8656, rough: 1 },
   straw: { color: 0xd2b45c, rough: 1 },
   dirt: { color: 0x6c5538, rough: 1 },
+  leaf: { color: 0x5f8a3e, rough: 0.9 },
   sack: { color: 0xc9b58a, rough: 1 },
   white: { color: 0xf3efe4, rough: 0.9 },
   bloom: { color: 0xffffff, rough: 0.7 },

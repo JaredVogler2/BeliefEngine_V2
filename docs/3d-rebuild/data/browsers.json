@@ -1,0 +1,36 @@
+{
+  "measuredWith": "Playwright builds on Linux, software WebGL; not real devices",
+  "base": "http://127.0.0.1:4173",
+  "rows": [
+    {
+      "browser": "chromium",
+      "version": "153.0.8010.12",
+      "renderer": "3d",
+      "framesDrawn": 20,
+      "drawCalls": 376,
+      "triangles": 245992,
+      "consoleErrors": [],
+      "verdict": "PASS: the 3D world drew frames"
+    },
+    {
+      "browser": "firefox",
+      "version": "155.0",
+      "renderer": "2d",
+      "framesDrawn": 0,
+      "drawCalls": 0,
+      "triangles": 0,
+      "consoleErrors": [],
+      "verdict": "FALLBACK: the page chose the classic map (no usable WebGL2 here)"
+    },
+    {
+      "browser": "webkit",
+      "version": "26.6",
+      "renderer": "3d",
+      "framesDrawn": 7,
+      "drawCalls": 376,
+      "triangles": 245992,
+      "consoleErrors": [],
+      "verdict": "PASS: the 3D world drew frames"
+    }
+  ]
+}

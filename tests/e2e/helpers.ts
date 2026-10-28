@@ -45,18 +45,16 @@ export async function startScenario(page: Page, scenario: string, seed = 1, diff
   await expect(page.getByTestId('play')).toBeVisible();
 }
 
+/** the side sheet holds the detail tabs and is closed until asked for, at every size: open it if it is not, then pick the tab */
 export async function openSheet(page: Page, tab: string) {
-  const vp = page.viewportSize();
-  if (vp && vp.width <= 900) {
-    const open = await page.locator('.side.open').count();
-    if (!open) await page.getByTestId('sheet-toggle').click();
-  }
+  if (!(await page.locator('.side.open').count())) await page.getByTestId('sheet-toggle').click();
   await page.getByTestId(`tab-${tab}`).click();
 }
 
 export async function selectVillager(page: Page, name: string) {
   await openSheet(page, 'village');
-  await page.getByRole('button', { name: new RegExp(`^${name}`) }).first().click();
+  // scoped to the village list: the card beside the selection can hold buttons whose names also start with a villager's name ("Ivo Thatcher tells Dunn Reed")
+  await page.getByTestId('village-panel').getByRole('button', { name: new RegExp(`^${name}`) }).first().click();
 }
 
 export async function selectPlace(page: Page, id: string) {
@@ -65,8 +63,7 @@ export async function selectPlace(page: Page, id: string) {
 }
 
 export async function closeSheet(page: Page) {
-  const vp = page.viewportSize();
-  if (vp && vp.width <= 900 && (await page.locator('.side.open').count())) await page.getByTestId('sheet-toggle').click();
+  if (await page.locator('.side.open').count()) await page.getByTestId('sheet-toggle').click();
 }
 
 export async function chooseClaim(page: Page, claim: string) {

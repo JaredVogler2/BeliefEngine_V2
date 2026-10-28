@@ -65,7 +65,8 @@ export type ReasonCode =
   | 'FATIGUE'
   | 'DECAY'
   | 'RIVAL_CAMPAIGN'
-  | 'LAW_WITNESS';
+  | 'LAW_WITNESS'
+  | 'NEIGHBOUR_CHALLENGE';
 
 export const REASON_TEXT: Record<string, string> = {
   FRIEND_TRUST: 'a friend vouched for it',
@@ -85,6 +86,7 @@ export const REASON_TEXT: Record<string, string> = {
   DECAY: 'the memory faded',
   RIVAL_CAMPAIGN: 'the rival campaign worked on them',
   LAW_WITNESS: 'they saw the law at work',
+  NEIGHBOUR_CHALLENGE: 'a neighbour argued against it',
 };
 
 export interface GossipInput {

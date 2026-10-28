@@ -31,6 +31,22 @@ export interface Modifiers {
   /** number of trigger sources that powered each law tonight */
   sourcesByLaw: Record<string, number>;
   notes: { law: string; text: string }[];
+  // ---- written only by Generative Reality laws (src/engine/reality/execute.ts); absent in every classic run, and every reader
+  // ---- treats absent as "no change", so V1's arithmetic is untouched
+  /** share of flood damage to the bridge prevented whether or not anyone watches it (negative: weaker) */
+  bridgeHardness?: number;
+  /** river levels of floodwater turned away from the bridge tonight (negative: drawn onto it) */
+  bridgeFlow?: number;
+  /** home id → share of flood damage prevented */
+  homeShield?: Record<string, number>;
+  /** home id → share of fire damage prevented (negative: more) */
+  homeFireCut?: Record<string, number>;
+  /** villagers fire cannot hurt tonight */
+  fireproof?: string[];
+  /** water moved by reality laws onto the low ground of a region (in addition to `sinkPool`), with the laws that moved it */
+  sinks?: { region: string; amount: number; laws?: string[] }[];
+  /** tiles a pack may move beyond its usual steps (negative: slower), -2..2 */
+  wolfStepDelta?: number;
 }
 
 export function emptyModifiers(s: RunState): Modifiers {
@@ -93,7 +109,7 @@ export function triggerSources(s: RunState, law: LawState, def: ClaimDef, spec: 
   }
 }
 
-function stampShield(s: RunState, arr: number[], src: Source, radius: number, bonus: number, sign: 1 | -1): void {
+export function stampShield(s: RunState, arr: number[], src: Source, radius: number, bonus: number, sign: 1 | -1): void {
   const w = s.world;
   const r = Math.ceil(radius + 0.5);
   for (let y = src.y - r; y <= src.y + r; y++)

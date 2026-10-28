@@ -35,9 +35,31 @@ export interface RunRecord {
   debug: boolean;
   /** an Inventor run (the player wrote beliefs): kept apart from ranked records, earns only its own badge */
   custom?: boolean;
+  /**
+   * the V2 mode it was played in (absent: Classic). Each keeps its own records and bests, apart from Classic's: a Generative
+   * Chronicle (written beliefs) or a Living Village counts only among its own kind; Reality Lab is unranked, like an Inventor run.
+   */
+  variant?: RunVariant;
   /** short integrity fingerprint of the key outcome fields (for local comparison only; not a security feature) */
   signature: string;
   finishedAt?: string;
+}
+
+export type RunVariant = 'chronicle' | 'living' | 'lab';
+export const VARIANT_LABEL: Record<RunVariant, string> = { chronicle: 'Generative Chronicle', living: 'Living Village', lab: 'Reality Lab' };
+
+/** A belief the player wrote that became law, kept for remembering: it gives no power to any later run. */
+export interface AtlasInvented {
+  /** its mechanics fingerprint: the same belief written again in another run is the same entry */
+  hash: string;
+  text: string;
+  short: string;
+  /** what it did, in the engine's words (one line per clause) */
+  mechanics: string;
+  scenarios: string[];
+  activations: number;
+  /** event codes that showed it doing something in the world */
+  effects: string[];
 }
 
 export interface AtlasLaw {
@@ -62,6 +84,8 @@ export interface Progress {
     laws: Record<Id, AtlasLaw>;
     knowledge: Record<Id, { run: string }>;
     postcards: Record<Id, string[]>;
+    /** beliefs written in Generative Chronicle runs that became law (keyed by mechanics hash) */
+    invented?: Record<string, AtlasInvented>;
   };
 }
 

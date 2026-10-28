@@ -5,6 +5,8 @@
  */
 
 import type { BeliefAST } from '../nl/ast.ts';
+import type { RealityAst } from '../reality/ast.ts';
+import type { RealityState } from '../reality/state.ts';
 
 export const SCHEMA_VERSION = 1;
 export const RULES_VERSION = '1.0.0';
@@ -88,6 +90,23 @@ export interface ClaimDef {
   extra?: RuleSpec[];
   /** custom (player composed) claim bookkeeping: what was typed, the structure it became, who read it, and a checksum of the balance */
   custom?: { text: string; astHash: string; parser: string; balance: number; ast: BeliefAST; source: 'offline' | 'model'; nl: number };
+  /**
+   * A Generative Reality belief (src/engine/reality): its validated AST v2 runs in the reality executor; `spec` then carries only
+   * the derived thresholds and a neutral subject that V1's effect table ignores. Absent on every V1 claim.
+   */
+  reality?: RealityClaim;
+}
+
+export interface RealityClaim {
+  ast: RealityAst;
+  /** mechanics hash (same mechanics, same id, whatever the words) */
+  hash: string;
+  power: number;
+  rating: 'light' | 'moderate' | 'strong';
+  /** fingerprint of the derived numbers */
+  checksum: string;
+  /** the run revision the reading was confirmed against (stale confirmations are refused) */
+  rev: number;
 }
 
 export type OmenKind = 'river_trend' | 'bridge_calm' | 'rain_tonight' | 'pack_quiet' | 'moon_clear' | 'fire_calm' | 'none';
@@ -322,7 +341,8 @@ export type Duty = 'work' | 'rest' | 'evacuate' | 'shelter' | 'watch' | 'messeng
 
 /** A bounded record of something a villager saw: a law failing or working, a proof backfiring. */
 export interface MemoryItem {
-  kind: 'law_failed' | 'law_worked' | 'proof_failed';
+  /** law_harmed (V2): a belief the Keeper wrote damaged their livelihood */
+  kind: 'law_failed' | 'law_worked' | 'proof_failed' | 'law_harmed';
   day: number;
   claim?: Id;
   text: string;
@@ -438,8 +458,40 @@ export type Action =
   | { type: 'COUNTER'; claim: Id; against: Id; target: Id }
   | { type: 'PICK_STARTER'; claim: Id }
   | { type: 'TRADE'; deal: Id; target: Id }
-  | { type: 'COMPOSE'; claim: ClaimDef }
+  /** `meta`: what the inference service reported for a model's reading (kept in the action log for the ledger; the engine ignores it) */
+  | { type: 'COMPOSE'; claim: ClaimDef; meta?: InferenceMeta }
+  /** decisions a model proposed for villagers due to think today (V2 minds); bound to the run revision the request was built at */
+  | { type: 'NPC_DECIDE'; rev: number; decisions: NpcChoiceInput[]; model?: string; id?: string; meta?: InferenceMeta }
+  /** the Keeper talks with a villager (V2 minds): ask, argue for, challenge, or ask what they make of things; `reply` is a model's line */
+  | { type: 'TALK'; target: Id; mode: 'ask' | 'persuade' | 'challenge' | 'guess'; claim?: Id; reply?: { line: string; cites: string[] }; meta?: InferenceMeta }
   | { type: 'END_DAY' };
+
+/** What the inference service reported about one model call (save/ledger.ts): never a key, a prompt or a raw answer. */
+export interface InferenceMeta {
+  provider?: string;
+  model?: string;
+  tier?: string;
+  promptVersion?: string;
+  id?: string;
+  latencyMs?: number;
+  cached?: boolean;
+  costUsd?: number;
+  tokens?: number;
+}
+
+/** A villager decision as it arrives from outside the engine (validated against the live run before anything uses it). */
+export interface NpcChoiceInput {
+  citizenId: string;
+  intent: string;
+  target: string | null;
+  claimId: string | null;
+  dialogue: string | null;
+  cites: string[];
+  tone: string;
+  approach: string;
+  confidence: number;
+  thought: string;
+}
 
 export type ActionType = Action['type'];
 
@@ -565,6 +617,8 @@ export interface RunState {
   beatsSeen: Id[];
   /** static scenario definition; shared by reference between clones, never mutated */
   scn: ScenarioRuntime;
+  /** Generative Reality runs only (src/engine/reality/state.ts); absent in every classic run */
+  v2?: RealityState;
 }
 
 // ------------------------------------------------------------------ results
@@ -601,4 +655,12 @@ export interface CreateRunOptions {
   extraClaims?: Id[];
   /** Inventor run: the Keeper may write beliefs of their own (unranked: it earns no scores, badges or atlas entries except its own) */
   inventor?: boolean;
+  /** Generative Reality run: beliefs written in the reality language, chickens and loose stones (separate records from Classic) */
+  reality?: boolean;
+  /** Reality Lab: a Generative Reality run with relaxed balance, unranked (computation and safety limits are never relaxed) */
+  realityLab?: boolean;
+  /** the written-belief rules to create a Generative Reality run under (default: the current ones); for replaying older records */
+  realityRules?: number;
+  /** Living Village: the chapter with villager minds at full voice (more of them think each day); its own stories only, own records */
+  living?: boolean;
 }

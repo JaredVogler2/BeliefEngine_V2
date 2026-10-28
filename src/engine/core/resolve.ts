@@ -8,6 +8,13 @@ import { runCropHarvest } from '../world/crops.ts';
 import { countWoodcutters, runDawnNeeds, runDeliveries, runHarvest } from '../world/economy.ts';
 import { updateSmoke } from '../world/sickness.ts';
 import { runNight } from '../world/hazards.ts';
+import { runRealityLaws, type RealityPlan } from '../reality/execute.ts';
+import { settleLawHarm } from '../reality/harm.ts';
+import { realityDawn, realityDusk, realityNight } from '../reality/entities.ts';
+import { captureMemories } from '../mind/memory.ts';
+import { planMinds } from '../mind/decide.ts';
+import { runMinds } from '../mind/run.ts';
+import { considerNpcClaims } from '../mind/claims.ts';
 import { cloneState } from './clone.ts';
 import { emit, type Ctx } from './events.ts';
 import { claimDef, findLandmark, modActive } from './lookup.ts';
@@ -39,6 +46,9 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   }
   s.history.push({ day, actions: s.today.map((a) => a.action), summary: emptySummary(day) });
   emit(ctx, { step: 'action', code: 'DAY_COMMITTED', importance: 1, text: `Day ${day}: night falls.` });
+  // villager minds remember the day where they spent it, and those due to think act at dusk (V2 runs only)
+  const dayMemories = captureMemories(s);
+  runMinds(ctx, dayMemories);
 
   if (s.scn.features.smoke) updateSmoke(s);
   runRivalExecute(ctx); // A  queued / announced moves land
@@ -52,11 +62,21 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   countWoodcutters(ctx);
   moveToNight(ctx);
   const mods = computeModifiers(s);
+  // Generative Reality laws add their own contributions and entity intents (absent in classic runs: nothing changes there)
+  let reality: RealityPlan | null = null;
+  if (s.v2) {
+    reality = runRealityLaws(ctx, mods);
+    realityDusk(ctx, reality, mods);
+  }
   for (const law of s.laws) if (law.status === 'active' || law.status === 'wavering') law.activeNights += 1;
   runNight(ctx, mods); // G  hazards and resources
+  if (reality) realityNight(ctx, reality);
   runRivalPlan(ctx); // H  rivals decide (announced a day ahead)
   runFactionPlan(ctx); // H' factions endorse or announce
   runDawnNeeds(ctx);
+  if (reality) realityDawn(ctx, reality);
+  // the price of hazardous magic: those a written belief harmed tonight remember who wrote it (rules 2)
+  if (reality) settleLawHarm(ctx);
 
   const ev = evaluate(s); // I  threat and win/loss
   if (ev.over) {
@@ -68,6 +88,11 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
     });
   }
   runBeats(ctx);
+  // …and the night, where they spent it; the strongest moments decide who thinks tomorrow
+  const nightMemories = captureMemories(s);
+  for (const [vid, eps] of dayMemories) nightMemories.set(vid, [...eps, ...(nightMemories.get(vid) ?? [])]);
+  planMinds(s, nightMemories, ctx.events);
+  considerNpcClaims(ctx, nightMemories);
   const summary = buildSummary(ctx.events, day);
   s.history[s.history.length - 1].summary = summary;
 

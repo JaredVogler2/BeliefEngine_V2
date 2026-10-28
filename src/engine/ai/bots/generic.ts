@@ -1,4 +1,4 @@
-import { applyAction, getAvailableActions, omenFor } from '../../core/actions.ts';
+import { applyAction, getAvailableActions, stagingOmen } from '../../core/actions.ts';
 import { cloneState } from '../../core/clone.ts';
 import { claimDef, neighborsOf } from '../../core/lookup.ts';
 import { getForecast, type ForecastView } from '../../core/selectors.ts';
@@ -225,7 +225,7 @@ function provableClaim(s: RunState): string | null {
   for (const id of ids) {
     const d = claimDef(s, id);
     const ritual = d.ritual ? s.scn.rituals.find((r) => r.id === d.ritual) : undefined;
-    const omen = ritual ? omenFor(s, ritual.omen).value : -1;
+    const omen = ritual ? stagingOmen(s, ritual, id).value : -1;
     const v = (ritual ? 0.5 + 0.25 * omen : 0) + claimRelevance(s, id) + commitment(s, id) * 1.5;
     if (v > bestV + 1e-9) {
       bestV = v;
@@ -273,7 +273,7 @@ export function forecastGuard(g: GameSession, maxSteps = 4): void {
       if (a.type === 'RITUAL' && a.claim) {
         // staging a proof also teaches the village, but never on a night that makes the proof fail
         const rit = s.scn.rituals.find((x) => x.id === a.ritual);
-        if (rit && omenFor(s, rit.omen).value < 0) continue;
+        if (rit && stagingOmen(s, rit, a.claim).value < 0) continue;
       }
       const r = applyAction(s, a);
       if (!r.ok) continue;
@@ -289,16 +289,17 @@ export function forecastGuard(g: GameSession, maxSteps = 4): void {
 // ------------------------------------------------------------------ the policies
 
 /** 3. Greedy: pour Influence into whichever action raises law pressure the most for one chosen law. Never touches the physical world. */
-export const greedy: Policy = playbook({
+export const greedyTactic: Tactic = {
   name: 'greedy',
   pick: strongestClaim,
   allow: () => true,
   gain: (a, b, claim) => support(b, claim, claimDef(a, claim).regions) - support(a, claim, claimDef(a, claim).regions),
-});
+};
+export const greedy: Policy = playbook(greedyTactic);
 
 /** 4. Broadcaster: tell the charismatic, and call crowds. Values each point of conviction by how much of the village follows its holder. */
 const hubIds = (s: RunState, n: number): Set<string> => new Set(living(s).sort((x, y) => hubScore(y) - hubScore(x) || (x.id < y.id ? -1 : 1)).slice(0, n).map((v) => v.id));
-export const broadcaster: Policy = playbook({
+export const broadcasterTactic: Tactic = {
   name: 'broadcaster',
   pick: strongestClaim,
   allow: (s, a) => {
@@ -316,16 +317,17 @@ export const broadcaster: Policy = playbook({
     return act.type === 'GATHER' ? total * 1.15 : total;
   },
   minGain: 1,
-});
+};
+export const broadcaster: Policy = playbook(broadcasterTactic);
 
 /** 5. Evidence-first: show, don't tell. Stage proofs on kind nights and talk only to the people words cannot move. */
-export const evidenceFirst: Policy = playbook({
+export const evidenceFirstTactic: Tactic = {
   name: 'evidence-first',
   pick: provableClaim,
   allow: (s, a) => {
     if (a.type === 'RITUAL') {
       const rit = s.scn.rituals.find((x) => x.id === a.ritual);
-      return !!rit && omenFor(s, rit.omen).value >= 0;
+      return !!rit && stagingOmen(s, rit, a.claim).value >= 0;
     }
     if (a.type === 'SEED') return (s.villagers.find((v) => v.id === a.target)?.traits.skepticism ?? 0) >= 50;
     if (a.type === 'MESSENGER') return (s.villagers.find((v) => v.id === a.from)?.beliefs[a.claim]?.evidence ?? 0) >= 15;
@@ -342,10 +344,11 @@ export const evidenceFirst: Policy = playbook({
     return total;
   },
   minGain: 1,
-});
+};
+export const evidenceFirst: Policy = playbook(evidenceFirstTactic);
 
 /** 6. Community bridge-builder: lift the weakest neighbourhood first, through the people who have ties into several of them. */
-export const bridgeBuilder: Policy = playbook({
+export const bridgeBuilderTactic: Tactic = {
   name: 'bridge-builder',
   pick: widestClaim,
   allow: (s, a) => a.type === 'SEED' || a.type === 'MESSENGER' || a.type === 'GATHER' || (a.type === 'RITUAL' && !!a.claim && s.day >= 3),
@@ -372,10 +375,11 @@ export const bridgeBuilder: Policy = playbook({
     return total * bonus * 100;
   },
   minGain: 0.5,
-});
+};
+export const bridgeBuilder: Policy = playbook(bridgeBuilderTactic);
 
 /** 7. Threat-aware planner: choose the law that fits the danger and the stores, hold Influence back for the night, and read the forecast. */
-export const threatAware: Policy = playbook({
+export const threatAwareTactic: Tactic = {
   name: 'threat-aware',
   pick: plannedClaim,
   allow: () => true,
@@ -387,7 +391,8 @@ export const threatAware: Policy = playbook({
   },
   after: (g) => forecastGuard(g),
   second: true,
-});
+};
+export const threatAware: Policy = playbook(threatAwareTactic);
 
 /**
  * 8. Exploit-seeker. Tries to get ahead by means the rules are supposed to forbid: re-doing the same cheap action over and over,

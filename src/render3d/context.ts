@@ -43,10 +43,19 @@ export interface WorldContext {
   reducedMotion: boolean;
   /** the weather's effect on motion, shared and updated by the world */
   weather: { wind: number; rain: number };
+  /** how far a standing bridge is carried above its resting height so its deck clears the flood (set by the landmarks, read by the people on it) */
+  bridgeLift: number;
+  /** how far the camera stands from what it looks at, updated every frame (the people grow a little at the overview so they stay legible) */
+  viewDistance: number;
   /** the glow belief leaves on the ground and the water, shared by the terrain, the river and the effects */
   magic?: MagicField;
   /** where a villager or landmark is in the world right now */
   locate?(kind: 'villager' | 'landmark', id: string): import('three').Vector3 | null;
+  /** what a Generative Reality run's things can be asked to do for an event (set by the reality layer) */
+  reality?: {
+    /** these hens rise `height` tiles, hover and settle again over `durMs` */
+    lift(ids: string[], height: number, durMs: number): void;
+  };
   /** what the people on the ground can be asked to do for an event (set by the people layer) */
   actors?: {
     gesture(id: string, kind: string, seconds?: number): void;

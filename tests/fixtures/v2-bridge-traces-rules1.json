@@ -1,0 +1,1150 @@
+{
+ "note": "The phase 09 chains as recorded under written-belief rules 1 (phases 04-10), kept as they were: older saves and records must keep replaying exactly. tests/unit/belief-bridge.test.ts replays them; the live chains are v2-bridge-traces.json.",
+ "hens": {
+  "why": "claim A through real persuasion: law on day 6, the hens ride out two flood nights; all Influence went to the hens, so four villagers drown (a complete loss)",
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 2,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true,
+   "realityRules": 1
+  },
+  "sentence": "Chickens fly when the bell rings.",
+  "region": null,
+  "claimId": "reality_12f5310edc",
+  "result": "defeat",
+  "lawDay": 6,
+  "alive": 10,
+  "hens": 22,
+  "bank": 0,
+  "stateHash": "11446bf8caf00b",
+  "eventHash": "19784769060df0",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "COMPOSE",
+    "claim": {
+     "id": "reality_12f5310edc",
+     "text": "Chickens fly when the bell rings.",
+     "short": "Chickens fly when the bell rings",
+     "icon": "✦",
+     "spec": {
+      "id": "reality_12f5310edc",
+      "version": 1,
+      "subject": "smoke",
+      "effect": "conceal",
+      "trigger": {
+       "kind": "lit_beacon"
+      },
+      "radius": 0,
+      "intensity": 1,
+      "thresholds": {
+       "on": 0.6,
+       "off": 0.45,
+       "minSupporters": 3,
+       "ramp": 66,
+       "decay": 21
+      },
+      "upkeep": {
+       "fuel": 0
+      },
+      "side": [],
+      "tags": [
+       "reality",
+       "chronicle"
+      ]
+     },
+     "regions": [
+      "east"
+     ],
+     "contradicts": [],
+     "benefit": "When the bell is rung: chickens in Eastbank rise up to 2 tiles into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind).",
+     "risk": "On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).",
+     "flavor": "",
+     "startsAvailable": true,
+     "reality": {
+      "ast": {
+       "v": 2,
+       "lang": "reality-1",
+       "text": "Chickens fly when the bell rings.",
+       "author": "player",
+       "source": {
+        "reader": "offline-v2",
+        "model": null,
+        "prompt": "offline-v2.2",
+        "id": null
+       },
+       "day": 1,
+       "regions": [
+        "east"
+       ],
+       "clauses": [
+        {
+         "id": "c1",
+         "when": {
+          "event": "bell",
+          "min": null
+         },
+         "where": null,
+         "target": {
+          "kind": "chicken",
+          "near": null,
+          "tags": [],
+          "region": null
+         },
+         "effect": {
+          "op": "APPLY_FORCE",
+          "direction": "up",
+          "magnitude": 2
+         },
+         "duration": "night"
+        }
+       ],
+       "omitted": [],
+       "narrative": null
+      },
+      "hash": "12f5310edc0815",
+      "power": 6,
+      "rating": "light",
+      "checksum": "0e65a8b477fa95",
+      "rev": 3
+     }
+    }
+   },
+   {
+    "type": "GATHER",
+    "claim": "reality_12f5310edc",
+    "site": "green_e"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_12f5310edc",
+    "target": "ivo"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_12f5310edc",
+    "target": "pip"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_12f5310edc",
+    "target": "tilly"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "tilly",
+    "to": "mara"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_12f5310edc",
+    "target": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "ivo",
+    "to": "nell"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "nell",
+    "to": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "tilly",
+    "to": "pip"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "mara",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "nell",
+    "to": "mara"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "tilly",
+    "to": "mara"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "mara",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_12f5310edc",
+    "from": "harl",
+    "to": "wren"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "hensBelow": {
+  "why": "the same village and sentence, told to one person and never again: the bell rings every night, the law never wakes, nothing flies and the hens drown",
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 2,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true,
+   "realityRules": 1
+  },
+  "sentence": "Chickens fly when the bell rings.",
+  "region": null,
+  "claimId": "reality_12f5310edc",
+  "result": "defeat",
+  "lawDay": null,
+  "alive": 10,
+  "hens": 0,
+  "bank": 0,
+  "stateHash": "14e16a337029d9",
+  "eventHash": "0409b31603c505",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "COMPOSE",
+    "claim": {
+     "id": "reality_12f5310edc",
+     "text": "Chickens fly when the bell rings.",
+     "short": "Chickens fly when the bell rings",
+     "icon": "✦",
+     "spec": {
+      "id": "reality_12f5310edc",
+      "version": 1,
+      "subject": "smoke",
+      "effect": "conceal",
+      "trigger": {
+       "kind": "lit_beacon"
+      },
+      "radius": 0,
+      "intensity": 1,
+      "thresholds": {
+       "on": 0.6,
+       "off": 0.45,
+       "minSupporters": 3,
+       "ramp": 66,
+       "decay": 21
+      },
+      "upkeep": {
+       "fuel": 0
+      },
+      "side": [],
+      "tags": [
+       "reality",
+       "chronicle"
+      ]
+     },
+     "regions": [
+      "east"
+     ],
+     "contradicts": [],
+     "benefit": "When the bell is rung: chickens in Eastbank rise up to 2 tiles into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind).",
+     "risk": "On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).",
+     "flavor": "",
+     "startsAvailable": true,
+     "reality": {
+      "ast": {
+       "v": 2,
+       "lang": "reality-1",
+       "text": "Chickens fly when the bell rings.",
+       "author": "player",
+       "source": {
+        "reader": "offline-v2",
+        "model": null,
+        "prompt": "offline-v2.2",
+        "id": null
+       },
+       "day": 1,
+       "regions": [
+        "east"
+       ],
+       "clauses": [
+        {
+         "id": "c1",
+         "when": {
+          "event": "bell",
+          "min": null
+         },
+         "where": null,
+         "target": {
+          "kind": "chicken",
+          "near": null,
+          "tags": [],
+          "region": null
+         },
+         "effect": {
+          "op": "APPLY_FORCE",
+          "direction": "up",
+          "magnitude": 2
+         },
+         "duration": "night"
+        }
+       ],
+       "omitted": [],
+       "narrative": null
+      },
+      "hash": "12f5310edc0815",
+      "power": 6,
+      "rating": "light",
+      "checksum": "0e65a8b477fa95",
+      "rev": 3
+     }
+    }
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_12f5310edc",
+    "target": "ivo"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "stones": {
+  "why": "claim B through real persuasion: law on day 6; wet stones by the lit lanterns weigh almost nothing, a villager carries one to the bank and the bank stands higher for good",
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 3,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true,
+   "realityRules": 1
+  },
+  "sentence": "Wet stone becomes light beside lanterns.",
+  "region": null,
+  "claimId": "reality_069a8c1a9e",
+  "result": "defeat",
+  "lawDay": 6,
+  "alive": 10,
+  "hens": 0,
+  "bank": 3,
+  "stateHash": "1a0aad7eb26198",
+  "eventHash": "1f74531b72005e",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "COMPOSE",
+    "claim": {
+     "id": "reality_069a8c1a9e",
+     "text": "Wet stone becomes light beside lanterns.",
+     "short": "Wet stone becomes light beside lanterns",
+     "icon": "✦",
+     "spec": {
+      "id": "reality_069a8c1a9e",
+      "version": 1,
+      "subject": "smoke",
+      "effect": "conceal",
+      "trigger": {
+       "kind": "lit_beacon"
+      },
+      "radius": 0,
+      "intensity": 1,
+      "thresholds": {
+       "on": 0.6,
+       "off": 0.45,
+       "minSupporters": 3,
+       "ramp": 67,
+       "decay": 20
+      },
+      "upkeep": {
+       "fuel": 0
+      },
+      "side": [],
+      "tags": [
+       "reality",
+       "chronicle"
+      ]
+     },
+     "regions": [
+      "east"
+     ],
+     "contradicts": [],
+     "benefit": "When a lantern (beacon) is lit and wet: loose stones within 2 tiles of a lantern in Eastbank weigh 2 loads less (a stone of 1 load or less is carried to the bank by anyone working nearby, and floats in floodwater).",
+     "risk": "A stone made light that stands in floodwater floats off and rams the bridge (6 integrity each).",
+     "flavor": "",
+     "startsAvailable": true,
+     "reality": {
+      "ast": {
+       "v": 2,
+       "lang": "reality-1",
+       "text": "Wet stone becomes light beside lanterns.",
+       "author": "player",
+       "source": {
+        "reader": "offline-v2",
+        "model": null,
+        "prompt": "offline-v2.2",
+        "id": null
+       },
+       "day": 1,
+       "regions": [
+        "east"
+       ],
+       "clauses": [
+        {
+         "id": "c1",
+         "when": {
+          "event": "lantern",
+          "min": null
+         },
+         "where": {
+          "test": "wet"
+         },
+         "target": {
+          "kind": "stone",
+          "near": {
+           "anchor": "beacon",
+           "radius": 2
+          },
+          "tags": [],
+          "region": null
+         },
+         "effect": {
+          "op": "SET_MATERIAL_PROPERTY",
+          "property": "mass",
+          "delta": -2
+         },
+         "duration": "night"
+        }
+       ],
+       "omitted": [],
+       "narrative": null
+      },
+      "hash": "069a8c1a9ebce6",
+      "power": 4.8,
+      "rating": "light",
+      "checksum": "1a4a4cb9def325",
+      "rev": 3
+     }
+    }
+   },
+   {
+    "type": "GATHER",
+    "claim": "reality_069a8c1a9e",
+    "site": "green_e"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_069a8c1a9e",
+    "target": "pip"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_069a8c1a9e",
+    "target": "ivo"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_069a8c1a9e",
+    "target": "tilly"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "tilly",
+    "to": "mara"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_069a8c1a9e",
+    "target": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "ivo",
+    "to": "bram"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "tilly",
+    "to": "pip"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_n"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "mara",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "nell",
+    "to": "mara"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "bram",
+    "to": "harl"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_069a8c1a9e",
+    "from": "mara",
+    "to": "harl"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_n"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "rain": {
+  "why": "claim C through real persuasion in a nine-day generated village (held in Eastbank): law on the last day; the rain is drawn onto Eastbank (it pools on the low ground), flames burn weaker and the hearths cool",
+  "opts": {
+   "scenarioId": "x1.2",
+   "seed": 2,
+   "difficulty": "normal",
+   "mode": "expedition",
+   "reality": true,
+   "realityRules": 1
+  },
+  "sentence": "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.",
+  "region": "east",
+  "claimId": "reality_1eaeab5416",
+  "result": "defeat",
+  "lawDay": 9,
+  "alive": 9,
+  "hens": 0,
+  "bank": 0,
+  "stateHash": "038e6f7fafc662",
+  "eventHash": "0767330d583815",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "COMPOSE",
+    "claim": {
+     "id": "reality_1eaeab5416",
+     "text": "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.",
+     "short": "At night, bell ringing pulls rain…",
+     "icon": "✦",
+     "spec": {
+      "id": "reality_1eaeab5416",
+      "version": 1,
+      "subject": "smoke",
+      "effect": "conceal",
+      "trigger": {
+       "kind": "lit_beacon"
+      },
+      "radius": 0,
+      "intensity": 1,
+      "thresholds": {
+       "on": 0.65,
+       "off": 0.5,
+       "minSupporters": 5,
+       "ramp": 56,
+       "decay": 26
+      },
+      "upkeep": {
+       "fuel": 0
+      },
+      "side": [],
+      "tags": [
+       "reality",
+       "chronicle"
+      ]
+     },
+     "regions": [
+      "east"
+     ],
+     "contradicts": [],
+     "benefit": "When the bell is rung: rain in Eastbank is called onto Eastbank: up to 2 steps of rain fall there instead of upriver (moved, not made: it lands on the low ground). When the bell is rung: fire in Eastbank burns weaker: fire damage cut by up to 50%.",
+     "risk": "The rain lands on Eastbank: up to 12 of its lowest dry tiles stand a tile deep, and homes there take flood damage.; The hearths warm less: children, elders and anyone run down lose health each night it acts.; The river fears a cooler fire less: flood wards kept by lit beacons or smoke fires stand a step lower those nights.",
+     "flavor": "",
+     "startsAvailable": true,
+     "reality": {
+      "ast": {
+       "v": 2,
+       "lang": "reality-1",
+       "text": "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.",
+       "author": "player",
+       "source": {
+        "reader": "offline-v2",
+        "model": null,
+        "prompt": "offline-v2.2",
+        "id": null
+       },
+       "day": 1,
+       "regions": [
+        "east"
+       ],
+       "clauses": [
+        {
+         "id": "c1",
+         "when": {
+          "event": "bell",
+          "min": null
+         },
+         "where": null,
+         "target": {
+          "kind": "rain",
+          "near": null,
+          "tags": [],
+          "region": null
+         },
+         "effect": {
+          "op": "WEATHER_MODIFIER",
+          "mode": "attract",
+          "magnitude": 2,
+          "toward": "east"
+         },
+         "duration": "night"
+        },
+        {
+         "id": "c2",
+         "when": {
+          "event": "bell",
+          "min": null
+         },
+         "where": null,
+         "target": {
+          "kind": "fire",
+          "near": null,
+          "tags": [],
+          "region": null
+         },
+         "effect": {
+          "op": "ALTER_TEMPERATURE",
+          "delta": -2
+         },
+         "duration": "night"
+        }
+       ],
+       "omitted": [],
+       "narrative": null
+      },
+      "hash": "1eaeab54166362",
+      "power": 16.5,
+      "rating": "moderate",
+      "checksum": "1e024d47e04a0f",
+      "rev": 3
+     }
+    }
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_1eaeab5416",
+    "target": "preacher"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "GATHER",
+    "claim": "reality_1eaeab5416",
+    "site": "green_e"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_1eaeab5416",
+    "target": "kchild"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_1eaeab5416",
+    "target": "preacher"
+   },
+   {
+    "type": "SEED",
+    "claim": "reality_1eaeab5416",
+    "target": "kchild"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "kchild",
+    "to": "pchild"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "pchild",
+    "to": "preacher"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "preacher",
+    "to": "pchild"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "kchild",
+    "to": "keeper"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "keeper",
+    "to": "kchild"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "keeper",
+    "to": "farmer"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "preacher",
+    "to": "elder"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "keeper",
+    "to": "parent"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "preacher",
+    "to": "elder"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "preacher",
+    "to": "elder"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "ringer",
+    "to": "farmer"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "farmer",
+    "to": "hermit"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "pchild",
+    "to": "hermit"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "ring_bells",
+    "landmark": "bell"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ },
+ "win": {
+  "why": "a complete win in a Generative Reality run: the written belief is composed and spread, but the authored Fire Wall decides the chapter",
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true,
+   "realityRules": 1
+  },
+  "sentence": "Chickens fly when the bell rings.",
+  "region": null,
+  "claimId": "reality_12f5310edc",
+  "result": "victory",
+  "lawDay": null,
+  "alive": 14,
+  "hens": 4,
+  "bank": 0,
+  "stateHash": "1e8282573bc914",
+  "eventHash": "040202558de15e",
+  "actions": [
+   {
+    "type": "PICK_STARTER",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "COMPOSE",
+    "claim": {
+     "id": "reality_12f5310edc",
+     "text": "Chickens fly when the bell rings.",
+     "short": "Chickens fly when the bell rings",
+     "icon": "✦",
+     "spec": {
+      "id": "reality_12f5310edc",
+      "version": 1,
+      "subject": "smoke",
+      "effect": "conceal",
+      "trigger": {
+       "kind": "lit_beacon"
+      },
+      "radius": 0,
+      "intensity": 1,
+      "thresholds": {
+       "on": 0.6,
+       "off": 0.45,
+       "minSupporters": 3,
+       "ramp": 66,
+       "decay": 21
+      },
+      "upkeep": {
+       "fuel": 0
+      },
+      "side": [],
+      "tags": [
+       "reality",
+       "chronicle"
+      ]
+     },
+     "regions": [
+      "east"
+     ],
+     "contradicts": [],
+     "benefit": "When the bell is rung: chickens in Eastbank rise up to 2 tiles into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind).",
+     "risk": "On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).",
+     "flavor": "",
+     "startsAvailable": true,
+     "reality": {
+      "ast": {
+       "v": 2,
+       "lang": "reality-1",
+       "text": "Chickens fly when the bell rings.",
+       "author": "player",
+       "source": {
+        "reader": "offline-v2",
+        "model": null,
+        "prompt": "offline-v2.2",
+        "id": null
+       },
+       "day": 1,
+       "regions": [
+        "east"
+       ],
+       "clauses": [
+        {
+         "id": "c1",
+         "when": {
+          "event": "bell",
+          "min": null
+         },
+         "where": null,
+         "target": {
+          "kind": "chicken",
+          "near": null,
+          "tags": [],
+          "region": null
+         },
+         "effect": {
+          "op": "APPLY_FORCE",
+          "direction": "up",
+          "magnitude": 2
+         },
+         "duration": "night"
+        }
+       ],
+       "omitted": [],
+       "narrative": null
+      },
+      "hash": "12f5310edc0815",
+      "power": 6,
+      "rating": "light",
+      "checksum": "0e65a8b477fa95",
+      "rev": 3
+     }
+    }
+   },
+   {
+    "type": "GATHER",
+    "claim": "river_fears_fire",
+    "site": "green_e"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "pip"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "SEED",
+    "claim": "river_fears_fire",
+    "target": "tilly"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e",
+    "claim": "river_fears_fire"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "pip",
+    "to": "nell"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "COUNTER",
+    "claim": "river_fears_fire",
+    "against": "river_courts_fire",
+    "target": "ivo"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "ivo",
+    "to": "dunn"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "river_fears_fire",
+    "from": "tilly",
+    "to": "mara"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_s"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_c"
+   },
+   {
+    "type": "END_DAY"
+   },
+   {
+    "type": "END_DAY"
+   }
+  ]
+ }
+}

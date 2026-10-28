@@ -3,6 +3,7 @@ import { cloneState } from './clone.ts';
 import { createRun } from './create.ts';
 import { resolveDay } from './resolve.ts';
 import type { Action, ActionResult, CreateRunOptions, GameEvent, ResolveResult, RunState } from './types.ts';
+import { actionCount, appendExternal, emptyLedger, truncateLedger, type Ledger } from '../save/ledger.ts';
 
 /**
  * A GameSession is the one controller used by the browser UI, bots, the MCP adapter and tests. It owns the
@@ -14,9 +15,15 @@ export class GameSession {
   private undoStack: RunState[] = [];
   /** accepted actions in order, including END_DAY: a complete replay log */
   readonly log: Action[] = [];
+  /**
+   * the external-decision ledger of the whole run (save/ledger.ts), kept as actions are accepted and undone; a session made from a
+   * saved state starts from the ledger saved with it (the loader derives and checks it), or empty
+   */
+  ledger: Ledger;
 
-  constructor(state: RunState) {
+  constructor(state: RunState, ledger?: Ledger) {
     this.state = state;
+    this.ledger = ledger ?? emptyLedger();
   }
 
   static create(opts: CreateRunOptions): GameSession {
@@ -42,9 +49,11 @@ export class GameSession {
     }
     const res = applyAction(this.state, action);
     if (res.ok) {
-      this.undoStack.push(this.state);
+      const pre = this.state;
+      this.undoStack.push(pre);
       this.state = res.state;
       this.log.push(action);
+      this.ledger = appendExternal(this.ledger, pre, action, actionCount(pre));
     }
     return res;
   }
@@ -53,6 +62,7 @@ export class GameSession {
     if (!this.canUndo) return false;
     this.state = this.undoStack.pop()!;
     this.log.pop();
+    this.ledger = truncateLedger(this.ledger, actionCount(this.state));
     return true;
   }
 

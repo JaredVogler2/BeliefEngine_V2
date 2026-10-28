@@ -27,12 +27,35 @@ export const MAGIC_GLSL = /* glsl */ `
   uniform vec4 uHollow[${HOLLOW}];
   uniform vec4 uReach[${REACH}];
   uniform vec4 uReachCol[${REACH}];
+  uniform sampler2D uForecast;
+  uniform float uForecastOn;
+
+  // ground that water has reached or lies beside is darker and glossier: a bank is plainly wet, and a flood leaves its mark
+  float groundWet(vec2 xz) {
+    return texture2D(uForecast, xz / uMagicDim).g;
+  }
+
+  // tonight's predicted flood, as the extra depth the engine expects over what is there now: slanted stripes inside it, and a contour
+  // line at every step of depth, cool where it is shallow and warm where it is deep. Stripes and lines mean it reads without colour.
+  vec3 forecastGlow(vec2 xz) {
+    if (uForecastOn < 0.5) return vec3(0.0);
+    vec4 f = texture2D(uForecast, xz / uMagicDim);
+    float d = f.r * 4.0;
+    float wet = smoothstep(0.3, 0.7, d);
+    if (wet < 0.01) return vec3(0.0);
+    // where water already stands the overlay is turned down: laid over the real flood it would only whiten it
+    wet *= mix(1.0, 0.35, f.g);
+    float stripes = smoothstep(0.35, 0.5, abs(fract((xz.x + xz.y) * 2.4 - uMagicTime * 0.1) - 0.5));
+    float line = smoothstep(0.4, 0.5, abs(fract(d) - 0.5));
+    vec3 c = mix(vec3(0.28, 0.72, 0.96), vec3(1.0, 0.46, 0.34), clamp((d - 1.0) / 2.0, 0.0, 1.0));
+    return c * wet * (0.10 + 0.16 * stripes + 0.5 * line);
+  }
 
   // patterns are drawn around a source and go out from it: rings and ticks for trust, a spiral closing in for a rival belief,
   // falling drops for rain, a wheel of dots for safety. They differ in shape as well as colour.
   float magicPattern(vec2 rel, float id) {
     float d = length(rel);
-    float ang = atan(rel.y, rel.x) / 6.2831853;
+    float ang = atan(rel.y, rel.x + 1e-5) / 6.2831853;
     if (id < 0.5) {
       float rings = smoothstep(0.82, 0.94, abs(fract(d * 1.25 - uMagicTime * 0.12) - 0.5) * 2.0);
       float band = step(0.5, fract(d * 0.625 - uMagicTime * 0.06));
@@ -82,20 +105,27 @@ export const MAGIC_GLSL = /* glsl */ `
       if (r.w > 0.002) {
         float d = length(xz - r.xy);
         float inside = 1.0 - smoothstep(r.z - 0.3, r.z + 0.05, d);
-        float edge = exp(-pow((d - r.z) / 0.07, 2.0));
+        float er = (d - r.z) / 0.07;
+        float edge = exp(-er * er);
         float pat = magicPattern(xz - r.xy, uReachCol[i].w);
         // brightest at the source, fading to the edge, with a bright rim at the exact reach
         float core = 1.0 - smoothstep(0.0, r.z, d);
         col += uReachCol[i].rgb * (inside * (0.025 + 0.6 * pat * r.w * (0.4 + 0.6 * core)) + edge * (0.22 + 0.55 * r.w) + core * core * 0.07 * r.w);
       }
     }
+#ifdef MAGIC_ON_WATER
+    col += forecastGlow(xz) * 0.4;
+#else
+    col += forecastGlow(xz);
+#endif
     // expanding rings and ripples from engine events
     for (int i = 0; i < ${PULSES}; i++) {
       vec4 p = uPulse[i];
       if (p.w > 0.002) {
         float d = length(xz - p.xy);
         float w = uPulseCol[i].w;
-        float ring = exp(-pow((d - p.z) / w, 2.0));
+        float pr = (d - p.z) / w;
+        float ring = exp(-pr * pr);
         float fill = (1.0 - smoothstep(p.z * 0.2, p.z, d)) * 0.03;
         col += uPulseCol[i].rgb * (ring * 1.15 + fill) * p.w;
       }
@@ -106,9 +136,10 @@ export const MAGIC_GLSL = /* glsl */ `
       if (h.w > 0.002) {
         vec2 q = xz - h.xy;
         float d = length(q);
-        float ang = atan(q.y, q.x) + uMagicTime * 0.25;
+        float ang = atan(q.y, q.x + 1e-5) + uMagicTime * 0.25;
         float dash = smoothstep(0.1, 0.3, abs(fract(ang * 1.9099) - 0.5));
-        col += vec3(0.58, 0.68, 0.82) * exp(-pow((d - h.z) / 0.05, 2.0)) * dash * h.w * 0.9;
+        float hr = (d - h.z) / 0.05;
+        col += vec3(0.58, 0.68, 0.82) * exp(-hr * hr) * dash * h.w * 0.9;
       }
     }
     return col;
@@ -132,6 +163,8 @@ const CHANNEL: Record<Vocab, number> = { trust: 0, resist: 0, rival: 1, rain: 2,
 export class MagicField {
   readonly uniforms: Record<string, THREE.IUniform>;
   private readonly tex: THREE.DataTexture;
+  private readonly fTex: THREE.DataTexture;
+  private readonly fData: Uint8Array;
   private readonly data: Uint8Array;
   private readonly w: number;
   private readonly h: number;
@@ -160,6 +193,15 @@ export class MagicField {
     this.tex.colorSpace = THREE.NoColorSpace;
     this.tex.generateMipmaps = false;
     this.tex.needsUpdate = true;
+    this.fData = new Uint8Array(this.w * this.h * 4);
+    this.fTex = new THREE.DataTexture(this.fData, this.w, this.h, THREE.RGBAFormat, THREE.UnsignedByteType);
+    this.fTex.magFilter = THREE.LinearFilter;
+    this.fTex.minFilter = THREE.LinearFilter;
+    this.fTex.wrapS = THREE.ClampToEdgeWrapping;
+    this.fTex.wrapT = THREE.ClampToEdgeWrapping;
+    this.fTex.colorSpace = THREE.NoColorSpace;
+    this.fTex.generateMipmaps = false;
+    this.fTex.needsUpdate = true;
     this.uniforms = {
       uMagic: { value: this.tex },
       uMagicDim: { value: new THREE.Vector2(this.w, this.h) },
@@ -170,6 +212,8 @@ export class MagicField {
       uHollow: { value: Array.from({ length: HOLLOW }, () => new THREE.Vector4(0, 0, 1, 0)) },
       uReach: { value: Array.from({ length: REACH }, () => new THREE.Vector4(0, 0, 1, 0)) },
       uReachCol: { value: Array.from({ length: REACH }, () => new THREE.Vector4(1, 1, 1, 0)) },
+      uForecast: { value: this.fTex },
+      uForecastOn: { value: 0 },
     };
   }
 
@@ -194,7 +238,7 @@ export class MagicField {
   }
 
   /** set the ground each law occupies from what the engine reports */
-  setLaws(laws: LawVisual[], snap: SceneSnapshot, instant: boolean): void {
+  setLaws(laws: LawVisual[], snap: SceneSnapshot, instant: boolean, highlight: string[] = []): void {
     this.target.fill(0);
     const hollow = this.uniforms.uHollow.value as THREE.Vector4[];
     hollow.forEach((v) => v.set(0, 0, 1, 0));
@@ -236,8 +280,60 @@ export class MagicField {
       }
       if (!l.powered) for (const c of l.candidates) if (hi < hollow.length) hollow[hi++].set(c.x, c.z, 0.9, 0.9);
     }
+    // the ground the chosen story could one day govern: a faint outline only, and never over a law that is already drawn there
+    for (const id of highlight) {
+      const reg = snap.regions.find((r) => r.id === id);
+      if (!reg) continue;
+      for (const rc of reg.rects)
+        for (let y = Math.max(0, rc[1]); y <= Math.min(this.h - 1, rc[3]); y++)
+          for (let x = Math.max(0, rc[0]); x <= Math.min(this.w - 1, rc[2]); x++) {
+            if (snap.terrain[y * this.w + x] === 1) continue;
+            const i = (y * this.w + x) * 4;
+            if (this.target[i] === 0) this.target[i] = 0.5 + 0.5 * 0.08;
+          }
+    }
     this.instant = instant || this.reduced;
     this.dirty = true;
+  }
+
+  /** how wet the ground is: where the engine has water, and a soft margin around it that fades over a few tiles */
+  setWetness(depth: ArrayLike<number>, terrain: ArrayLike<number>): void {
+    const w = this.w;
+    const h = this.h;
+    let a = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) a[i] = depth[i] > 0.05 && terrain[i] !== 1 ? 1 : terrain[i] === 1 ? 1 : 0;
+    // two box blurs spread it into a bank
+    for (let pass = 0; pass < 3; pass++) {
+      const b = new Float32Array(w * h);
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++) {
+          let sum = 0;
+          let n = 0;
+          for (let dy = -1; dy <= 1; dy++)
+            for (let dx = -1; dx <= 1; dx++) {
+              const xx = x + dx;
+              const yy = y + dy;
+              if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+              sum += a[yy * w + xx];
+              n++;
+            }
+          b[y * w + x] = sum / n;
+        }
+      a = b;
+    }
+    for (let i = 0; i < w * h; i++) this.fData[i * 4 + 1] = Math.round(Math.min(1, a[i] * 1.5) * 255);
+    this.fTex.needsUpdate = true;
+  }
+
+  /** show (or hide) tonight's forecast flood: `pred` is the predicted depth per tile, `now` the depth there is already */
+  setForecast(pred: ArrayLike<number> | null, now: ArrayLike<number>): void {
+    this.uniforms.uForecastOn.value = pred ? 1 : 0;
+    if (!pred) return;
+    for (let i = 0; i < this.w * this.h; i++) {
+      this.fData[i * 4] = Math.round(Math.min(1, Math.max(0, (pred[i] - now[i]) / 4)) * 255);
+      this.fData[i * 4 + 1] = now[i] > 0 ? 255 : 0;
+    }
+    this.fTex.needsUpdate = true;
   }
 
   /** an expanding ring (or a ripple that moves inward when `inward`) over the ground and the water */
@@ -306,6 +402,7 @@ export class MagicField {
 
   dispose(): void {
     this.tex.dispose();
+    this.fTex.dispose();
   }
 }
 
@@ -316,15 +413,17 @@ export function attachMagicToStandard(mat: THREE.MeshStandardMaterial, field: Ma
     shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vMagicXZ;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvMagicXZ = position.xz;');
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\nvarying vec2 vMagicXZ;\n${MAGIC_GLSL}`)
+      .replace('#include <map_fragment>', '#include <map_fragment>\ndiffuseColor.rgb *= mix(1.0, 0.7, groundWet(vMagicXZ));')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor *= mix(1.0, 0.5, groundWet(vMagicXZ));')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += magicGlow(vMagicXZ);');
   };
-  mat.customProgramCacheKey = () => 'terrain-magic-1';
+  mat.customProgramCacheKey = () => 'terrain-magic-2';
   mat.needsUpdate = true;
 }
 
 /** put the glow into the water shader's colour (the water's own fragment source is passed in and returned changed) */
 export function injectMagicIntoWater(frag: string): string {
   return frag
-    .replace('void main() {', `${MAGIC_GLSL}\n  void main() {`)
+    .replace('void main() {', `#define MAGIC_ON_WATER 1\n${MAGIC_GLSL}\n  void main() {`)
     .replace('col *= uTint;', 'col *= uTint;\n    col += magicGlow(vWorld.xz) * 0.8;');
 }

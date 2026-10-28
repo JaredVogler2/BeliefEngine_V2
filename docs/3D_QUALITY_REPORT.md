@@ -1,5 +1,18 @@
 # 3D quality report: V2 baseline
 
+> **Superseded renderer.** On 2026-10-28 V2 merged V1's later 3D work (JaredVogler2/BeliefEngine#2 and JaredVogler2/BeliefEngine#3: immersive HUD, end-of-run
+> scene, a finishing chain with ink lines and ambient occlusion, yards and props). The frames and scores below are of the renderer *before*
+> that merge; V1's own record of its pass is [`v1/3D_QUALITY_REPORT.md`](v1/3D_QUALITY_REPORT.md).
+>
+> **Phase 10 (2026-10-28), the merged renderer.** Frames of the merged renderer with phase 10's effects are in
+> [`screenshots/v2-phase10/`](screenshots/v2-phase10/) and described in [`3D_EFFECTS.md`](3D_EFFECTS.md). What changed against the rows
+> below: the threat mood and forecast reach a freshly loaded world (V1's P0, fixed by the merge); ink lines and ambient occlusion give
+> the houses and trees edges; a written law now shows on the ground (its glyph) and in its effects (hens rising to the engine's height,
+> the stone carried to the bank, the bank's courses, pooled water marked); the merged HUD leaves most of the screen to the world (a
+> browser test checks it). What did not change: it is still lit as day at every hour, still a plate in a void, still green-dominated,
+> and draw calls at the high tier are 520-750 (147 at low) against the standard's 250. The rows below were not re-scored: a re-score
+> with the palette measurement is stage 9's work, and nothing here should be read as meeting the bar.
+
 What the 3D world looks like on 2026-10-27, measured against the [visual standard](3D_VISUAL_STANDARD.md). The renderer is V1's,
 exactly as imported from `6a92862` (no file under `src/render3d/` has changed). Every frame below is a capture of the running
 production build's canvas; none is a mock-up. The plan to close the gaps: [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md).

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { MAX_CUSTOM_CLAIMS, allOffers, interpretBelief, previewAction } from '../../engine/index.ts';
 import type { Draft, Interpretation } from '../../engine/index.ts';
 import { Modal } from '../components.tsx';
-import { aiClient, type AiStatus, type ReadingMeta } from '../../ai/client.ts';
+import { aiClient, type ReadingMeta } from '../../ai/client.ts';
 import { V2_FEATURES } from '../../v2/features.ts';
 import { store, useStore } from '../store.ts';
+import { OnlineRow, useOnlineReading } from './online.tsx';
 
 const MAX_CHARS = 160;
 const MAX_TITLE = 40;
@@ -31,10 +32,7 @@ export function Compose() {
   const [pick, setPick] = useState(0);
   const [titles, setTitles] = useState<Record<number, string>>({});
   const [busy, setBusy] = useState(false);
-  const [online, setOnline] = useState(false);
-  const [optIn, setOptIn] = useState<'off' | 'asking' | 'checking' | 'on'>('off');
-  const [aiStatus, setAiStatus] = useState<AiStatus | null>(null);
-  const [onlineNote, setOnlineNote] = useState<string | null>(null);
+  const o = useOnlineReading();
   const [meta, setMeta] = useState<ReadingMeta | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const seq = useRef(0);
@@ -42,37 +40,7 @@ export function Compose() {
   if (!state) return null;
   const close = () => store.set({ composing: false });
   const made = state.claims.filter((c) => c.def?.custom).length;
-  // online reading is opt-in per run: nothing is sent anywhere until the player turns it on and accepts the notice
-  const turnOn = async () => {
-    setOptIn('checking');
-    setOnlineNote(null);
-    const st = await aiClient.status();
-    if ('ok' in st) {
-      setOptIn('off');
-      setOnlineNote(st.why);
-      return;
-    }
-    setAiStatus(st);
-    if (!st.available) {
-      setOptIn('off');
-      setOnlineNote(`${({ disabled: 'Online reading is switched off on this server.', not_configured: 'Online reading is not set up on this server.', over_budget: 'The online budget for today is spent.', quota_unavailable: 'Online reading is paused right now.' } as Record<string, string>)[st.reason ?? ''] ?? 'Online reading is unavailable.'} The offline reader works as always.`);
-      return;
-    }
-    const sess = await aiClient.openSession();
-    if (!sess.ok) {
-      setOptIn('off');
-      setOnlineNote(`${sess.why} The offline reader works as always.`);
-      return;
-    }
-    setOnline(true);
-    setOptIn('on');
-  };
-  const turnOff = () => {
-    aiClient.forget();
-    setOnline(false);
-    setOptIn('off');
-  };
-
+  // online reading is opt-in per run: nothing is sent anywhere until the player turns it on and accepts the notice (online.tsx)
   const run = (sentence: string) => {
     const mine = ++seq.current;
     setBusy(true);
@@ -83,13 +51,13 @@ export function Compose() {
       let why: string | null = null;
       const s = store.state!;
       let m: ReadingMeta | null = null;
-      if (online && V2_FEATURES.serverInference) {
-        const o = await aiClient.interpretV1(s, sentence);
-        if (o.ok) {
-          r = interpretBelief(s, sentence, { readings: o.readings });
-          m = o.meta;
+      if (o.online && V2_FEATURES.serverInference) {
+        const res = await aiClient.interpretV1(s, sentence);
+        if (res.ok) {
+          r = interpretBelief(s, sentence, { readings: res.readings });
+          m = res.meta;
         } else {
-          why = `${o.why} Here is the offline reading instead; no Influence was spent.`;
+          why = `${res.why} Here is the offline reading instead; no Influence was spent.`;
           r = interpretBelief(s, sentence);
         }
       } else r = interpretBelief(s, sentence);
@@ -150,36 +118,7 @@ export function Compose() {
               }}
             />
           </label>
-          {V2_FEATURES.serverInference && (
-            <div className="online-row" data-testid="compose-online-row">
-              {optIn === 'on' ? (
-                <p className="small" style={{ margin: 0 }}>
-                  <span className="chip violet" data-testid="compose-online-on">{aiStatus?.provider === 'mock' ? 'Online reading: simulated (local test server, no model)' : `Online reading on${aiStatus?.models ? ` · ${aiStatus.models.fast}` : ''}`}</span>{' '}
-                  <button type="button" className="btn small" onClick={turnOff} data-testid="compose-online-off">Turn off</button>
-                </p>
-              ) : optIn === 'asking' || optIn === 'checking' ? (
-                <div className="consent" role="group" aria-labelledby="consent-title" data-testid="compose-consent">
-                  <p className="small" id="consent-title" style={{ margin: '0 0 0.3rem' }}><b>Read beliefs with a language model?</b></p>
-                  <ul className="small" style={{ margin: '0 0 0.4rem' }}>
-                    <li>Your sentence and the names of this village&apos;s places and features leave this device: they go to this game&apos;s server and, through the Vercel AI Gateway, to a language-model provider.</li>
-                    <li>Each reading is a paid request, paid by whoever runs this game. There are daily limits; a refused or failed reading costs you nothing.</li>
-                    <li>A model only proposes. The game checks every reading against what this village can physically do, exactly as it checks its own.</li>
-                    <li>The offline reader always works. You can turn this off at any time.</li>
-                  </ul>
-                  <div className="row" style={{ gap: '0.5rem' }}>
-                    <button type="button" className="btn primary small" disabled={optIn === 'checking'} onClick={() => void turnOn()} data-testid="compose-consent-yes">{optIn === 'checking' ? 'Checking…' : 'Turn on online reading'}</button>
-                    <button type="button" className="btn small" disabled={optIn === 'checking'} onClick={() => setOptIn('off')} data-testid="compose-consent-no">Not now</button>
-                  </div>
-                </div>
-              ) : (
-                <p className="small muted" style={{ margin: 0 }}>
-                  Reading offline (nothing leaves this device).{' '}
-                  <button type="button" className="btn small" onClick={() => setOptIn('asking')} data-testid="compose-online">Use online reading…</button>
-                </p>
-              )}
-              {onlineNote && <p className="small muted" data-testid="compose-online-note" style={{ margin: '0.3rem 0 0' }}>{onlineNote}</p>}
-            </div>
-          )}
+          {V2_FEATURES.serverInference && <OnlineRow o={o} prefix="compose" leaves="Your sentence and the names of this village's places and features leave this device: they go to this game's server and, through the Vercel AI Gateway, to a language-model provider." />}
           <div className="row" style={{ gap: '0.5rem' }}>
             <button type="submit" className="btn primary" disabled={busy || !text.trim()} data-testid="compose-preview">{busy ? 'Reading…' : 'See what it would do'}</button>
             <button type="button" className="btn" onClick={close}>Cancel</button>

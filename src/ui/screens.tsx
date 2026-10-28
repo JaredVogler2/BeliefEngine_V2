@@ -1,7 +1,7 @@
-import { DebriefScene } from './scene.tsx';
+import { Aftermath } from './play/Aftermath.tsx';
 import { useEffect, useRef, useState } from 'react';
 import type { RunState } from '../engine/index.ts';
-import { MAX_SEED, optionsFromState, buildDebrief, catalogInfo, isVerifiedSeed, createRun, getModifier, getModifierViews, getScenarioDef, listScenarios, numberToDate } from '../engine/index.ts';
+import { MAX_SEED, optionsFromState, v2ModeOf, buildDebrief, catalogInfo, isVerifiedSeed, createRun, getModifier, getModifierViews, getScenarioDef, listScenarios, numberToDate } from '../engine/index.ts';
 import type { Difficulty } from '../engine/index.ts';
 import { MapRenderer } from '../render/MapRenderer.ts';
 import { unlockAudio, sfx } from '../audio/audio.ts';
@@ -12,6 +12,9 @@ import { BIOME_LABEL, dailyLabel, dailyOptions, expeditionOptions, freshExpediti
 import { downloadText } from './files.ts';
 import { useWhatIf } from './whatif.ts';
 import { store, useStore } from './store.ts';
+import { V2_FEATURES } from '../v2/features.ts';
+import { RealityProvenance } from './play/Provenance.tsx';
+import { ReplayCheck } from './ReplayCheck.tsx';
 
 // ------------------------------------------------------------------ title
 
@@ -89,9 +92,22 @@ export function Title() {
               Continue — {getScenarioDef(info.scenarioId).runtime.name}, day {info.day}/{info.maxDay}
             </button>
           )}
-          <button className={`btn ${info ? '' : 'primary'} big`} data-testid="play" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios' }); }}>
-            {info ? 'New game' : 'Play'}
+          <button className={`btn ${info ? '' : 'primary'} big stacked`} data-testid="play" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'story', v2Mode: undefined }); }}>
+            {info ? 'New game: Classic' : 'Play Classic'} <span className="btn-sub">offline, the hand-made stories</span>
           </button>
+          {V2_FEATURES.generativeReality && (
+            <div className="menu-v2" role="group" aria-label="Generative Reality modes">
+              <button className="btn big stacked" data-testid="play-reality" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'reality', v2Mode: 'chronicle' }); }}>
+                Generative Reality <span className="btn-sub">write your own laws</span>
+              </button>
+              <button className="btn stacked" data-testid="play-living" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'reality', v2Mode: 'living' }); }}>
+                Living Village <span className="btn-sub">villagers who remember and argue</span>
+              </button>
+              <button className="btn stacked" data-testid="play-lab" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'reality', v2Mode: 'lab' }); }}>
+                Reality Lab <span className="btn-sub">stronger beliefs, never ranked</span>
+              </button>
+            </div>
+          )}
           <button className="btn" data-testid="atlas-open" onClick={() => store.set({ screen: 'atlas' })}>Atlas of Belief{atlasCount > 0 ? ` (${atlasCount} badge${atlasCount === 1 ? '' : 's'})` : ''}</button>
           <button className="btn" onClick={() => store.set({ screen: 'howto' })}>How it works</button>
           <button className="btn" onClick={() => store.set({ screen: 'settings' })}>Settings</button>
@@ -106,7 +122,9 @@ export function Title() {
 
 // ------------------------------------------------------------------ scenario select + briefing
 
-type ModeTab = 'story' | 'expedition' | 'daily';
+type ModeTab = 'story' | 'expedition' | 'daily' | 'reality';
+/** the V2 mode a run was played in (flags.reality), as its records name it */
+const MODE_LABEL: Record<1 | 2 | 3, string> = { 1: 'Generative Chronicle (its own records)', 2: 'Reality Lab (unranked)', 3: 'Living Village (its own records)' };
 
 function ModifierList({ ids }: { ids: string[] }) {
   if (!ids.length) return null;
@@ -138,7 +156,9 @@ function VillageCard({ p }: { p: VillagePreview }) {
 export function Scenarios() {
   const list = listScenarios();
   const prog = loadProgress();
-  const [tab, setTab] = useState<ModeTab>('story');
+  const ui = useStore((s) => s.ui);
+  const [tab, setTab] = useState<ModeTab>(ui.startTab === 'reality' && !V2_FEATURES.generativeReality ? 'story' : (ui.startTab ?? 'story'));
+  const v2Mode = ui.v2Mode ?? 'chronicle';
   const [seedText, setSeedText] = useState<string>(() => String(freshExpeditionSeed(playedExpeditionSeeds())));
   const seedNum = /^\d{1,10}$/.test(seedText) && Number(seedText) <= MAX_SEED ? Number(seedText) : null;
   const village = seedNum === null ? null : previewVillage(seedNum);
@@ -153,7 +173,7 @@ export function Scenarios() {
         <button className="btn small" onClick={() => store.set({ screen: 'title' })}>← Back</button>
         <h1 style={{ marginTop: '0.8rem' }}>Choose how to play</h1>
         <div className="tabs mode-tabs" role="tablist" aria-label="Game mode">
-          {([['story', 'Story chapters'], ['expedition', 'Expedition'], ['daily', 'Daily village']] as [ModeTab, string][]).map(([t, label]) => (
+          {([['story', 'Story chapters'], ['expedition', 'Expedition'], ['daily', 'Daily village'], ...(V2_FEATURES.generativeReality ? [['reality', 'Generative Reality']] : [])] as [ModeTab, string][]).map(([t, label]) => (
             <button key={t} role="tab" className="tab" aria-selected={tab === t} data-testid={`mode-${t}`} onClick={() => { sfx('click'); setTab(t); }}>{label}</button>
           ))}
         </div>
@@ -181,6 +201,58 @@ export function Scenarios() {
               })}
             </div>
           </>
+        )}
+        {tab === 'reality' && V2_FEATURES.generativeReality && (
+          <section data-testid="reality-panel">
+            <p className="muted">
+              The story chapters, with one difference: you can write any belief about how the world works, in your own words. The game shows exactly what it can make real
+              of it (and what it cannot), and a belief only changes the world once enough villagers hold it. These runs also have chickens and loose stones to work with.
+              Reading is offline unless you choose otherwise.
+            </p>
+            <p className="muted small" data-testid="mode-notes">
+              <b>Generative Chronicle</b> (Begin): write your own laws; its own records. <b>Living Village</b>: the chapter&apos;s own stories, with villagers who remember,
+              argue and demand proof; its own records. <b>Reality Lab</b>: stronger beliefs, never ranked. Classic (the other tabs) keeps its records apart from all three.
+            </p>
+            <details className="card reading-note" data-testid="reality-reading">
+              <summary>How beliefs and villagers are read: offline first, a model only if you ask</summary>
+              <ul className="small">
+                <li>Everything works offline on this device: the game&apos;s own reader turns your sentence into a law it can run, and villagers decide by its own rules.</li>
+                <li>A language model can read your sentences (and voice villagers) instead, if this server offers one. You turn it on in the composer or a villager&apos;s card; it tells you what would be sent and asks first, and nothing leaves this device before you agree.</li>
+                <li>Each online reading is paid by whoever runs this game, within daily limits. A refused, failed or slow reading costs you nothing: the offline reading is used and no Influence is spent.</li>
+                <li>A model only proposes. The game checks every reading against what this village can physically do, exactly as it checks its own.</li>
+              </ul>
+            </details>
+            <div className="grid2">
+              {list.map((sc) => (
+                <div key={sc.id} className="card scn-card" data-testid={`reality-scn-${sc.id}`}>
+                  <h2>{sc.name}</h2>
+                  <p>{sc.tagline}</p>
+                  <div className="row wrap">
+                    <span className="chip">{sc.days} days</span>
+                    <span className="chip violet">Write your own laws</span>
+                  </div>
+                  <div className="row wrap" style={{ gap: '0.5rem' }}>
+                    <button className={`btn ${v2Mode === 'chronicle' ? 'primary' : ''}`} onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), reality: true }); }} data-testid={`begin-reality-${sc.id}`}>Begin</button>
+                    <button className={`btn ${v2Mode === 'living' ? 'primary' : ''}`} title="The chapter's own stories, and villagers who remember, argue, demand proof and put their own claims: more of them think each day. Its own records." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), living: true }); }} data-testid={`begin-living-${sc.id}`}>Living Village</button>
+                    <button className={`btn ${v2Mode === 'lab' ? 'primary' : ''}`} title="Three clauses, wider reach and stronger beliefs; never ranked." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), realityLab: true }); }} data-testid={`begin-lab-${sc.id}`}>Reality Lab (unranked)</button>
+                  </div>
+                </div>
+              ))}
+              <div className="card scn-card" data-testid="reality-scn-expedition">
+                <h2>A generated village</h2>
+                <p>Any village the generator builds, with its own map, people and crisis: the same seed always builds the same one.</p>
+                <label className="field">
+                  <span>Village seed</span>
+                  <input type="text" inputMode="numeric" value={seedText} onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} aria-label="Village seed for a Generative Reality run" data-testid="reality-expedition-seed" />
+                </label>
+                <div className="row wrap">
+                  {village && <span className="chip">{village.days} days</span>}
+                  <span className="chip violet">Write your own laws</span>
+                </div>
+                <button className="btn primary" disabled={seedNum === null} onClick={() => { if (seedNum !== null) { sfx('click'); store.newRun({ ...expeditionOptions(seedNum), reality: true }); } }} data-testid="begin-reality-expedition">Begin</button>
+              </div>
+            </div>
+          </section>
         )}
         {tab === 'expedition' && (
           <section data-testid="expedition-panel">
@@ -406,7 +478,8 @@ export function Debrief() {
   };
   const different = () => {
     sfx('click');
-    const inv = state.flags.inventor ? { inventor: true } : {};
+    // a new seed or village keeps how the run was played: Inventor, or the V2 mode (under today's written-belief rules)
+    const inv = { ...(state.flags.inventor ? { inventor: true } : {}), ...v2ModeOf(state) };
     if (kind === 'story') store.newRun({ ...storyOptions(state.scenarioId, randomSeed(), state.difficulty), ...inv });
     else store.newRun({ ...expeditionOptions(freshExpeditionSeed([...playedExpeditionSeeds(), state.seed]), state.difficulty), ...inv });
     store.set({ screen: 'play' });
@@ -414,7 +487,7 @@ export function Debrief() {
   return (
     <main className="screen" data-testid="debrief">
       <div className="page">
-        <DebriefScene state={state} win={win} />
+        <Aftermath state={state} win={win} />
         <div className="row" style={{ gap: '1rem' }}>
           <div className="medal" aria-hidden="true">{win ? (d.medal === 'gold' ? '🥇' : d.medal === 'silver' ? '🥈' : '🥉') : '†'}</div>
           <div>
@@ -431,6 +504,7 @@ export function Debrief() {
           {alt && <button className="btn big" data-testid="try-other" onClick={again}>Try another approach</button>}
         </div>
         {state.flags.inventor && <InventorNote state={state} />}
+        {state.v2 && <RealityProvenance state={state} />}
         {reward && <Rewards reward={reward} />}
         <h2>Why it went this way</h2>
         {d.chains.map((c, i) => (
@@ -449,7 +523,8 @@ export function Debrief() {
         <p>{d.saved} of {state.villagers.length} survived. {d.homesSpared} home(s) and {d.livesSpared} life/lives spared by laws.{d.lost.length ? ` Lost: ${d.lost.map((l) => `${l.name} (${l.cause}, day ${l.day})`).join('; ')}.` : ''}</p>
         <h2>Score {d.score}</h2>
         <table className="breakdown"><tbody>{Object.entries(d.breakdown).map(([k, v]) => <tr key={k}><td>{k}</td><td>{v}</td></tr>)}</tbody></table>
-        <p className="small muted" data-testid="seed-info">{d.seedInfo}{kind !== 'story' ? ` · village ${state.scenarioId}` : ''}{state.modifiers.length ? ` · twists: ${state.modifiers.join(', ')}` : ''}. Score is a rough guide only; the story above matters more.</p>
+        <ReplayCheck state={state} />
+        <p className="small muted" data-testid="seed-info">{d.seedInfo}{kind !== 'story' ? ` · village ${state.scenarioId}` : ''}{state.modifiers.length ? ` · twists: ${state.modifiers.join(', ')}` : ''}{state.flags.reality ? ` · ${MODE_LABEL[state.flags.reality as 1 | 2 | 3]}` : ''}. Score is a rough guide only; the story above matters more.</p>
         <ul className="small">{d.tips.map((t, i) => <li key={i}>{t}</li>)}</ul>
         <div className="row wrap" style={{ marginTop: '1rem' }}>
           <button className="btn" data-testid="share" onClick={() => { void navigator.clipboard?.writeText(link).then(() => store.toast('Link copied. It holds only the mode, the seed and the version.', 'good'), () => store.toast(link)); }}><Icon name="share" /> Share this {kind === 'story' ? 'seed' : 'village'}</button>
@@ -471,7 +546,7 @@ export function HowTo() {
         <h1 style={{ marginTop: '0.8rem' }}>How it works</h1>
         <p><b>Claim → Spread → Belief → Law → Consequence.</b></p>
         <ol>
-          <li><b>Claim.</b> You hold stories about the world, like “the river fears fire”. Choose one in the hand at the bottom of the map.</li>
+          <li><b>Claim.</b> You hold stories about the world, like “the river fears fire”. Choose one of the story chips at the bottom of the screen (the book button beside them says what each does and risks).</li>
           <li><b>Spread.</b> Tell villagers directly (1 Influence each) or ask a believer to carry it to someone they trust. Overnight, stories travel along ties of trust — only between people who can reach each other.</li>
           <li><b>Belief.</b> Hearsay barely moves skeptics. People who <i>watch</i> something happen are convinced far more deeply. Stage a ritual at a landmark on a good-omen night to give people something to see.</li>
           <li><b>Law.</b> When enough of a place believes (the line on the support bar), the story becomes law and the world obeys: flames turn the flood, watched wood does not break, bells draw rain.</li>
@@ -488,6 +563,9 @@ export function HowTo() {
           <tr><td>Select a villager or landmark</td><td>Click / tap</td></tr>
           <tr><td>Pan the map</td><td>Drag, or <span className="kbd">arrows</span> / <span className="kbd">WASD</span></td></tr>
           <tr><td>Zoom</td><td>Wheel, pinch, <span className="kbd">+</span> <span className="kbd">-</span> buttons, <span className="kbd">0</span> to fit</td></tr>
+          <tr><td>Turn and tilt the 3D view</td><td>Right-drag or Shift-drag, the two turn buttons, <span className="kbd">Q</span> <span className="kbd">E</span> to turn, <span className="kbd">R</span> <span className="kbd">F</span> to tilt</td></tr>
+          <tr><td>Ways of looking</td><td>The buttons on the left edge: World, Social (who trusts whom), Laws (the ledger), Flood (tonight's water). Tap the river for the forecast.</td></tr>
+          <tr><td>Everything about someone</td><td>Tap them for a small card with what to do; “More about…” or the list button in the bottom bar opens the full sheet.</td></tr>
           <tr><td>Choose a story</td><td>Click a card, or <span className="kbd">1</span>–<span className="kbd">9</span></td></tr>
           <tr><td>Tell the selected villager the chosen story</td><td><span className="kbd">T</span></td></tr>
           <tr><td>Undo last action</td><td><span className="kbd">U</span> or the Undo button</td></tr>
@@ -540,12 +618,42 @@ export function SettingsScreen() {
         </div>
         <div className="row wrap" style={{ marginTop: '1rem' }}>
           <button className="btn" onClick={() => store.resetSettings()}>Reset settings</button>
-          {inGame && <button className="btn" onClick={() => { const s = store.state!; store.newRun({ scenarioId: s.scenarioId, seed: s.seed, difficulty: s.difficulty }); store.set({ screen: 'play' }); }} data-testid="restart-seed">Restart this seed</button>}
+          {inGame && <button className="btn" onClick={() => { store.newRun(optionsFromState(store.state!)); store.set({ screen: 'play' }); }} data-testid="restart-seed">Restart this seed</button>}
           {inGame && <button className="btn danger" onClick={() => store.set({ screen: 'title' })} data-testid="to-title">Leave to title (your game is saved)</button>}
         </div>
+        <YourData inGame={inGame} />
         <p className="small muted" style={{ marginTop: '1rem' }}>Settings and saves are stored in this browser only. {store.lastSavedOk ? '' : 'Storage is unavailable, so saves last only until you close the tab.'}</p>
       </div>
     </main>
+  );
+}
+
+/** What this game keeps, where, and the controls to take it away (phase 14). */
+function YourData({ inGame }: { inGame: boolean }) {
+  const [confirm, setConfirm] = useState<null | 'game' | 'all'>(null);
+  return (
+    <div className="card" style={{ marginTop: '1rem' }} data-testid="your-data">
+      <h2>Your data</h2>
+      <ul className="small" style={{ margin: '0 0 0.6rem' }}>
+        <li><b>On this device:</b> the game you are playing (with every belief you wrote and what villagers said to you), your Atlas (records, badges, the laws your Chronicles made) and these settings. None of it leaves this device by itself.</li>
+        <li><b>If you turn on online reading</b> in a Generative run: what its notice lists (your sentence, the village&apos;s name and seed, the region and the day; for villagers, their public facts and memories) goes to this game&apos;s server and a language-model provider. The server keeps hashed usage counters and, for 7 days, validated readings of sentences so a repeat costs nothing; nothing that names you.</li>
+        <li><b>A downloaded save or replay</b> holds the whole run, including what you wrote. Share it only with people you would show the game to.</li>
+      </ul>
+      <div className="row wrap" style={{ gap: '0.5rem' }}>
+        {inGame && (confirm === 'game' ? (
+          <>
+            <button className="btn danger" onClick={() => { setConfirm(null); store.deleteGame(); }} data-testid="delete-game-yes">Delete this game</button>
+            <button className="btn" onClick={() => setConfirm(null)}>Keep it</button>
+          </>
+        ) : <button className="btn" onClick={() => setConfirm('game')} data-testid="delete-game">Delete this game…</button>)}
+        {confirm === 'all' ? (
+          <>
+            <button className="btn danger" onClick={() => { setConfirm(null); store.deleteAllLocal(); }} data-testid="delete-all-yes">Delete everything this game keeps here</button>
+            <button className="btn" onClick={() => setConfirm(null)}>Keep it</button>
+          </>
+        ) : <button className="btn" onClick={() => setConfirm('all')} data-testid="delete-all">Delete everything on this device…</button>}
+      </div>
+    </div>
   );
 }
 
@@ -557,7 +665,7 @@ export function Credits() {
         <h1 style={{ marginTop: '0.8rem' }}>Credits</h1>
         <p>Design, code, procedural art and procedural audio: original, made for this project. No external art, music, fonts or sound files are used — every sprite is drawn in code and every sound is synthesised in your browser.</p>
         <p>Built with React, Three.js, TypeScript and Vite. The simulation is a pure deterministic TypeScript engine; the same engine powers the browser game, the bot tournaments and the MCP agent server.</p>
-        <p className="muted small">Privacy: the game makes no network requests and sets no cookies. Saves and settings live in your browser’s local storage.</p>
+        <p className="muted small">Privacy: Classic play makes no network requests, and the game sets no cookies. Saves and settings live in your browser’s local storage. In a Generative run, online reading (off until you turn it on and accept its notice) sends what that notice lists to this game’s server.</p>
       </div>
     </main>
   );

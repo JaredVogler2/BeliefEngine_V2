@@ -9,86 +9,149 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **03 Provider, auth and budgets: VERIFIED with mocks, a real Redis and an offline `vercel build`. LIVE: UNVERIFIED** (no
   credential exists here; `npm run ai:smoke` refuses and exits 2). **NOT DEPLOYED** (no Vercel project). Details:
   [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md).
-- **04 Generative belief language: NOT STARTED. It is the next task (below)**, together with the executor core of phase 06,
-  because the phase 04 gate asks for novel claims that are "mechanically testable".
+- **04 Generative belief language: VERIFIED** (engine gate). Reference: [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md).
+- **05 Interpreter and compiler: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Generalisation (second held-out corpus,
+  scored untuned): 51/80 labels, 13/30 supported sentences read faithfully; V1's composer on the same sentences: 34/80 and 3/30.
+- **06 Simulation primitives: VERIFIED (gate)**; hens, stones and the raised bank are drawn in 3D and on the classic map (phase 09).
+  Stated limits: turned-aside floodwater is not conserved elsewhere; faster growth has no water demand.
+- **07 Agent cognition and memory: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Reference: [`MINDS.md`](MINDS.md).
+- **08 Multi-agent social dynamics: VERIFIED offline and with mocks; LIVE UNVERIFIED** (the gate's "one real provider run makes
+  faction behaviour observably different" needs a credential). Reference: [`MINDS.md`](MINDS.md) §6.
+- **09 Belief-to-reality bridge: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Reference: [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md).
+- **V1's 3D work (JaredVogler2/BeliefEngine#2 and JaredVogler2/BeliefEngine#3) is merged** into V2 (`08877e7`).
+- **10 3D visual effects: IN PROGRESS.** The effect registry and three physical laws drawn as the engine computed them are
+  **VERIFIED** (unit tests over the recorded chains; both 3D browser suites, 46 passed). The gate's "looks like premium real-time
+  gameplay" is **NOT MET** by my own reading (daylight diorama; the art stages 1-9 of [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md)
+  remain); GPU and phone frame times **UNVERIFIED**. Reference: [`3D_EFFECTS.md`](3D_EFFECTS.md).
+- **11 Generative gameplay and balance: VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds
+  strategic variety" needs a provider). Written-belief rules 2 are recorded per run (older runs keep rules 1 and replay exactly).
+  Reference: [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md); tournament reports in [`data/tournament-v2/`](data/tournament-v2/).
+- **12 Desktop and iPhone UX: VERIFIED in Chromium** (desktop 1366×768, the phone profile and four iPhone sizes); WebKit, the
+  iPhone 14 profile and Firefox run the new Generative Reality smoke in CI only; **real iPhone Safari UNVERIFIED**; the dialog
+  staying above the iOS keyboard UNVERIFIED (no device). Reference: [`UX_V2.md`](UX_V2.md).
+- **13 MCP and tool play: VERIFIED locally** (stdio, the official SDK client, on the browser's hash); online reading through MCP
+  **TESTED MOCK ONLY**; a model-powered V2 agent session NOT RUN; remote Streamable HTTP **NOT BUILT**. Reference: [`MCP_V2.md`](MCP_V2.md).
+- **14 Replay, persistence and evals: VERIFIED offline (gate met)**; LIVE evals not run. Reference: [`REPLAY_V2.md`](REPLAY_V2.md).
+- **15 Security, privacy, cost and failure: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
-Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2`, on top of `main@534448e` (phases 01-02 merged as
-JaredVogler2/BeliefEngine_V2#1). Phase 03 is the commit that adds `server/ai/`, `api/`, `src/ai/`, this file's update and
-[`AI_SETUP.md`](AI_SETUP.md).
+Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2`. JaredVogler2/BeliefEngine_V2#2 was merged into `main`
+at phase 03 (`d9312bc`); everything since is in the open follow-up JaredVogler2/BeliefEngine_V2#3 (`main` merged into the branch
+without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`; phases 04/06 (engine): `e33209b`; phase 05: `e093c4f` … `70575ad`; phase 07:
+`802dbe2` … `d842cc6`; phase 08: `e48a7ca`; V1 merge: `08877e7`, `1b7086b`; phase 09: `07e06f7` (engine) and the commit after it
+(browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
+matrix, docs, `39ab15b`); phase 11: `e9d6847` (rules 2, modes, tournament, docs); phase 12: the commit after `e9d6847` (menu,
+composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs: `49beb00`);
+phase 13: `6ba4996` (MCP V2 tools, error kinds, online reader, stdio proof, docs); phase 14: the commit after `6ba4996`
+(ledger, saves, replay check, privacy controls, evals).
 
-## Working files changed in phase 03
+## Working files changed in phase 14
 
-`server/ai/{config,crypto,store,session,budget,provider,sdk-provider,mock-provider,http,meter,app,vercel,dev-server}.ts`,
-`server/ai/tasks/{interpret-v1,npc}.ts`, `api/{ai-status,session,interpret-belief,npc-decision,ai-metrics}.ts`, `src/ai/client.ts`,
-`src/ui/play/Compose.tsx` (consent notice, source labels), `src/styles.css`, `src/v2/features.ts` (`serverInference: true`),
-`scripts/ai-live-smoke.ts`, `scripts/lib/redis-rest-shim.ts`, `scripts/check-bundle.ts` (bundle secret scan), `tsconfig.json`
-(`rewriteRelativeImportExtensions`, `api` included), `vercel.json` (rewrite excludes `/api/`), `vite.config.ts` (`/api` proxy),
-`playwright.config.ts` (simulator web server), `package.json` (`ai`, `zod` as dependencies; `dev:api`, `ai:smoke`),
-`.env.example`, `.github/workflows/ci.yml` (redis-server; `BE_REQUIRE_REDIS=1`). Removed: `server/interpreter.ts`,
-`server/vercel-function.example.ts`, `src/ui/interpreter.ts`. Tests: `tests/unit/ai-*.test.ts` (5 files), `tests/helpers/ai.ts`,
-rewritten `tests/unit/nl-online-client.test.ts`, trimmed `tests/unit/nl-llm.test.ts`, extended `tests/unit/no-unsafe-code.test.ts`,
-`tests/e2e/v2-online.spec.ts`.
+New: `src/engine/save/ledger.ts`, `src/engine/core/meta.ts`, `src/ui/ReplayCheck.tsx`, `scripts/verify-replay.ts`, `scripts/eval.ts`,
+`scripts/lib/npc-cases.ts`, `tests/unit/{ledger,ledger-save,evals}.test.ts`, `tests/fixtures/npc-cases-1.json`, `docs/REPLAY_V2.md`,
+`docs/data/evals/`, `docs/screenshots/v2-phase14/`. Changed: `src/engine/core/{session,actions,types}.ts` (the ledger in the session;
+`InferenceMeta` cleaned before it is recorded), `src/engine/save/serialize.ts` (the ledger beside the state), `src/engine/index.ts`,
+`src/ui/store.ts` (save/restore the ledger, delete game/everything), `src/ui/screens.tsx` (replay check, Your data, Restart keeps the
+mode, Credits line), `src/ui/play/RealityCompose.tsx` (online metadata), `mcp/service.ts` (run files carry and verify the ledger;
+export_replay returns it), `tests/e2e/v2-bridge.spec.ts`, `tests/e2e/v2-ux.spec.ts`, `tests/unit/mcp-v2.test.ts`, `package.json`
+(`npm run eval`).
+
+## Working files changed in phase 13
+
+New: `mcp/v2.ts` (variants, error kinds, reading/region/object/graph/rule views), `mcp/online.ts` (the inference service in-process,
+off by default), `tests/unit/mcp-v2.test.ts`, `tests/unit/mcp-v2-stdio.test.ts`, `scripts/mcp-v2-session.ts`, `docs/MCP_V2.md`,
+`docs/data/mcp/v2-hens-session.md`. Changed: `mcp/service.ts` (the tools), `mcp/server.ts` (registrations, async runner, the online
+reader from the environment), `mcp/guide.ts` (rules and tool guide for V2), `docs/MCP.md` (pointer).
+
+## Working files changed in phase 12
+
+New: `src/ui/play/TellFirst.tsx` (who tells it first), `src/ui/viewport.ts` (visual viewport → `--vvh`/`--vvt`),
+`tests/e2e/v2-ux.spec.ts`, `docs/UX_V2.md`, `docs/screenshots/v2-phase12/`. Changed: `src/ui/play/RealityCompose.tsx` (draft kept in
+`store.ui.realityDraft`, Stop, manual retry, the tell-first step), `src/ui/play/Panels.tsx` (villager glance, `showEvent`, the log's
+focused event), `src/ui/screens.tsx` (menu modes, reading explainer, New seed keeps the mode), `src/ui/store.ts` (`realityDraft`,
+`keepDraft`, `logFocus`), `src/ui/play/Provenance.tsx` (what it cost), `src/ai/client.ts` (a player's Stop ends as `cancelled`),
+`src/engine/core/selectors.ts` (`BeliefView.whyEvent`), `src/engine/reality/provenance.ts` (`harm`), `src/engine/progress/options.ts`
+(`v2ModeOf`), `src/main.tsx`, `src/styles.css`, the three V2 specs that write a belief (they close the new step), `smoke.spec.ts`
+(a Generative Reality run for CI's WebKit/iPhone/Firefox), `tests/unit/{ai-reality-client,belief-bridge}.test.ts`.
+
+## Working files changed in phase 11
+
+New: `src/engine/reality/{demonstrate,twin,harm}.ts`, `src/engine/ai/bots/reality.ts`, `scripts/tournament-v2.ts`,
+`tests/unit/gameplay-v2.test.ts`, `tests/e2e/v2-modes.spec.ts`, `tests/fixtures/v2-bridge-traces-rules1.json` (the phase 09 chains
+as recorded under rules 1), `docs/GAMEPLAY_V2.md`, `docs/data/tournament-v2/`, `docs/screenshots/v2-phase11/`. Changed:
+`reality/{balance,build,read,state}.ts` (rules 2, the authored floor, every-hamlet beliefs, demonstrations), `core/{actions,create,
+memory,resolve,types}.ts` (`stagingOmen`, `realityRules`/`living` options, `law_harmed` memories, the harm step), `mind/{claims,
+decide,types}.ts` (leaders against harm, six thinkers in a Living Village), `progress/{progress,types,options}.ts` (records per mode,
+invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging omens), `ui/play/{Hand,Panels}.tsx`, `ui/screens.tsx`,
+`tests/fixtures/v2-bridge-traces.json` (re-recorded under rules 2), `tests/unit/{belief-bridge,reality-properties}.test.ts`, docs.
 
 ## Commands run and exact results
 
-In [`PROGRESS.md`](PROGRESS.md) (phase 03 entry): typecheck, lint, 400/400 unit tests with `BE_REQUIRE_REDIS=1`, build, size,
-verify:hosting, the online-reading browser spec 4/4, the full Playwright suite, an offline `vercel build` whose functions were run
-with plain Node, and `npm run ai:smoke` (LIVE: UNVERIFIED).
+Phase 14 (entry in [`PROGRESS.md`](PROGRESS.md)): `npm test` 56 files, 641 tests (two timing-sensitive ones need a quiet machine);
+the whole Chromium suite 192 passed, 72 skipped, 0 failed; `npm run eval` (report in `docs/data/evals/`). Phase 13 (entry in [`PROGRESS.md`](PROGRESS.md)): the MCP tests 62 passed (V1's 45 unchanged); the stdio proof ends on the
+browser's state hash; `npm test` 52 files, 625 passed. In [`PROGRESS.md`](PROGRESS.md) (phase 12 entry): typecheck and lint pass; `npm test` 50 files, 608 passed; `v2-ux.spec.ts` and
+`smoke.spec.ts` 21 passed (7 skipped by design); the whole Chromium suite 189 passed, 71 skipped, 0 failed; size: entry 292 KB gzip
+of 300; V1 golden hashes unchanged (Classic engine untouched).
 
 ## Mock vs LIVE model tests
 
-Every inference test used a scripted provider or the AI SDK's `MockLanguageModelV4`: **TESTED MOCK ONLY**. **LIVE: UNVERIFIED.**
+Every model-facing test used a scripted provider or the offline policy standing in for a model: **TESTED MOCK ONLY**.
+**LIVE: UNVERIFIED.** Executing ASTs and running villager minds needs no model.
 
 ## Screenshots and browser/device
 
-[`screenshots/v2-phase03/`](screenshots/v2-phase03/): the composer's consent notice and a simulated reading (desktop 1366x768,
-phone 390x844), from the production build in headless Chromium with the local simulator. No real phone, Safari or GPU.
+[`screenshots/v2-phase12/`](screenshots/v2-phase12/), production build, Chromium: the main menu (desktop, phone), the reality tab with
+the reading explainer, who tells it first (desktop and 320/375/390/430 wide), the composer preview at each phone width, the villager
+glance, the log opened by "Why?", and the outage fallback. [`screenshots/v2-phase11/`](screenshots/v2-phase11/): the mode screen, a Living Village conversation, a written belief offered for
+staging at the bell tower (desktop and phone, production build). [`screenshots/v2-phase10/`](screenshots/v2-phase10/): the 3D effect
+matrix. [`screenshots/v2-phase09/`](screenshots/v2-phase09/), from the production build: the composer's full preview (desktop, and the
+compound rain belief on desktop and phone), the law ledger's provenance, the debrief's provenance, the classic map with the hens a law
+saved and the raised bank, and the same states in the 3D world (desktop-3d, phone-3d; software WebGL). Earlier phases:
+[`v2-phase08/`](screenshots/v2-phase08/), [`v2-phase07/`](screenshots/v2-phase07/).
 
 ## Known blockers and risks
 
 1. **No credential, no deployment.** Every LIVE item stays UNVERIFIED until the owner privately sets the variables in
    [`AI_SETUP.md`](AI_SETUP.md) and runs `npm run ai:smoke`; deployment needs the owner's authorisation (no Vercel project exists).
-   Not a blocker for phases 04-06, which are offline engine work.
-2. **V1's pull request JaredVogler2/BeliefEngine#2 (3D part 2) is not in V2.** Merge it before touching `src/render3d/` or
-   `src/ui/play/` heavily (procedure at the end of this file). Phases 04-06 add engine code and only small UI hooks.
-3. **3D tests are slow on a software rasteriser** (≈3 fps): keep new 3D browser tests short; long traces behind `BE_SLOW_3D=1`.
-4. V1 defects D7, D8, D9 ([`V1_AUDIT.md`](V1_AUDIT.md) §12) are still open.
+   Phase 08's gate asks for one real provider run making faction behaviour observably different from the policy; it is marked
+   LIVE UNVERIFIED.
+2. **V2 balance** (phase 11): written beliefs now decide chapters (Redbank 27/30, Harvest 28/30, Ashwood 21/30 for the best written
+   plan); the strongest written law in each chapter does what one of the chapter's own stories does (priced at least as high);
+   Harvest's growth belief leaves about 3.5 idle days once it holds (dead time). Generated villages were not in the tournament.
+   Classic is unchanged.
+3. **Entry bundle**: 292 of 300 KB gzip (phase 12 added the glance, the viewport tracker and the menu). New V2 engine code ships in the entry (it must be present wherever a day resolves). If
+   headroom runs out, move the V2-only engine to a chunk installed before any V2 run starts (a hook in `resolve.ts`), never after.
+4. **V1's later 3D work is merged**; any further V1 change would merge the same way (procedure at the end of this file). CI now
+   has a separate 3D job (software WebGL, about 30-45 minutes).
+5. **3D tests are slow on a software rasteriser** (≈3 fps): keep new 3D browser tests short; long traces behind `BE_SLOW_3D=1`.
+6. V1 defects D7, D8, D9 ([`V1_AUDIT.md`](V1_AUDIT.md) §12) are still open.
+7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
+   richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phases 04 + 06 core)
+## Next exact code changes (phase 15: security, privacy, cost and failure)
 
-The design, decided now so the next session does not re-derive it:
+[`../prompts/15_SECURITY_PRIVACY_COST_AND_FAILURE.md`](../prompts/15_SECURITY_PRIVACY_COST_AND_FAILURE.md). Most controls exist
+since phase 03 (`server/ai/app.ts`: signed sessions, origin checks, durable atomic quotas that fail closed, spend reservations, size
+limits, one request at a time, a validated-only cache); the phase is an adversarial pass with evidence:
 
-- **Where state lives.** A Generative Reality run is created with a new option (`reality: true`) that adds `s.v2` (language version,
-  entities, applied effects). Classic runs never have `s.v2`, and V1 claims never have the new field, so every V1 hash is
-  unchanged (`canonicalize` drops absent keys; the tripwire in `tests/unit/v2-migration.test.ts` must not move).
-- **The language** (`src/engine/reality/`): `ontology.ts` (entity kinds and properties from the real scene and simulation, each
-  marked *simulated and visible*, *logical only* or *unsupported*), `ast.ts` (AST v2: literal text, author, source provenance,
-  day, language version, regions, 1-3 clauses of trigger + optional condition + selector + effect + duration, explicit omissions,
-  narrative kept apart; strict validator, canonical form, hash), `operators.ts` (registry: units, legal targets, ranges, tick
-  order, cost weight, log text, persistence), `v1.ts` (every V1 `RuleSpec` → AST v2), `balance.ts` (power from magnitude, reach,
-  duration, trigger ease and scope → support thresholds, AP and upkeep).
-- **The executor**: `execute.ts` runs at night after `computeModifiers` in `core/resolve.ts`, only when `s.v2` exists: evaluate
-  triggers (bell rung, beacon lit, smoke fire, rain, night, watchers...), resolve selectors to bounded targets, collect intents,
-  resolve opposite pushes by support-weighted sum (never update order), then write V1 `Modifiers` fields (so the existing hazard
-  code carries the physical consequences) and entity/world state, with an event per change. A property test must show that a V1
-  claim translated to AST v2 yields exactly V1's `computeModifiers` output.
-- **New entities** (`entities.ts`, generative runs only): **chickens** (coops near homes; forage by day, roost at night, drown in
-  floodwater and are taken by wolves unless airborne; eggs feed the village) and **loose stones** (mass, wetness; light stones near
-  workers are hauled to the riverbank and raise it; light stones in floodwater are carried downstream against the bridge).
-- **Three proof claims** to make executable first: "Chickens fly when the bell rings" (Redbank: lift at the belltower; survive
-  the flood night; wind drift strands some across the river), "Wet stone becomes light beside lanterns" (compound condition;
-  hauling raises the bank; the downside batters the bridge), "At night, bell ringing pulls rain toward the orchard and makes local
-  flames burn weaker" (compound clause: rain redistribution plus fire damage cut; "orchard" grounds to Redbank's fields, with a
-  note saying so).
-- Then the ≥150-sentence adversarial corpus as a versioned fixture (`tests/fixtures/reality-corpus-1.json`) with expected labels,
-  which phase 05's offline reader and the model contract (`interpret v2`) are scored against.
+1. **Threat model and chaos suite** (`tests/unit/security-*.test.ts`): provider missing, 429, 401, timeout, partition, invalid model
+   id, malformed or refused output, over budget, poisoned cache, quota store outage, double-tap, concurrent stale request, closed
+   session, deeply nested AST, 10k entities, expensive compound rules; 100 parallel requests from several app instances on one quota
+   store must not bypass a limit; CORS/CSRF, content types, response caching, run ownership. Unicode/BiDi, HTML and hidden payloads in
+   beliefs, dialogue, imported saves/replays and MCP inputs.
+2. **Physics limits**: AST depth, target counts, radius, per-night execution time and memory budgets enforced and tested (Lab relaxes
+   balance, never compute limits).
+3. **Secrets**: a CI secret scan (no key patterns in the tree or the built bundle; no `VITE_` AI variables); `.env.example` names only.
+4. **Cost monitor**: the operator metrics route and a dev monitor (calls, tokens, spend by model, cache hits, quota counters, p95,
+   fallbacks, budget).
+5. Docs: `docs/SECURITY.md`, `docs/PRIVACY.md`, `docs/COST_AND_QUOTAS.md` (configuration steps, mocked vs live evidence, limits).
 
 ## Parallel track: the 3D world
 
-[`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md): stage 0 (merge V1's 3D pull request), stage 1 (draw packs, fire,
-smoke, forecast, lens and labels in 3D), stage 2 (time of day). Phase 10 needs chickens and stones drawn in 3D.
+[`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md): stage 0 (merge V1's 3D work) is done; stage 1 (draw packs, fire,
+smoke, forecast, lens and labels in 3D) and stage 2 (time of day) remain, and with them phase 10's "premium" bar. Written laws'
+effects are drawn and animated from logged events (phase 10, [`3D_EFFECTS.md`](3D_EFFECTS.md)).
 
 ## What MUST NOT be rewritten
 
@@ -96,7 +159,12 @@ smoke, forecast, lens and labels in 3D), stage 2 (time of day). Phase 10 needs c
 `RULES_VERSION`, re-record, update the tripwire, say why); `GameSession` as the only mutation path; the `WorldRenderer` observer
 contract; save, archive, catalog and MCP run formats, the MCP server name and resources, `localStorage` keys; the offline composer
 as the Classic reader and fallback; the `server/ai` checks order (cheap before paid, fail closed) and the no-request-before-consent
-rule in `src/ai/client.ts`.
+rule in `src/ai/client.ts`; villager minds as data the engine records (a model proposes decisions and voices answers, never
+writes memories, beliefs or trust); the reality language's closed vocabulary (a new operator, kind or trigger is a language version bump,
+`reality-2`, never a silent change to `reality-1`, whose saves must keep replaying), the executor's order independence and
+support-weighted conflicts, and V1 laws running on V1's executor in every run; the written-belief rules versions (a change to how
+written beliefs are priced, staged or punished is a new `REALITY_RULES`, gated by `realityRules(s)`, never a silent change to an
+existing version: every run records its version and older runs must replay exactly).
 
 ## Private configuration needed (names only, never values)
 
@@ -109,16 +177,18 @@ an issue, a commit or a `VITE_` variable. Steps: [`AI_SETUP.md`](AI_SETUP.md).
 
 Application cap: $1.00 per UTC day (default), 3,000 calls per day. Usage so far: 0 calls, 0 tokens, $0.
 
-## Merging V1's 3D part-2 pull request (JaredVogler2/BeliefEngine#2) when it lands
+## Merging later V1 changes
+
+V1's `main` up to `22b7b1c` (JaredVogler2/BeliefEngine#2 and JaredVogler2/BeliefEngine#3) was merged on 2026-10-28 as ordinary
+history (`08877e7`). Anything newer merges the same way:
 
 ```bash
-git fetch https://github.com/JaredVogler2/BeliefEngine main    # after JaredVogler2/BeliefEngine#2 is merged there
-git merge FETCH_HEAD                                           # common ancestor 6a92862: ordinary history
+git fetch https://github.com/JaredVogler2/BeliefEngine main
+git merge FETCH_HEAD
 ```
 
-A trial merge of JaredVogler2/BeliefEngine#2's head (`37ed18a`), made in a scratch copy before phase 03, conflicted in exactly four
-files (`README.md`: keep V2's, carry V1's edits into `docs/v1/README.md`; `docs/PROGRESS.md`: keep V2's, carry V1's entries into
-`docs/v1/PROGRESS.md`; `docs/3D_VISUAL_STANDARD.md`: keep V2's, save V1's as `docs/v1/3D_VISUAL_STANDARD.md`; `docs/ASSETS.md`:
-take V1's new rows, keep the three.js runtime line). Phase 03 touched `src/ui/play/Compose.tsx` and `src/styles.css`, so re-check
-those two. Then regenerate the licence inventories (`npx tsx scripts/licenses.ts [--prod] --write`), run the unit suite (the
-tripwire must not move), both 3D browser suites, the 2D suite, and recapture the visual matrix.
+Last time the conflicts were `README.md` (keep V2's; V1's goes to `docs/v1/README.md` with links re-pointed), `docs/PROGRESS.md`
+(keep V2's; V1's entries appended to `docs/v1/PROGRESS.md`), the three `docs/3D_*.md` (keep V2's; V1's saved under `docs/v1/`),
+`docs/ASSETS.md`, the licence inventories (regenerate: `npx tsx scripts/licenses.ts [--prod] --write`), `src/styles.css` (keep both),
+`src/ui/play/Hand.tsx` and `Play.tsx` (V1's HUD with V2's reality button and lazy composer). Then the unit suite (the tripwire must
+not move), the classic suite, both 3D suites, and V2's own specs.

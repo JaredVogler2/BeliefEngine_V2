@@ -55,7 +55,7 @@ export interface Limits {
   sessionTtlMs: number;
   callsPerDay: number;
   timeoutMs: Record<Tier, number>;
-  maxOutputTokens: { interpret: number; npc: number };
+  maxOutputTokens: { interpret: number; interpretV2: number; npc: number };
   leaseMs: number;
   cacheTtlMs: number;
 }
@@ -76,7 +76,7 @@ export const DEFAULT_LIMITS: Limits = {
   sessionTtlMs: 2 * 3600_000,
   callsPerDay: 3_000,
   timeoutMs: { fast: 10_000, accurate: 15_000 },
-  maxOutputTokens: { interpret: 1_200, npc: 1_400 },
+  maxOutputTokens: { interpret: 1_200, interpretV2: 2_400, npc: 1_400 },
   leaseMs: 30_000,
   cacheTtlMs: 7 * 24 * 3600_000,
 };
