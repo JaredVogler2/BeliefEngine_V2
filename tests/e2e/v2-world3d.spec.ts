@@ -64,7 +64,8 @@ test.describe('3D world (Three.js, forced on)', () => {
     // pick Ivo Thatcher by pointing at him in the 3D scene: the raycast answers with an engine id, the store selects it
     const at = await villagerOnPage(page, 'ivo');
     await page.mouse.click(at.x, at.y - 4);
-    await expect(page.getByTestId('villager-card')).toContainText('Ivo Thatcher');
+    // the card beside the selection (V1's immersive HUD) names them and holds the quick actions
+    await expect(page.getByTestId('selection-pop')).toContainText('Ivo Thatcher');
     await page.locator('.act', { hasText: 'Tell Ivo Thatcher' }).first().click();
     await expect.poll(() => page.evaluate(() => (window as unknown as { __beRenderer: R3D }).__beRenderer.stats().effects), { message: 'telling a story puts an effect in the world' }).toBeGreaterThan(0);
 
