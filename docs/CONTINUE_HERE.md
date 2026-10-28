@@ -23,7 +23,10 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
   **VERIFIED** (unit tests over the recorded chains; both 3D browser suites, 46 passed). The gate's "looks like premium real-time
   gameplay" is **NOT MET** by my own reading (daylight diorama; the art stages 1-9 of [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md)
   remain); GPU and phone frame times **UNVERIFIED**. Reference: [`3D_EFFECTS.md`](3D_EFFECTS.md).
-- **11 Generative gameplay and balance: next (below).**
+- **11 Generative gameplay and balance: VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds
+  strategic variety" needs a provider). Written-belief rules 2 are recorded per run (older runs keep rules 1 and replay exactly).
+  Reference: [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md); tournament reports in [`data/tournament-v2/`](data/tournament-v2/).
+- **12 Desktop and iPhone UX: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
@@ -32,23 +35,24 @@ at phase 03 (`d9312bc`); everything since is in the open follow-up JaredVogler2/
 without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`; phases 04/06 (engine): `e33209b`; phase 05: `e093c4f` … `70575ad`; phase 07:
 `802dbe2` … `d842cc6`; phase 08: `e48a7ca`; V1 merge: `08877e7`, `1b7086b`; phase 09: `07e06f7` (engine) and the commit after it
 (browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
-matrix, docs).
+matrix, docs, `39ab15b`); phase 11: the commit after `39ab15b` (rules 2, modes, tournament, docs).
 
-## Working files changed in phase 09
+## Working files changed in phase 11
 
-New: `src/engine/reality/{preview,project,provenance}.ts`, `src/render/reality2d.ts`, `src/render3d/reality.ts`,
-`src/ui/play/Provenance.tsx`, `scripts/record-bridge.ts`, `tests/fixtures/v2-bridge-traces.json`, `tests/unit/belief-bridge.test.ts`,
-`tests/e2e/v2-bridge.spec.ts`, `docs/BELIEF_TO_REALITY.md`, `docs/screenshots/v2-phase09/`. Changed: `reality/{execute,entities,
-build,operators,read,state}.ts`, `laws/effects.ts` (sinks carry their laws), `world/hazards.ts` (pooled water names its law),
-`ai/routines.ts` (prediction includes written beliefs), `render/{MapRenderer,types}.ts`, `render3d/{snapshot,layers,World3D}.ts`,
-`ui/play/{RealityCompose,Panels}.tsx`, `ui/screens.tsx` (debrief provenance; a generated village in the reality tab),
-`tests/e2e/v2-world3d.spec.ts`, `tests/unit/reality-language.test.ts`, docs.
+New: `src/engine/reality/{demonstrate,twin,harm}.ts`, `src/engine/ai/bots/reality.ts`, `scripts/tournament-v2.ts`,
+`tests/unit/gameplay-v2.test.ts`, `tests/e2e/v2-modes.spec.ts`, `tests/fixtures/v2-bridge-traces-rules1.json` (the phase 09 chains
+as recorded under rules 1), `docs/GAMEPLAY_V2.md`, `docs/data/tournament-v2/`, `docs/screenshots/v2-phase11/`. Changed:
+`reality/{balance,build,read,state}.ts` (rules 2, the authored floor, every-hamlet beliefs, demonstrations), `core/{actions,create,
+memory,resolve,types}.ts` (`stagingOmen`, `realityRules`/`living` options, `law_harmed` memories, the harm step), `mind/{claims,
+decide,types}.ts` (leaders against harm, six thinkers in a Living Village), `progress/{progress,types,options}.ts` (records per mode,
+invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging omens), `ui/play/{Hand,Panels}.tsx`, `ui/screens.tsx`,
+`tests/fixtures/v2-bridge-traces.json` (re-recorded under rules 2), `tests/unit/{belief-bridge,reality-properties}.test.ts`, docs.
 
 ## Commands run and exact results
 
-In [`PROGRESS.md`](PROGRESS.md) (phase 09 entry): typecheck and lint pass; `BE_REQUIRE_REDIS=1 npm test` 48 files, 576 passed;
-`v2-bridge.spec.ts` 7 passed (5 skipped by design); `v2-world3d.spec.ts` on the 3D projects 7 passed; after the V1 merge the
-classic suite 160 passed and the 3D suites 39 passed (+2 fixed); size: entry 285 KB gzip of 300; V1 golden hashes unchanged.
+In [`PROGRESS.md`](PROGRESS.md) (phase 11 entry): typecheck and lint pass; `npm test` 50 files, 607 passed; the V2 tournament at
+30 seeds under both rule sets (the table in the entry); `v2-modes.spec.ts` 4 passed; the V2 browser specs and the re-recorded
+`v2-bridge.spec.ts` green; size: entry 289 KB gzip of 300; V1 golden hashes unchanged.
 
 ## Mock vs LIVE model tests
 
@@ -57,7 +61,9 @@ Every model-facing test used a scripted provider or the offline policy standing 
 
 ## Screenshots and browser/device
 
-[`screenshots/v2-phase09/`](screenshots/v2-phase09/), from the production build: the composer's full preview (desktop, and the
+[`screenshots/v2-phase11/`](screenshots/v2-phase11/): the mode screen, a Living Village conversation, a written belief offered for
+staging at the bell tower (desktop and phone, production build). [`screenshots/v2-phase10/`](screenshots/v2-phase10/): the 3D effect
+matrix. [`screenshots/v2-phase09/`](screenshots/v2-phase09/), from the production build: the composer's full preview (desktop, and the
 compound rain belief on desktop and phone), the law ledger's provenance, the debrief's provenance, the classic map with the hens a law
 saved and the raised bank, and the same states in the 3D world (desktop-3d, phone-3d; software WebGL). Earlier phases:
 [`v2-phase08/`](screenshots/v2-phase08/), [`v2-phase07/`](screenshots/v2-phase07/).
@@ -68,9 +74,10 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
    [`AI_SETUP.md`](AI_SETUP.md) and runs `npm run ai:smoke`; deployment needs the owner's authorisation (no Vercel project exists).
    Phase 08's gate asks for one real provider run making faction behaviour observably different from the policy; it is marked
    LIVE UNVERIFIED.
-2. **V2 chapter balance moved** with minds (Harvest Moonlight 4/10 → 9/10, Ashwood Decoy 4/10 → 8/10, Smoke Ring 8/10 → 6/10;
-   doing nothing still loses everywhere), and **written beliefs are slow**: 6-9 days to law through the greedy bot, chapters last
-   7-9, so they rarely decide a chapter (a written flood ward never became law in Redbank). Phase 11 owns both; Classic is unchanged.
+2. **V2 balance** (phase 11): written beliefs now decide chapters (Redbank 27/30, Harvest 28/30, Ashwood 21/30 for the best written
+   plan); the strongest written law in each chapter does what one of the chapter's own stories does (priced at least as high);
+   Harvest's growth belief leaves about 3.5 idle days once it holds (dead time). Generated villages were not in the tournament.
+   Classic is unchanged.
 3. **Entry bundle**: 285 of 300 KB gzip. New V2 engine code ships in the entry (it must be present wherever a day resolves). If
    headroom runs out, move the V2-only engine to a chunk installed before any V2 run starts (a hook in `resolve.ts`), never after.
 4. **V1's later 3D work is merged**; any further V1 change would merge the same way (procedure at the end of this file). CI now
@@ -80,20 +87,23 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 11: an exciting strategy game, not a wish machine)
+## Next exact code changes (phase 12: complex generative play made intuitive on desktop and iPhone)
 
-[`../prompts/11_GENERATIVE_GAMEPLAY_AND_BALANCE.md`](../prompts/11_GENERATIVE_GAMEPLAY_AND_BALANCE.md). Measured before any change:
-under the current rules no written belief reaches law within a chapter (Redbank seed 1, every policy).
+[`../prompts/12_DESKTOP_IPHONE_UX.md`](../prompts/12_DESKTOP_IPHONE_UX.md). Start by walking the generative flow in the browser at
+1366×768 and on 320×568, 375×667, 390×844, 430×932 (Playwright WebKit as the iPhone stand-in; real iPhone Safari stays UNVERIFIED).
 
-1. **A Generative Reality tournament** (`scripts/tournament-v2.ts`, policies in `src/engine/ai/bots/reality.ts`): no-op, spam a broad
-   law, evidence-first, bridge-based persuasion, inventive compound, careful low-power synergy, rival antagonist (an adversarial
-   proposer through `NPC_DECIDE`), all through the same actions; AP, activation day, survival, collateral, reach, dead time, cost 0.
-2. **Balance written beliefs under a recorded rules version** (`s.v2.rules`, older runs keep 1 and replay exactly): thresholds nearer
-   authored laws of equal power; a belief that waits for a catalyst can be staged like an authored story, its omen read from what it
-   does (`reality/demonstrate.ts`). Find and fix one dominant free win.
-3. **Modes and strategic events**: Living Village beside Classic, Generative Chronicle and Reality Lab with separate records; a leader
-   who opposes a law that damages livelihoods; trust as the price of hazardous magic; counterfactual retry on failure.
-4. Gate evidence: two very different creative laws viable, a third that can backfire, a win/lose arc in a reasonable session.
+1. **Main menu**: Classic (offline), Generative Reality (with the model requirement, consent and cost said plainly; offline reader
+   when the backend is not configured), Living Village, Reality Lab, Continue. Never a "live" label on a stub.
+2. **Generative flow**: the composer from a compact tray; region or landmark selector; "understand" with a cancel and a timeout, no
+   retry loops; the preview already shows said/can-do, clauses, omissions, strength, evidence, targets, threshold and side effects
+   (phase 09) — check it fits a phone; then choose the first villager in 3D or a roster with the AP cost confirmed.
+3. **Villager card**: what they think, why, who told them, persuadable or not, what you can say, their next move, one "Why?" link
+   to the source event; recorded dialogue replayed without new calls.
+4. **Phone**: safe areas, dynamic viewport, 44 px targets, the software keyboard never hiding the composer, orientation change
+   keeping the draft and the run revision, no world gesture submitting anything.
+5. **Outage**: "Online interpretation unavailable; use the offline composer", no Influence lost, live dialogue disabled honestly.
+6. E2E on desktop Chromium and WebKit phone: start, write, choose, seed, advance, inspect, law and effect, save, reload, win or lose,
+   retry; keyboard and screen-reader audit; reduced motion; orientation and keyboard tests.
 
 ## Parallel track: the 3D world
 
@@ -110,7 +120,9 @@ as the Classic reader and fallback; the `server/ai` checks order (cheap before p
 rule in `src/ai/client.ts`; villager minds as data the engine records (a model proposes decisions and voices answers, never
 writes memories, beliefs or trust); the reality language's closed vocabulary (a new operator, kind or trigger is a language version bump,
 `reality-2`, never a silent change to `reality-1`, whose saves must keep replaying), the executor's order independence and
-support-weighted conflicts, and V1 laws running on V1's executor in every run.
+support-weighted conflicts, and V1 laws running on V1's executor in every run; the written-belief rules versions (a change to how
+written beliefs are priced, staged or punished is a new `REALITY_RULES`, gated by `realityRules(s)`, never a silent change to an
+existing version: every run records its version and older runs must replay exactly).
 
 ## Private configuration needed (names only, never values)
 

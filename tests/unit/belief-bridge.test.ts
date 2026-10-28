@@ -39,6 +39,20 @@ function play(key: (typeof CHAINS)[number]): RunState {
 }
 const events = (s: RunState, code: string, claim?: string) => s.log.filter((e) => e.code === code && (claim === undefined || e.claim === claim));
 
+describe('older runs keep replaying exactly (written-belief rules 1)', () => {
+  // the same chains as recorded before phase 11 changed the balance: their run options carry realityRules 1, and each must still end
+  // on the very hash it was recorded with
+  const old = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces-rules1.json', import.meta.url), 'utf8')) as Record<string, Trace>;
+  it.each(CHAINS)('%s, as recorded under rules 1, replays to its recorded hash', (key) => {
+    const t = old[key];
+    expect(t.opts.realityRules).toBe(1);
+    const r = replayRun({ ...t.opts, actions: t.actions });
+    expect(r.rejected).toEqual([]);
+    expect(r.stateHash).toBe(t.stateHash);
+    expect(r.eventHash).toBe(t.eventHash);
+  });
+});
+
 describe('each chain starts from the words and replays exactly', () => {
   it.each(CHAINS)('%s: the offline reader, in the live village, builds exactly the claim the trace wrote', (key) => {
     const t = fx[key];
@@ -201,13 +215,21 @@ describe('claim C, "At night, bell ringing pulls rain toward the orchard and mak
   it('through real persuasion (a nine-day village, held in Eastbank): the rain is moved onto Eastbank, the flames weaken, the hearths cool', () => {
     const s = play('rain');
     const id = fx.rain.claimId;
-    expect(s.laws.find((l) => l.claimId === id)!.activatedDay).toBe(9);
+    // law on day 8 of 9 under rules 2 (day 9 under rules 1): it acts on the last two nights
+    expect(s.laws.find((l) => l.claimId === id)!.activatedDay).toBe(fx.rain.lawDay);
+    expect(fx.rain.lawDay).toBe(8);
     const acts = events(s, 'REALITY_EFFECT', id);
     expect(acts.some((e) => /rain is called in toward Eastbank/.test(e.text))).toBe(true);
     expect(acts.some((e) => /flames burn weaker/.test(e.text) && /hearths warm less/.test(e.text))).toBe(true);
     const pooled = events(s, 'WATER_POOLED', id);
-    expect(pooled).toHaveLength(1);
-    expect(pooled[0].law).toBe(s.laws.find((l) => l.claimId === id)!.id);
+    expect(pooled.length).toBeGreaterThanOrEqual(1);
+    for (const p of pooled) expect(p.law).toBe(s.laws.find((l) => l.claimId === id)!.id);
+    // and the people it pooled water on remember who wrote it (rules 2: the price of hazardous magic), and the debrief's story says so
+    expect(events(s, 'LAW_HARMED', id).length).toBe(pooled.length);
+    const story = provenanceOf(s, id)!;
+    expect(story.steps.some((x) => x.kind === 'outcome' && /did harm/.test(x.text))).toBe(true);
+    const opposed = events(s, 'LEADER_OPPOSES', id);
+    if (opposed.length) expect(story.steps.some((x) => x.kind === 'opposed' && x.event === opposed[0].id)).toBe(true);
     // the river stood one step lower that night than the forecast, because the rain fell on Eastbank instead
     expect(s.world.level).toBe(s.threat[8].level - 1);
   });
@@ -324,8 +346,14 @@ describe('the preview tells the whole chain before anything is spent', () => {
     expect(x.plan[0].catalyst).toMatch(/bell/);
     expect(x.plan[0].ready.now).toBe(false);
     expect(x.plan[0].ready.why).toMatch(/ring the bell today/);
-    expect(x.threshold.percent).toBe(65);
+    // rules 2 (phase 11): 0.5 + power/200 rounded up to 5%; the same belief under rules 1 asked 65%
+    expect(x.threshold.percent).toBe(60);
     expect(x.threshold.voters).toBe(14);
+    const old = GameSession.create({ scenarioId: 'redbank', seed: 2, reality: true, realityRules: 1 });
+    old.act({ type: 'PICK_STARTER', claim: old.state.scn.starters[0] });
+    const r1 = readBelief(old.state, 'At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.');
+    if (r1.kind !== 'supported' || !r1.candidates[0].build.ok) throw new Error('rules 1 build');
+    expect(describeDraft(old.state, r1.candidates[0].build.draft).threshold.percent).toBe(65);
     expect(x.upkeep.join()).toMatch(/Ring the bell on each day/);
     expect(x.opposition.join()).toMatch(/skeptic|ask for a test|weighs the damage/);
     expect(c.build.draft.risks.join()).toMatch(/lowest dry tiles stand a tile deep/);

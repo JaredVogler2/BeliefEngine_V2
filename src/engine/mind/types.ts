@@ -178,6 +178,9 @@ export interface MindsState {
 }
 
 export const THINKERS_PER_DAY = 4;
+/** a Living Village gives more villagers a moment to think each day (the request to a model still carries at most six) */
+export const LIVING_THINKERS_PER_DAY = 6;
+export const thinkersPerDay = (s: { v2?: { living?: boolean } }): number => (s.v2?.living ? LIVING_THINKERS_PER_DAY : THINKERS_PER_DAY);
 export const MODEL_DECISIONS_PER_RUN = 120;
 
 export const MAX_EPISODES = 24;

@@ -29,7 +29,7 @@ export interface Provenance {
 }
 
 const TOLD = new Set(['RUMOR_SEEDED', 'GATHERING', 'MESSENGER_SENT', 'EVIDENCE_STAGED', 'KEEPER_TALKED', 'NPC_ACT']);
-const OPPOSED = new Set(['RUMOR_CHALLENGED', 'NPC_CLAIM_TELEGRAPHED', 'NPC_CLAIM_MADE', 'TEST_REQUESTED', 'TEST_FAILED', 'TEST_LAPSED', 'LIE_TOLD', 'BELIEVER_LOST', 'RIVAL_CAMPAIGN', 'LAW_SUPPRESSED', 'LAW_WAVERING', 'LAW_COLLAPSED']);
+const OPPOSED = new Set(['RUMOR_CHALLENGED', 'NPC_CLAIM_TELEGRAPHED', 'NPC_CLAIM_MADE', 'LEADER_OPPOSES', 'TEST_REQUESTED', 'TEST_FAILED', 'TEST_LAPSED', 'LIE_TOLD', 'BELIEVER_LOST', 'RIVAL_CAMPAIGN', 'LAW_SUPPRESSED', 'LAW_WAVERING', 'LAW_COLLAPSED']);
 /** physical changes a law makes, and what they did to the village */
 const CHANGED = new Set(['REALITY_EFFECT', 'REALITY_CONFLICT', 'FIRE_WARDS_COOLED', 'BANK_RAISED', 'STONE_RAMS_BRIDGE', 'STRAYS_FLEW_HOME', 'CHICKENS_ROSE', 'WATER_POOLED', 'FIELD_TENDED', 'CHICKS_HATCHED']);
 
@@ -65,6 +65,8 @@ export function provenanceOf(s: RunState, claim: string): Provenance | null {
       const th = def.spec.thresholds;
       steps.push({ kind: 'threshold', day: e.day, event: e.id, text: `${e.text}${e.code === 'LAW_ACTIVATED' ? ` (it needed ${Math.round(th.on * 100)}% and ${th.minSupporters} firm believers)` : ''}` });
     } else if (CHANGED.has(e.code)) steps.push({ kind: 'changed', day: e.day, event: e.id, text: e.text });
+    // the harm it did to people who live with it, and what that cost the Keeper (rules 2)
+    else if (e.code === 'LAW_HARMED') steps.push({ kind: 'outcome', day: e.day, event: e.id, text: e.text });
   }
   // what the changes did to the village: the hazards that night that the law's effects decided
   for (const e of s.log) {

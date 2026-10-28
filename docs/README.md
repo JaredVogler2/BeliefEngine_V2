@@ -17,6 +17,8 @@ the date and provenance before trusting a number: **only the V2 records were pro
 | [`AI_COSTS.md`](AI_COSTS.md) | phase 03: chosen models and catalog prices, per-call estimates (not measurements), the four spend limits |
 | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) | phases 04 and 06: the AST v2 belief language, its world vocabulary and operators, price, grounding, the night executor, the new entities and the V1 bridge |
 | [`MINDS.md`](MINDS.md) | phase 07: villager minds (personality, goals, memories with provenance), who thinks and what they can do, the model's `npc v2` contract, and conversations |
+| [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md) | phase 11: the V2 modes and their separate records, what a written belief costs (rules 2), demonstrations, the strategic events, the balance tournament (rules 1 vs 2), the exploit fixed and the gate |
+| [`data/tournament-v2/`](data/tournament-v2/) | phase 11: the Generative Reality tournament's reports (seven policies and two probes, three chapters, 30 seeds, both rule sets) |
 | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md) | phase 09: the whole chain from a typed sentence to a changed world (preview, confirmation, persuasion, threshold, catalyst, consequences, provenance), the three proof claims and what the measurements found |
 | [`3D_EFFECTS.md`](3D_EFFECTS.md) | phase 10: what written laws look like in 3D (the effect registry keyed by logged events, hens rising to the engine's height, the screenshot matrix, measured draw calls) and what is not met |
 | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md) | the art direction and the measurable visual bar for the 3D world |

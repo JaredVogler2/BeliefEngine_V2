@@ -1,3 +1,4 @@
+import { REALITY_RULES } from '../reality/state.ts';
 import type { ScenarioDef } from '../content/types.ts';
 import type { ClaimDef, Id } from '../core/types.ts';
 import { getRule } from '../laws/rules.ts';
@@ -170,6 +171,8 @@ export function optionsFromState(s: import('../core/types.ts').RunState): import
     // twists the player chose (as opposed to the ones a generated village drew from its seed)
     ...(s.flags.twisted ? { modifiers: mods } : {}),
     ...(s.flags.inventor ? { inventor: true } : {}),
-    ...(s.flags.reality === 2 ? { realityLab: true } : s.flags.reality === 1 ? { reality: true } : {}),
+    ...(s.flags.reality === 2 ? { realityLab: true } : s.flags.reality === 1 ? { reality: true } : s.flags.reality === 3 ? { living: true } : {}),
+    // a Generative Reality run made under older written-belief rules is recreated under them
+    ...(s.v2 && !s.v2.living && (s.v2.rules ?? 1) !== REALITY_RULES ? { realityRules: s.v2.rules ?? 1 } : {}),
   };
 }

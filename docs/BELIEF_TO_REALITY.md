@@ -29,13 +29,14 @@ Code: `src/engine/reality/` (`read`, `build`, `preview`, `execute`, `entities`, 
 
 Each chain below starts from the sentence typed into the composer and is spread by the same greedy, preview-driven bot the balance
 tournaments use (no belief is ever set). Replayed from its actions alone it gives the same state and event hashes; in the browser the
-same clicks end on the same hash.
+same clicks end on the same hash. The chains were re-recorded under phase 11's written-belief rules (2); as recorded under rules 1
+they are kept in `tests/fixtures/v2-bridge-traces-rules1.json` and still replay to their own hashes.
 
 | Claim | Village | Became law | What changed in the run | Outcome |
 |---|---|---|---|---|
 | A. "Chickens fly when the bell rings." | Redbank, seed 2 | day 6 (7 believers, 70%) | 22 hens rise two tiles on nights 6 and 7 and ride out water that would have drowned them; told once and never again (same seed, bell rung every day), nothing rises and every hen drowns | a complete loss: all Influence went to the hens, four villagers drowned |
-| B. "Wet stone becomes light beside lanterns." | Redbank, seed 3 | day 6 (8 believers, 72%) | two wet stones by the lit lantern weigh two loads less; a villager carries one to the bank; three tiles of bank stand higher for good and shield every later night | loss (the chapter's flood) |
-| C. "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker." | generated village x1.2, held in Eastbank | day 9, the last (7 believers, 80%) | the river stands one step lower; seven of Eastbank's lowest dry tiles stand a tile deep; fire damage there is cut and the hearths cool; a skeptic demanded to see it first and nobody showed them | loss |
+| B. "Wet stone becomes light beside lanterns." | Redbank, seed 3 | day 6 (8 believers, 74%) | two wet stones by the lit lantern weigh two loads less; a villager carries one to the bank; three tiles of bank stand higher for good and shield every later night | loss (the chapter's flood) |
+| C. "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker." | generated village x1.2, held in Eastbank | day 8 of 9 (8 believers, 70%; day 9 under rules 1) | the river stands one step lower; Eastbank's lowest dry tiles stand a tile deep (12, then 7); fire damage there is cut and the hearths cool; skeptics demanded to see it and nobody showed them; under rules 2 the people it flooded trust the Keeper less and a faction leader stands against it (phase 11) | loss |
 
 A complete win with the composer used: Redbank seed 1, the belief written and spread, the authored Fire Wall decides the chapter.
 
@@ -54,10 +55,11 @@ their weight.
 
 ## 4. What the measurements found
 
-- **Written beliefs are slow.** Through the greedy bot a written belief reaches law in 6-9 days; chapters last 7-9. A written flood
-  ward ("The river turns away from lit lanterns": strong, 70% and six believers) never became law in Redbank's seven days; a
-  written grain belief in Harvest became law on day 8 or 9, too late to feed anyone. Authored stories start with believers;
-  written ones start from nothing. Phase 11 (gameplay and balance) owns this.
+- **Written beliefs were slow (rules 1).** Through the greedy bot a written belief reached law in 6-9 days; chapters last 7-9. A
+  written flood ward ("The river turns away from lit lanterns": strong, 70% and six believers) never became law in Redbank's seven
+  days; a written grain belief in Harvest became law on day 8 or 9, too late to feed anyone. **Phase 11 changed this** (rules 2:
+  support nearer authored laws of equal power, demonstrations at a belief's catalyst): the same flood ward now wins 24-27 of 30
+  Redbank seeds ([`GAMEPLAY_V2.md`](GAMEPLAY_V2.md)).
 - **Claim C cannot become law in Redbank**: the chapter holds back rain answers until day 4 (V1's pacing rule against a written
   rain belief skipping the chapter's own) and C needs 65% of the whole village. It did in a nine-day generated village.
 - **Bugs fixed**: region-wide effects on the river commons (fire, crops, cold, sickness) were keyed to `river`, which the hazards

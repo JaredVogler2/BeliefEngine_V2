@@ -4,6 +4,7 @@ import { cloneState } from '../../src/engine/core/clone.ts';
 import { emptyModifiers } from '../../src/engine/laws/effects.ts';
 import { COND_TESTS, TAGS, TRIGGER_EVENTS, mechanicsHash, validateRealityAst, type RealityAst, type Trigger } from '../../src/engine/reality/ast.ts';
 import { MAX_POWER, balanceReality } from '../../src/engine/reality/balance.ts';
+import { authoredTwin } from '../../src/engine/reality/twin.ts';
 import { runRealityLaws } from '../../src/engine/reality/execute.ts';
 import { ANCHORS } from '../../src/engine/reality/ontology.ts';
 import { EXECUTABLE_OPS, OPERATORS, type OpId } from '../../src/engine/reality/operators.ts';
@@ -101,15 +102,31 @@ describe('the language holds its guarantees for any belief (seeded property test
         const again = validateRealityAst(JSON.parse(JSON.stringify(check.ast)));
         expect(again.ok).toBe(true);
         if (again.ok) expect(mechanicsHash(again.ast)).toBe(mechanicsHash(check.ast));
-        const b = balanceReality(check.ast);
+        // the run's own balance rules (2 for a run made now, with the floor of the chapter's own law that does the same thing);
+        // rules 1 keeps its bounds for older saves
+        const twin = authoredTwin(s, check.ast);
+        const floor = twin ? { short: twin.short, thresholds: twin.spec.thresholds, watchers: twin.spec.trigger.kind === 'watchers' ? (twin.spec.trigger.min ?? 1) : undefined } : null;
+        const b = balanceReality(check.ast, { rules: s.v2!.rules ?? 1, floor });
+        const b1 = balanceReality(check.ast, { rules: 1 });
         expect(b.power).toBeLessThanOrEqual(MAX_POWER);
         expect(Number.isFinite(b.power)).toBe(true);
-        expect(b.thresholds.on).toBeGreaterThanOrEqual(0.6);
-        expect(b.thresholds.on).toBeLessThanOrEqual(0.9);
+        expect(b.power).toBe(b1.power);
+        expect(b.apCost).toBe(b1.apCost);
+        expect(b.thresholds.on).toBeGreaterThanOrEqual(0.55);
+        expect(b.thresholds.on).toBeLessThanOrEqual(0.85);
+        expect(b.thresholds.on).toBeLessThanOrEqual(b1.thresholds.on);
+        expect(b1.thresholds.on).toBeGreaterThanOrEqual(0.6);
+        expect(b1.thresholds.on).toBeLessThanOrEqual(0.9);
         expect(b.thresholds.minSupporters).toBeGreaterThanOrEqual(2);
-        expect(b.thresholds.minSupporters).toBeLessThanOrEqual(8);
+        expect(b.thresholds.minSupporters).toBeLessThanOrEqual(7);
+        expect(b1.thresholds.minSupporters).toBeLessThanOrEqual(8);
         expect(validateRealityAst(b.ast).ok).toBe(true);
-        expect(balanceReality(check.ast)).toEqual(b);
+        expect(balanceReality(check.ast, { rules: s.v2!.rules ?? 1, floor })).toEqual(b);
+        // a copy never asks less than the law it copies
+        if (twin) {
+          expect(b.thresholds.on).toBeGreaterThanOrEqual(twin.spec.thresholds.on);
+          expect(b.thresholds.ramp).toBeLessThanOrEqual(twin.spec.thresholds.ramp);
+        }
         const built = buildRealityClaim(s, check.ast);
         if (built.ok) {
           stats.built++;

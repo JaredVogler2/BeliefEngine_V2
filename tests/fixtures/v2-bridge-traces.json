@@ -17,8 +17,8 @@
   "alive": 10,
   "hens": 22,
   "bank": 0,
-  "stateHash": "11446bf8caf00b",
-  "eventHash": "19784769060df0",
+  "stateHash": "0ce7238943cc8d",
+  "eventHash": "079499d360e1db",
   "actions": [
    {
     "type": "PICK_STARTER",
@@ -42,11 +42,11 @@
       "radius": 0,
       "intensity": 1,
       "thresholds": {
-       "on": 0.6,
-       "off": 0.45,
+       "on": 0.55,
+       "off": 0.4,
        "minSupporters": 3,
-       "ramp": 66,
-       "decay": 21
+       "ramp": 77,
+       "decay": 20
       },
       "upkeep": {
        "fuel": 0
@@ -60,6 +60,7 @@
      "regions": [
       "east"
      ],
+     "ritual": "ring_bells",
      "contradicts": [],
      "benefit": "When the bell is rung: chickens in Eastbank rise up to 2 tiles into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind).",
      "risk": "On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).",
@@ -109,7 +110,7 @@
       "hash": "12f5310edc0815",
       "power": 6,
       "rating": "light",
-      "checksum": "0e65a8b477fa95",
+      "checksum": "0628bddec74152",
       "rev": 3
      }
     }
@@ -249,8 +250,8 @@
   "alive": 10,
   "hens": 0,
   "bank": 0,
-  "stateHash": "14e16a337029d9",
-  "eventHash": "0409b31603c505",
+  "stateHash": "0adb9cbce41f61",
+  "eventHash": "0306ac30114cc3",
   "actions": [
    {
     "type": "PICK_STARTER",
@@ -274,11 +275,11 @@
       "radius": 0,
       "intensity": 1,
       "thresholds": {
-       "on": 0.6,
-       "off": 0.45,
+       "on": 0.55,
+       "off": 0.4,
        "minSupporters": 3,
-       "ramp": 66,
-       "decay": 21
+       "ramp": 77,
+       "decay": 20
       },
       "upkeep": {
        "fuel": 0
@@ -292,6 +293,7 @@
      "regions": [
       "east"
      ],
+     "ritual": "ring_bells",
      "contradicts": [],
      "benefit": "When the bell is rung: chickens in Eastbank rise up to 2 tiles into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind).",
      "risk": "On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).",
@@ -341,7 +343,7 @@
       "hash": "12f5310edc0815",
       "power": 6,
       "rating": "light",
-      "checksum": "0e65a8b477fa95",
+      "checksum": "0628bddec74152",
       "rev": 3
      }
     }
@@ -426,8 +428,8 @@
   "alive": 10,
   "hens": 0,
   "bank": 3,
-  "stateHash": "1a0aad7eb26198",
-  "eventHash": "1f74531b72005e",
+  "stateHash": "155cb07108207f",
+  "eventHash": "15ae7f7cf505e8",
   "actions": [
    {
     "type": "PICK_STARTER",
@@ -451,10 +453,10 @@
       "radius": 0,
       "intensity": 1,
       "thresholds": {
-       "on": 0.6,
-       "off": 0.45,
+       "on": 0.55,
+       "off": 0.4,
        "minSupporters": 3,
-       "ramp": 67,
+       "ramp": 78,
        "decay": 20
       },
       "upkeep": {
@@ -469,6 +471,7 @@
      "regions": [
       "east"
      ],
+     "ritual": "light_beacon",
      "contradicts": [],
      "benefit": "When a lantern (beacon) is lit and wet: loose stones within 2 tiles of a lantern in Eastbank weigh 2 loads less (a stone of 1 load or less is carried to the bank by anyone working nearby, and floats in floodwater).",
      "risk": "A stone made light that stands in floodwater floats off and rams the bridge (6 integrity each).",
@@ -523,7 +526,7 @@
       "hash": "069a8c1a9ebce6",
       "power": 4.8,
       "rating": "light",
-      "checksum": "1a4a4cb9def325",
+      "checksum": "11d7240910704d",
       "rev": 3
      }
     }
@@ -615,16 +618,10 @@
     "type": "END_DAY"
    },
    {
-    "type": "MESSENGER",
-    "claim": "reality_069a8c1a9e",
-    "from": "bram",
-    "to": "harl"
-   },
-   {
-    "type": "MESSENGER",
-    "claim": "reality_069a8c1a9e",
-    "from": "mara",
-    "to": "harl"
+    "type": "RITUAL",
+    "ritual": "light_beacon",
+    "landmark": "b_e",
+    "claim": "reality_069a8c1a9e"
    },
    {
     "type": "RITUAL",
@@ -652,12 +649,12 @@
   "region": "east",
   "claimId": "reality_1eaeab5416",
   "result": "defeat",
-  "lawDay": 9,
+  "lawDay": 8,
   "alive": 9,
   "hens": 0,
   "bank": 0,
-  "stateHash": "038e6f7fafc662",
-  "eventHash": "0767330d583815",
+  "stateHash": "1b6d9f78dc380b",
+  "eventHash": "1d0a12bd6fc61c",
   "actions": [
    {
     "type": "PICK_STARTER",
@@ -681,11 +678,11 @@
       "radius": 0,
       "intensity": 1,
       "thresholds": {
-       "on": 0.65,
-       "off": 0.5,
-       "minSupporters": 5,
-       "ramp": 56,
-       "decay": 26
+       "on": 0.6,
+       "off": 0.45,
+       "minSupporters": 4,
+       "ramp": 72,
+       "decay": 25
       },
       "upkeep": {
        "fuel": 0
@@ -699,6 +696,7 @@
      "regions": [
       "east"
      ],
+     "ritual": "ring_bells",
      "contradicts": [],
      "benefit": "When the bell is rung: rain in Eastbank is called onto Eastbank: up to 2 steps of rain fall there instead of upriver (moved, not made: it lands on the low ground). When the bell is rung: fire in Eastbank burns weaker: fire damage cut by up to 50%.",
      "risk": "The rain lands on Eastbank: up to 12 of its lowest dry tiles stand a tile deep, and homes there take flood damage.; The hearths warm less: children, elders and anyone run down lose health each night it acts.; The river fears a cooler fire less: flood wards kept by lit beacons or smoke fires stand a step lower those nights.",
@@ -768,7 +766,7 @@
       "hash": "1eaeab54166362",
       "power": 16.5,
       "rating": "moderate",
-      "checksum": "1e024d47e04a0f",
+      "checksum": "15d7e8c02065a9",
       "rev": 3
      }
     }
@@ -914,18 +912,6 @@
     "type": "END_DAY"
    },
    {
-    "type": "MESSENGER",
-    "claim": "reality_1eaeab5416",
-    "from": "farmer",
-    "to": "hermit"
-   },
-   {
-    "type": "MESSENGER",
-    "claim": "reality_1eaeab5416",
-    "from": "pchild",
-    "to": "hermit"
-   },
-   {
     "type": "RITUAL",
     "ritual": "ring_bells",
     "landmark": "bell"
@@ -952,8 +938,8 @@
   "alive": 14,
   "hens": 4,
   "bank": 0,
-  "stateHash": "1e8282573bc914",
-  "eventHash": "040202558de15e",
+  "stateHash": "0272c5e8205376",
+  "eventHash": "18825afc116356",
   "actions": [
    {
     "type": "PICK_STARTER",
@@ -977,11 +963,11 @@
       "radius": 0,
       "intensity": 1,
       "thresholds": {
-       "on": 0.6,
-       "off": 0.45,
+       "on": 0.55,
+       "off": 0.4,
        "minSupporters": 3,
-       "ramp": 66,
-       "decay": 21
+       "ramp": 77,
+       "decay": 20
       },
       "upkeep": {
        "fuel": 0
@@ -995,6 +981,7 @@
      "regions": [
       "east"
      ],
+     "ritual": "ring_bells",
      "contradicts": [],
      "benefit": "When the bell is rung: chickens in Eastbank rise up to 2 tiles into the air for the night (out of reach of water and wolves; a lift of 2 or more drifts with a strong wind).",
      "risk": "On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).",
@@ -1044,7 +1031,7 @@
       "hash": "12f5310edc0815",
       "power": 6,
       "rating": "light",
-      "checksum": "0e65a8b477fa95",
+      "checksum": "0628bddec74152",
       "rev": 3
      }
     }

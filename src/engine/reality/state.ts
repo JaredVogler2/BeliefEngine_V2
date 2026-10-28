@@ -62,8 +62,20 @@ export interface AppliedEffect {
   amount?: number;
 }
 
+/**
+ * The rules written beliefs are balanced and staged under (not the language: a sentence reads the same under both).
+ *   1  phases 04-10: support max(60%, 0.5 + power/160), 3 + power/8 believers, no demonstrations
+ *   2  phase 11: support and believers closer to authored laws of equal power; a belief that waits for a catalyst can be staged
+ * A run keeps the rules it was created under (absent in older saves: 1), so a saved or recorded run replays exactly.
+ */
+export const REALITY_RULES = 2;
+
 export interface RealityState {
   lang: typeof REALITY_LANG;
+  /** balance and staging rules this run was created under (absent: 1) */
+  rules?: number;
+  /** Living Village (phase 11): villager minds and their arguments, the chapter's own stories only (no writing, no hens or stones) */
+  living?: boolean;
   /** Reality Lab: unranked, with relaxed balance (never relaxed computation or safety limits) */
   lab: boolean;
   coops: Coop[];
@@ -116,10 +128,16 @@ export function bankTiles(w: WorldState): number[] {
   return out;
 }
 
+/** The balance and staging rules of a run (1 for runs made before rules were recorded). */
+export const realityRules = (s: RunState): number => s.v2?.rules ?? 1;
+
 /** Coops by every other home, a flock in each; loose stones on the riverbank. Seeded, so the same run always gets the same world. */
-export function initReality(s: RunState, lab = false): RealityState {
+export function initReality(s: RunState, lab = false, rules = REALITY_RULES, living = false): RealityState {
   const w = s.world;
-  const st: RealityState = { lang: REALITY_LANG, lab, coops: [], chickens: [], stones: [], nextId: 1, bank: {}, primed: [], lastNight: [], eggs: 0 };
+  // rules 1 is recorded by its absence, so a run made under them is the very state older saves hold
+  const st: RealityState = { lang: REALITY_LANG, ...(rules !== 1 ? { rules } : {}), ...(living ? { living: true } : {}), lab, coops: [], chickens: [], stones: [], nextId: 1, bank: {}, primed: [], lastNight: [], eggs: 0 };
+  // a Living Village keeps the chapter's world as it is: minds are added, nothing to write beliefs about
+  if (living) return st;
   const taken: { x: number; y: number }[] = [];
   const homes = w.landmarks.filter((l) => l.kind === 'home').sort((a, b) => (a.id < b.id ? -1 : 1));
   homes.forEach((h, i) => {

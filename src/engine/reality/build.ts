@@ -4,8 +4,11 @@ import { believerCap, electorateOfRegion } from '../nl/build.ts';
 import { sanitizeText } from '../nl/parse.ts';
 import { validateRealityAst, LAB_LIMITS, LIMITS, type Clause, type Condition, type RealityAst, type Selector, type Trigger } from './ast.ts';
 import { balanceReality, type Rating } from './balance.ts';
+import { demoRitualOf } from './demonstrate.ts';
 import { groundAst } from './ground.ts';
 import { ANCHOR_LABEL, KINDS } from './ontology.ts';
+import { realityRules } from './state.ts';
+import { authoredTwin } from './twin.ts';
 
 /**
  * From a validated AST v2 to a claim the game can run, and the honest preview the player confirms. The composer, MCP tools and
@@ -249,7 +252,9 @@ export function buildRealityClaim(s: RunState, astIn: unknown, opts: { title?: s
   if (!ground.ok) return fail('UNSUPPORTED_EFFECT', 'That belief names something this village cannot do.', ground.issues);
   const notes = [...ground.notes];
   const text = sanitizeText(checked.ast.text);
-  const bal = balanceReality({ ...checked.ast, text }, { lab, maxBelievers: believerCap(s.villagers, checked.ast.regions) });
+  const rules = realityRules(s);
+  const twin = rules >= 2 ? authoredTwin(s, checked.ast) : null;
+  const bal = balanceReality({ ...checked.ast, text }, { lab, rules, maxBelievers: believerCap(s.villagers, checked.ast.regions), floor: twin ? { short: twin.short, thresholds: twin.spec.thresholds, watchers: twin.spec.trigger.kind === 'watchers' ? (twin.spec.trigger.min ?? 1) : undefined } : null });
   const ast = bal.ast;
   const id = `reality_${bal.hash.slice(0, 10)}`;
   const title = sanitizeText(opts.title ?? '').replace(/[<>]/g, '').slice(0, MAX_TITLE) || defaultTitle(ast);
@@ -262,6 +267,9 @@ export function buildRealityClaim(s: RunState, astIn: unknown, opts: { title?: s
   const risks = [...new Set(ast.clauses.flatMap((c) => sideEffectsOf(s, c, ast.regions)))];
   const rev = opts.rev ?? s.nextEventId;
   const unlockDay = realityUnlockDay(s, ast);
+  // rules 2: a belief that waits for a catalyst the Keeper can make can be staged at it, like an authored story (demonstrate.ts);
+  // one that does what a story of the village does can at least be proved the way that story is (a copy is as provable as it)
+  const ritual = rules >= 2 ? (demoRitualOf(s, ast) ?? (twin?.ritual && s.scn.rituals.some((r) => r.id === twin.ritual) ? twin.ritual : undefined)) : undefined;
   if (unlockDay !== undefined && s.day < unlockDay) notes.push(`The village will take this up on day ${unlockDay}: the chapter holds back its own answer of this kind until then, and a written one cannot jump the queue.`);
   const claim: ClaimDef = {
     id,
@@ -272,6 +280,7 @@ export function buildRealityClaim(s: RunState, astIn: unknown, opts: { title?: s
     spec: { id, version: 1, subject: 'smoke', effect: 'conceal', trigger: { kind: 'lit_beacon' }, radius: 0, intensity: 1, thresholds: bal.thresholds, upkeep: { fuel: 0 }, side: [], tags: ['reality', lab ? 'lab' : 'chronicle'] },
     regions: ast.regions.slice(),
     ...(Object.keys(electorate).length ? { electorate } : {}),
+    ...(ritual ? { ritual } : {}),
     contradicts: [],
     benefit: mechanics.join(' '),
     risk: risks.join('; '),
@@ -323,11 +332,14 @@ function v1SubjectOf(c: Clause): string | null {
  */
 export function realityUnlockDay(s: RunState, ast: RealityAst): number | undefined {
   let day = 0;
+  // rules 2: an opening story the player did not pick is held back too (it reaches the hand on its own day), so writing it on day 1
+  // is not a way to have both openings; the one they picked is theirs from the start
+  const held = (d: ClaimDef) => !s.scn.starters.includes(d.id) || (realityRules(s) >= 2 && s.starter !== null && s.starter !== d.id);
   for (const c of ast.clauses) {
     const subject = v1SubjectOf(c);
     if (!subject) continue;
     let first = Infinity;
-    for (const d of s.scn.claimDefs) if (!d.rival && d.unlockDay !== undefined && !s.scn.starters.includes(d.id) && d.spec.subject === subject) first = Math.min(first, d.unlockDay);
+    for (const d of s.scn.claimDefs) if (!d.rival && d.unlockDay !== undefined && held(d) && d.spec.subject === subject) first = Math.min(first, d.unlockDay);
     if (first !== Infinity) day = Math.max(day, first);
   }
   return day > 0 ? day : undefined;
@@ -352,5 +364,6 @@ export function verifyRealityClaim(s: RunState, def: ClaimDef): string | null {
   if (canonicalize(b.spec.thresholds) !== canonicalize(def.spec.thresholds)) return 'its thresholds were changed';
   if (canonicalize(b.regions) !== canonicalize(def.regions)) return 'its regions were changed';
   if ((b.unlockDay ?? null) !== (def.unlockDay ?? null)) return 'the day it can first be told was changed';
+  if ((b.ritual ?? null) !== (def.ritual ?? null)) return 'the rite that stages it was changed';
   return null;
 }

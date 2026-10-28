@@ -132,11 +132,19 @@ ease         = always 1.6, night 1.15, bell/lantern/smoke/watchers/clear night 1
 belief power = Σ clauses × (1 + 0.1 per extra clause)
 ```
 
-From power alone (never from wording): support share `max(60%, 0.5 + power/160)` rounded up to 5% (≤ 90%), firm believers
-`3 + power/8` (3-8, never more than the region's electorate can give), ramp `72 - power`, decay `18 + power/2`, Influence 1/2/3
-below power 10/30/above. Balanced play caps power at 60 by narrowing reach, then strength, each change reported; the Lab allows
-120 and is unranked. A belief that answers the same need as one of the chapter's own laws waits for the day that law unlocks
-(V1's pacing rule), so a rain belief cannot skip Redbank's day-4 rain answer.
+From power alone (never from wording), under the rules the run was created under (`s.v2.rules`, phase 11; absent = 1):
+
+- **Rules 1** (phases 04-10, and every run made before phase 11): support share `max(60%, 0.5 + power/160)` rounded up to 5%
+  (≤ 90%), firm believers `3 + power/8` (3-8), ramp `72 - power`, decay `18 + power/2`.
+- **Rules 2** (phase 11, every run made now): with `p` the power per region the belief is held in, support `0.5 + p/200` rounded up
+  to 5% (55-85%), believers `3 + p/15` (3-7), ramp `80 - p/2` (50-80), decay `18 + 0.4 p`; a radius is paid once per region; and
+  never less than the chapter's own law that does the same thing (same kind of target, operator and direction) asks, including the
+  watchers it needs ([`GAMEPLAY_V2.md`](GAMEPLAY_V2.md) §2).
+
+Either way never more believers than the region's electorate can give, and Influence 1/2/3 below power 10/30/above. Balanced play
+caps power at 60 by narrowing reach, then strength, each change reported; the Lab allows 120 and is unranked. A belief that answers
+the same need as one of the chapter's own laws waits for the day that law unlocks (V1's pacing rule), so a rain belief cannot skip
+Redbank's day-4 rain answer; under rules 2 that includes an opening story the player did not pick.
 
 ## 6. Grounding (`ground.ts`)
 

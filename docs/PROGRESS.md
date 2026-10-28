@@ -15,12 +15,66 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 08 Multi-agent social dynamics | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** Influence journal with cause chains; faction leanings; skeptics demanding proof (answered, failed, ignored); competing claims villagers write in the same language (announced, withdrawable, capped, contestable); lies the engine flags and witnesses discover; social energy so decisions redirect rather than add influence. Measured: the social layer moves the outcome of knife-edge chapters (table in the entry) | [`MINDS.md`](MINDS.md) §6, entry below, [`screenshots/v2-phase08/`](screenshots/v2-phase08/) |
 | 09 Belief-to-reality bridge | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** A typed sentence becomes law only through the whole chain (preview → hashed confirmation → real persuasion → threshold with hysteresis → catalyst → executor → V1 hazards), proven in the browser for the three proof claims plus a complete win and a complete loss; below threshold nothing happens; replays need no model and no network. Measured: written beliefs reach law in 6-9 days, so they rarely decide a chapter (phase 11) | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md), entry below, [`screenshots/v2-phase09/`](screenshots/v2-phase09/) |
 | 10 3D visual effects | **IN PROGRESS: the effect registry and three physical laws in 3D VERIFIED (they match canonical state, tested over the recorded chains and in the browser); the gate's "looks like premium real-time gameplay" NOT MET by my own reading (the art stages of the 3D plan remain); frame times on a GPU or phone UNVERIFIED** | [`3D_EFFECTS.md`](3D_EFFECTS.md), `tests/unit/render3d-reality.test.ts`, `tests/e2e/v2-world3d.spec.ts`, [`screenshots/v2-phase10/`](screenshots/v2-phase10/) |
-| 11-17 | NOT STARTED | |
+| 11 Generative gameplay and balance | **VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds strategic variety" needs a provider). Under the old rules no written-belief policy won a single seed of 30 in any chapter; under rules 2 (recorded per run; older runs replay exactly) written beliefs win in all three (Redbank 27/30, Harvest 28/30, Ashwood 21/30), a decoy belief backfires on 11 of 30, the dominant cheap win (a written copy of the unpicked opening story, 20/20) is closed (0/30); four modes with separate records; leaders stand against magic that harms livelihoods | [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md), [`data/tournament-v2/`](data/tournament-v2/), `tests/unit/gameplay-v2.test.ts`, `tests/e2e/v2-modes.spec.ts`, [`screenshots/v2-phase11/`](screenshots/v2-phase11/) |
+| 12-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 11: a strategy game, not a wish machine (VERIFIED offline; LIVE UNVERIFIED)
+
+**What was done** (reference: [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md))
+
+- **A Generative Reality tournament** (`scripts/tournament-v2.ts`, `src/engine/ai/bots/reality.ts`): the prompt's seven policies
+  (no-op, spam a broad law, evidence-first, bridge-based persuasion, inventive compound, careful low-power synergy, rival antagonist
+  through `NPC_DECIDE`) plus two probes, all through the public actions, network switched off; AP, activation day, survival,
+  collateral (homes, hens, animals, fields, pooled tiles), reach, demonstrations, tests, harm and opposition, dead time, ms per run.
+- **Written-belief rules 2, recorded per run** (`s.v2.rules`; absent = 1, so older saves and the phase 09 chains replay to their
+  hashes): support and believers nearer authored laws of equal power; breadth priced per region; demonstrations at a belief's
+  catalyst with an omen read from what it does (`reality/demonstrate.ts`); a copy of an authored story is as provable as it.
+- **The dominant cheap win fixed**: a written copy of the opening story the player did not pick won Redbank 20/20 for 1 Influence;
+  a copy now asks at least what the story it copies asks (support, believers, watchers, ramp) and waits for its day (`reality/twin.ts`).
+- **Every hamlet**: "in every hamlet" holds a belief in each region that has what it acts on (the reader; rules 2 only).
+- **Strategic events**: `LAW_HARMED` (the people a written belief harmed trust the Keeper less and hold it less; `reality/harm.ts`)
+  and `LEADER_OPPOSES` (a council or scholars' leader stands against it; `mind/claims.ts`). Recorded through real persuasion in the
+  re-recorded claim C chain: a faction leader stood against the bell-rain belief after it flooded Eastbank.
+- **Modes and records**: Living Village (`living: true`: six thinkers a day, the chapter's own stories, no writing); every V2 run
+  is recorded with its mode, apart from Classic (no unlocks, no Classic badges, own bests; Lab unranked); a Chronicle's laws go to
+  the atlas as keepsakes with no power; an import keeps the mode (and Inventor runs' `custom` mark, which it used to drop).
+- UI: Living Village on the reality tab, its mode in the hand, the mode in the debrief; the staging omen of a written belief in the
+  landmark card and the preview.
+
+**Tournament (30 seeds per chapter, normal), wins, rules 1 → rules 2**
+
+| Policy | Redbank | Harvest | Ashwood |
+|---|---|---|---|
+| noop | 0 → 0 | 0 → 0 | 0 → 0 |
+| spam-broad | 0 → 20 | 0 → 0 | 0 → 0 |
+| evidence-first | 0 → 27 | 0 → 13 | 0 → 18 |
+| bridge-persuasion | 0 → 0 | 0 → 0 | 0 → 0 |
+| inventive-compound | 0 → 0 | 0 → 3 | 0 → 9 |
+| careful-synergy (authored plan + a light belief) | 26 → 26 | 13 → 13 | 6 → 6 |
+| rival-antagonist | 0 → 23 | 0 → 25 | 0 → 21 |
+| ward-greedy (probe: antagonist's control) | 0 → 24 | 0 → 28 | 0 → 21 |
+| backfire-probe (probe) | 0 → 0 | 0 → 0 | 0 → 7 (worse than doing nothing on 11) |
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `npm test` | 50 files, **607 passed** (17 in `gameplay-v2.test.ts`; `belief-bridge.test.ts` replays the rules-1 chains to their recorded hashes) |
+| `npx tsx scripts/tournament-v2.ts --seeds 30` and `--rules 1` | the table above; 0 model calls (the network is switched off); 0.5-2 s per run |
+| `npx playwright test tests/e2e/v2-modes.spec.ts` (desktop, phone) | **6 passed**: Living Village (mode shown, no composer, a villager answers); a written belief offered for staging at the bell tower with the engine's omen; the Atlas showing a Chronicle's law and each mode's record (this test found that the archive importer dropped the invented laws: fixed) |
+| V2 browser specs (`v2-reality`, `v2-minds`, `v2-online`, `v2-bridge` re-recorded under rules 2) | 25 + 7 passed, the rest skipped by design |
+| `npx playwright test --project=desktop --project=phone` (the whole classic suite) | **171 passed, 65 skipped by design**: 8 first failed with `browserContext.close: ENOENT` on their trace files because a parallel Playwright run had cleared `test-results/`; all 8 re-run green on a quiet machine. `atlas.spec.ts` re-run after the atlas change: green |
+| `npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop-3d --project=phone-3d -g "a click on a person"` | 2 passed: the 3D click test now aims at a person nobody stands in front of (it failed in CI at both phase 10 commits, where Tilly covered Ivo) |
+| `npm run size` | entry 289 KB gzip (budget 300), 3D 215, composer 26, mind panel 3 |
+
+**Mock vs LIVE:** no model was called. The gate's "the model adds strategic variety rather than only more text" is **LIVE
+UNVERIFIED**; the adversarial proposer standing where a model would moves the ward's outcome by 0-3 seeds in 30.
 
 ## 2026-10-28 — Phase 10: written laws in the 3D world (effects VERIFIED; premium look NOT MET; GPU UNVERIFIED)
 

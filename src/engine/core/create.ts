@@ -135,10 +135,12 @@ export function createRunFromDef(base: ScenarioDef, opts: CreateRunOptions): Run
     scn: def.runtime,
   };
   // Generative Reality: the reality block exists only in these runs, so every classic run (and its hash) is exactly V1's
-  if (opts.reality || opts.realityLab) {
-    s.v2 = initReality(s, !!opts.realityLab);
+  if (opts.reality || opts.realityLab || opts.living) {
+    // writing wins over a Living Village if both are asked for: a run is one mode
+    const living = !!opts.living && !opts.reality && !opts.realityLab;
+    s.v2 = initReality(s, !!opts.realityLab, opts.realityRules, living);
     s.v2.minds = initMinds(s);
-    s.flags.reality = opts.realityLab ? 2 : 1;
+    s.flags.reality = opts.realityLab ? 2 : living ? 3 : 1;
   }
   const ctx: Ctx = { s, events: [], expect: false };
   if (def.runtime.starters.length === 1) {

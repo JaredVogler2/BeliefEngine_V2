@@ -3,6 +3,7 @@ import { sanitizeText } from '../nl/parse.ts';
 import { regionAt } from '../world/grid.ts';
 import { LAB_LIMITS, LIMITS, validateRealityAst, type Clause, type Condition, type Effect, type Omission, type RealityAst, type Trigger, type TriggerEvent } from './ast.ts';
 import { buildRealityClaim, clauseText, type RealityBuild } from './build.ts';
+import { realityRules } from './state.ts';
 import { ANCHOR_WORDS, KINDS, REALITY_LANG, type TargetKind } from './ontology.ts';
 import { OPERATORS, type OpId } from './operators.ts';
 import {
@@ -958,22 +959,28 @@ function assemble(s: RunState, text: string, use: { d: Draft; clause: Clause }[]
   }
   const named = use.map((u) => u.d.place?.region).find((r) => r) ?? null;
   const order = regionOrder(s, clauses, named ?? opts.region ?? null);
-  let best: { ast: RealityAst; build: RealityBuild; region: string } | null = null;
-  for (const region of order) {
+  // rules 2: "in every hamlet" holds the belief in each region that has what it acts on (each decides for itself, one law per
+  // region, and its price counts every region); without the words, or under rules 1, one region as before
+  const every = realityRules(s) >= 2 && !named && !opts.region && EVERY_PLACE.test(text) ? regionsWithTargets(s, clauses) : [];
+  const tries: string[][] = every.length >= 2 ? [every, ...order.map((r) => [r])] : order.map((r) => [r]);
+  let best: { ast: RealityAst; build: RealityBuild; region: string; regions: string[] } | null = null;
+  for (const regions of tries) {
     const ast: RealityAst = {
       v: 2, lang: REALITY_LANG, text: text.slice(0, MAX_BELIEF_TEXT), author: 'player', source: { reader: 'offline-v2', model: null, prompt: READER_ID, id: null },
-      day: Math.max(0, Math.min(400, s.day)), regions: [region], clauses, omitted: omitted.slice(0, 6), narrative: null,
+      day: Math.max(0, Math.min(400, s.day)), regions, clauses, omitted: omitted.slice(0, 6), narrative: null,
     };
     if (!validateRealityAst(ast, opts.lab ? LAB_LIMITS : LIMITS).ok) return null;
     const build = buildRealityClaim(s, ast);
-    if (!best) best = { ast, build, region };
+    if (!best) best = { ast, build, region: regions[0], regions };
     if (build.ok) {
-      best = { ast, build, region };
+      best = { ast, build, region: regions[0], regions };
       break;
     }
   }
   if (!best) return null;
-  if (!named && !opts.region && s.world.regions.length > 1) assumed.push(`read for ${s.world.regions.find((r) => r.id === best!.region)?.name ?? best.region}${whyRegion(s, clauses, best.region)}`);
+  if (best.regions.length > 1) assumed.push(`held in every part of the village that has ${KINDS[clauses[0].target.kind].label}: ${best.regions.map((r) => s.world.regions.find((x) => x.id === r)?.name ?? r).join(', ')} (each decides for itself, and the price counts all of them)`);
+  else if (every.length >= 2) assumed.push('read for one part of the village: held in every part, it could not be written');
+  if (!named && !opts.region && s.world.regions.length > 1 && best.regions.length === 1) assumed.push(`read for ${s.world.regions.find((r) => r.id === best!.region)?.name ?? best.region}${whyRegion(s, clauses, best.region)}`);
   const map: ClauseMap[] = use.map((u, i) => ({
     clause: `c${i + 1}`,
     target: u.d.targetM ? wordsOf(u.d.targetM) : KINDS[u.d.kind!].label,
@@ -999,9 +1006,39 @@ function whyRegion(s: RunState, clauses: Clause[], region: string): string {
 }
 
 /** Regions to try, best first: the one named, else where the reading's targets, powers and landmarks actually are. */
+/** "in every hamlet", "across all the districts", "on both banks": the belief is meant for each part of the village. */
+const EVERY_PLACE = /\b(?:in|across|throughout|on|for|over)\s+(?:every|each|all(?:\s+(?:the|three|four|two))?|both)\s+(?:of\s+the\s+)?(?:hamlets?|districts?|quarters?|parts?(?:\s+of\s+(?:the\s+)?village)?|regions?|banks?|sides?|settlements?|neighbou?rhoods?|wards?)\b/i;
+
+/**
+ * Regions holding what the belief acts on, most first (at most four, as the language allows): the landmarks of its kind (pens,
+ * homes, fields, lanterns), the coops, the loose stones; for what moves (water, rain, fire, wolves, people), the regions people live in.
+ */
+const LANDMARK_KIND: Partial<Record<TargetKind, string[]>> = { livestock: ['pen'], home: ['home', 'cabin'], field: ['field'], lantern: ['beacon'] };
+function regionsWithTargets(s: RunState, clauses: Clause[]): string[] {
+  const count = new Map<string, number>();
+  const add = (r: string | null | undefined) => {
+    if (r && r !== 'river') count.set(r, (count.get(r) ?? 0) + 1);
+  };
+  for (const c of clauses) {
+    const k = c.target.kind;
+    const kinds = LANDMARK_KIND[k];
+    if (kinds) for (const l of s.world.landmarks) if (kinds.includes(l.kind) && l.hp > 0) add(l.district);
+    if (k === 'chicken') for (const coop of s.v2?.coops ?? []) add(coop.region);
+    if (k === 'stone') for (const st of s.v2?.stones ?? []) if (st.state === 'loose') add(regionAt(s.world, st.x, st.y));
+    if (!kinds && k !== 'chicken' && k !== 'stone' && k !== 'bridge') for (const v of s.villagers) if (v.status !== 'dead') add(v.district);
+  }
+  return [...count.keys()].sort((a, b) => count.get(b)! - count.get(a)! || (a < b ? -1 : 1)).slice(0, 4);
+}
+
 function regionOrder(s: RunState, clauses: Clause[], named: string | null): string[] {
   const ids = s.world.regions.map((r) => r.id);
   if (named && ids.includes(named)) return [named];
+  const score = regionScores(s, clauses);
+  return ids.slice().sort((a, b) => score.get(b)! - score.get(a)! || ids.indexOf(a) - ids.indexOf(b));
+}
+
+function regionScores(s: RunState, clauses: Clause[]): Map<string, number> {
+  const ids = s.world.regions.map((r) => r.id);
   const score = new Map<string, number>(ids.map((r) => [r, 0]));
   const bump = (r: string | null | undefined, n: number) => {
     if (r && score.has(r)) score.set(r, score.get(r)! + n);
@@ -1022,7 +1059,7 @@ function regionOrder(s: RunState, clauses: Clause[], named: string | null): stri
     if (evs.includes('"watchers"')) bump('river', 6);
     if (k === 'water' || k === 'rain' || k === 'fire') bump('river', 0.5);
   }
-  return ids.slice().sort((a, b) => score.get(b)! - score.get(a)! || ids.indexOf(a) - ids.indexOf(b));
+  return score;
 }
 
 /** At most two executable beliefs about the same things the sentence named, clearly offered as different from what it asked. */

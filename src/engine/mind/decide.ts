@@ -7,7 +7,7 @@ import { danger } from '../ai/utility.ts';
 import { predictedWater } from '../ai/routines.ts';
 import { ensureBelief, evidenceGain, gossipDelta, REASON_TEXT, relevance, round1, type ReasonCode } from '../social/persuasion.ts';
 import { components, connected, passableMask } from '../world/nav.ts';
-import { APPROACHES, INTENTS, THINKERS_PER_DAY, TONES, type Choice, type Episode, type Intent, type Moment, type MindsState, type Queued } from './types.ts';
+import { APPROACHES, INTENTS, TONES, thinkersPerDay, type Choice, type Episode, type Intent, type Moment, type MindsState, type Queued } from './types.ts';
 
 /**
  * Decisions (phase 07). A villager due to think picks one move from those open to them right now; a model may propose it, and
@@ -427,6 +427,6 @@ export function planMinds(s: RunState, fresh: Map<string, Episode[]>, events: { 
   }
   minds.queue = cands
     .sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1))
-    .slice(0, THINKERS_PER_DAY)
+    .slice(0, thinkersPerDay(s))
     .map(({ score: _score, ...q }) => q);
 }

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ACHIEVEMENTS, KNOWLEDGE, UNLOCKS, progressStats } from '../engine/index.ts';
+import { ACHIEVEMENTS, KNOWLEDGE, UNLOCKS, VARIANT_LABEL, progressStats } from '../engine/index.ts';
 import { sfx } from '../audio/audio.ts';
 import { Icon, Modal } from './components.tsx';
 import { exportJson, importJson, loadProgress, resetProgress } from './progress.ts';
@@ -15,6 +15,10 @@ const EFFECT_TEXT: Record<string, string> = {
   HOME_SPARED: 'spared homes', LIFE_SPARED: 'saved lives', BRIDGE_HELD: 'held the bridge', PEN_SPARED: 'kept wolves from pens', RAIN_DISPLACED: 'pushed rain elsewhere', MUDSLIDE: 'buried a road',
   FIRE_STARTED: 'started a fire', FIELD_BURNED: 'burned a field', SMOKE_SICKNESS: 'sickened people', PACK_LURED: 'lured a pack', NIGHT_LABOR: 'exhausted workers', LAW_WAVERING: 'wavered',
   LAW_COLLAPSED: 'collapsed', LAW_SUPPRESSED: 'was suppressed', CROP_BOOSTED: 'ripened crops',
+  // what written beliefs do (Generative Chronicle)
+  REALITY_EFFECT: 'acted on the world', REALITY_CONFLICT: 'pulled against another belief', CHICKENS_ROSE: 'lifted hens into the air', STRAYS_FLEW_HOME: 'flew strays home',
+  BANK_RAISED: 'raised the riverbank', STONE_RAMS_BRIDGE: 'rammed the bridge with a stone', WATER_POOLED: 'pooled water on low ground', FIRE_WARDS_COOLED: 'sank the fire wards',
+  FIELD_TENDED: 'tended fields', CHICKS_HATCHED: 'hatched chicks', LAW_HARMED: 'harmed the people who live with it', LEADER_OPPOSES: 'raised a leader against it',
 };
 
 const STARTER_LAWS = ['river_fears_fire', 'bridge_stands_watched', 'moonlight_ripens_grain', 'rain_follows_bells', 'wolves_fear_smoke', 'wolves_follow_smoke'];
@@ -51,12 +55,37 @@ export function Atlas() {
                 <p><em>“{l.text}”</em></p>
                 <p><b>Gives:</b> {l.benefit}</p>
                 <p><b>Costs:</b> {l.risk}</p>
-                <p className="small muted">Took hold {l.activations} time{l.activations === 1 ? '' : 's'} · {l.scenarios.join(', ')} · {l.regions.join(', ')}{l.effects.length ? ` · seen: ${l.effects.map((e) => EFFECT_TEXT[e] ?? e.toLowerCase()).join(', ')}` : ''}</p>
+                <p className="small muted">Took hold {l.activations} time{l.activations === 1 ? '' : 's'} · {l.scenarios.join(', ')} · {l.regions.join(', ')}{l.effects.length ? ` · seen: ${l.effects.map((e) => EFFECT_TEXT[e] ?? e.toLowerCase().replace(/_/g, ' ')).join(', ')}` : ''}</p>
               </article>
             ))}
             {STARTER_LAWS.filter((id) => !p.atlas.laws[id]).map((id) => (
               <article key={id} className="card atlas-law locked" aria-label="An undiscovered law"><h2>? ? ?</h2><p className="muted">A law you have not yet seen take hold.</p></article>
             ))}
+            {Object.values(p.atlas.invented ?? {}).length > 0 && (
+              <>
+                <h2 style={{ marginTop: '1rem' }}>Beliefs you made law</h2>
+                <p className="small muted">Written in Generative Chronicle runs. Kept to remember them by: they give no power to any later run.</p>
+                {Object.values(p.atlas.invented ?? {}).map((l) => (
+                  <article key={l.hash} className="card atlas-law" data-testid={`atlas-invented-${l.hash}`}>
+                    <h2>{l.short}</h2>
+                    <p><em>“{l.text}”</em></p>
+                    <p>{l.mechanics}</p>
+                    <p className="small muted">Took hold {l.activations} time{l.activations === 1 ? '' : 's'} · {l.scenarios.join(', ')}{l.effects.length ? ` · seen: ${l.effects.map((e) => EFFECT_TEXT[e] ?? e.toLowerCase().replace(/_/g, ' ')).join(', ')}` : ''}</p>
+                  </article>
+                ))}
+              </>
+            )}
+            {(['chronicle', 'living', 'lab'] as const).some((v) => st.variants[v].runs > 0) && (
+              <section className="card" data-testid="atlas-variants" style={{ marginTop: '1rem' }}>
+                <h2>Generative Reality records</h2>
+                <p className="small muted">Each mode keeps its own record, apart from the Classic one above.</p>
+                <ul className="small">
+                  {(['chronicle', 'living', 'lab'] as const).filter((v) => st.variants[v].runs > 0).map((v) => (
+                    <li key={v}>{VARIANT_LABEL[v]}: {st.variants[v].runs} run{st.variants[v].runs === 1 ? '' : 's'}, {st.variants[v].victories} won{v === 'lab' ? ' (unranked)' : st.variants[v].best !== null ? `, best score ${st.variants[v].best}` : ''}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </section>
         )}
 

@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { councilBanDays, getAvailableActions, getCallouts, getForecast, getIntents, getLawViews, getModifierViews, getVillagerView, memoryLines, previewAction, describeAction, omenFor } from '../../engine/index.ts';
+import { councilBanDays, getAvailableActions, getCallouts, getForecast, getIntents, getLawViews, getModifierViews, getVillagerView, memoryLines, previewAction, describeAction, stagingOmen } from '../../engine/index.ts';
 import type { Action, ClaimDef, Landmark, Preview, RunState } from '../../engine/index.ts';
 import { findClaimDef, neighborsOf } from '../../engine/core/lookup.ts';
 import { firstName } from '../../engine/core/names.ts';
@@ -303,7 +303,10 @@ export function landmarkOpts(state: RunState, id: string, claimId: string | null
     }
     for (const c of claims) {
       const o = mk(state, { type: 'RITUAL', ritual: r.id, landmark: l.id, claim: c });
-      if (c) o.badge = omenFor(state, r.omen).value > 0 ? 'good' : omenFor(state, r.omen).value < 0 ? 'bad' : null;
+      if (c) {
+        const omen = stagingOmen(state, r, c).value;
+        o.badge = omen > 0 ? 'good' : omen < 0 ? 'bad' : null;
+      }
       out.push(o);
     }
   }
@@ -320,7 +323,7 @@ function LandmarkCard({ id }: { id: string }) {
   if (!l) return null;
   const def: ClaimDef | undefined = claimId ? findClaimDef(state, claimId) : undefined;
   const ritual = def?.ritual ? state.scn.rituals.find((r) => r.id === def.ritual) : undefined;
-  const omen = ritual && ritual.landmark === l.kind ? omenFor(state, ritual.omen) : null;
+  const omen = ritual && ritual.landmark === l.kind ? stagingOmen(state, ritual, claimId) : null;
   const occupants = state.villagers.filter((v) => v.status !== 'dead' && v.place === l.id);
   return (
     <div data-testid="landmark-card">

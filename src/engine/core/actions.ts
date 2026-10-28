@@ -5,6 +5,8 @@ import { pledgeKey } from '../progress/options.ts';
 import { MAX_CUSTOM_CLAIMS, buildClaim, composeCostOf } from '../nl/build.ts';
 import { MAX_REALITY_CLAIMS, buildRealityClaim } from '../reality/build.ts';
 import { realityComposeCost } from '../reality/cost.ts';
+import { coincidenceOf, NO_COINCIDENCE_OMEN, poweredBy, WAKING_OMEN, WRITTEN_OMEN_TEXT } from '../reality/demonstrate.ts';
+import { realityRules } from '../reality/state.ts';
 import { installClaim } from '../nl/stress.ts';
 import { NL_VERSION } from '../nl/ontology.ts';
 import { memoryFactor, remember } from './memory.ts';
@@ -12,7 +14,7 @@ import type { Action, ActionError, ActionResult, ClaimDef, GameEvent, Landmark, 
 import { K, ensureBelief, evidenceGain, gossipDelta, REASON_TEXT, relevance, round1, seedGain } from '../social/persuasion.ts';
 import { judged, validateChoice } from '../mind/decide.ts';
 import { TALK_MODES, checkedReply, offlineReply, talkCost } from '../mind/talk.ts';
-import { THINKERS_PER_DAY, type Approach, type Intent, type Tone } from '../mind/types.ts';
+import { thinkersPerDay, type Approach, type Intent, type Tone } from '../mind/types.ts';
 import { bfsDist, components, connected, passableMask } from '../world/nav.ts';
 import { idx } from '../world/grid.ts';
 
@@ -94,6 +96,22 @@ export function omenFor(s: RunState, kind: RitualDef['omen']): { value: -1 | 0 |
     case 'none':
       return { value: 0, text: '' };
   }
+}
+
+/**
+ * The omen for staging a ritual as proof of a story. An authored story reads its ritual's omen (V1); a written belief under rules 2
+ * reads it from what the belief does (reality/demonstrate.ts), and is a kind night as soon as it is waking, because then it acts.
+ */
+export function stagingOmen(s: RunState, ritual: RitualDef, claim?: string | null): { value: -1 | 0 | 1; text: string } {
+  const def = claim ? findClaimDef(s, claim) : undefined;
+  if (!def?.reality || realityRules(s) < 2) return omenFor(s, ritual.omen);
+  if (s.laws.some((l) => l.claimId === def.id && (l.progress > 0 || l.status === 'active' || l.status === 'wavering'))) return { value: 1, text: WAKING_OMEN };
+  // a rite that powers none of its clauses (a copy proved the way its authored twin is) reads that rite's own omen
+  const kind = coincidenceOf(def.reality.ast, ritual.id);
+  if (kind === 'none' && ritual.omen !== 'none' && !poweredBy(def.reality.ast, ritual.id)) return omenFor(s, ritual.omen);
+  if (kind === 'none') return { value: -1, text: NO_COINCIDENCE_OMEN };
+  const value = omenFor(s, kind).value;
+  return { value, text: WRITTEN_OMEN_TEXT[kind][value] };
 }
 
 function spokeToday(s: RunState, vid: string): boolean {
@@ -308,7 +326,7 @@ function doNpcDecide(ctx: Ctx, a: Extract<Action, { type: 'NPC_DECIDE' }>): Fail
   const minds = s.v2?.minds;
   if (!minds) return fail('NO_MINDS', 'Villager decisions belong to Generative Reality runs.');
   if (a.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since these decisions were asked for. The villagers will decide for themselves at dusk.');
-  if (!Array.isArray(a.decisions) || a.decisions.length < 1 || a.decisions.length > THINKERS_PER_DAY) return fail('BAD_DECISIONS', `Send 1 to ${THINKERS_PER_DAY} decisions.`);
+  if (!Array.isArray(a.decisions) || a.decisions.length < 1 || a.decisions.length > thinkersPerDay(s)) return fail('BAD_DECISIONS', `Send 1 to ${thinkersPerDay(s)} decisions.`);
   const accepted: string[] = [];
   const refused: string[] = [];
   for (const d of a.decisions) {
@@ -430,6 +448,7 @@ function doComposeReality(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fa
   const s = ctx.s;
   const r = a.claim.reality!;
   if (!s.v2) return fail('NOT_AVAILABLE', 'Beliefs in the reality language are written in Generative Reality runs.');
+  if (s.v2.living) return fail('NOT_AVAILABLE', 'A Living Village is won with its own stories and its people’s arguments: written beliefs belong to Generative Reality runs.');
   const made = s.claims.filter((c) => c.def?.reality && !c.def.rival).length;
   if (made >= MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)) return fail('TOO_MANY', `You can write at most ${MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)} beliefs in one run.`);
   if (r.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since this belief was read. Read it again (reading is free).');
@@ -512,7 +531,7 @@ function doRitual(ctx: Ctx, a: Extract<Action, { type: 'RITUAL' }>): Fail | null
   else if (ritual.physical === 'vigil') s.flags.vigilDay = s.day;
   else if (ritual.physical === 'night_labor') lm.data.moonlit = 1;
   s.stats.rituals++;
-  const omen = omenFor(s, ritual.omen);
+  const omen = stagingOmen(s, ritual, a.claim);
   const rid = emit(ctx, {
     step: 'action', code: 'RITUAL', importance: 2, claim: a.claim, tile: [lm.x, lm.y],
     text: `${ritual.verb} — ${lm.name}.${a.claim ? ` ${omen.text}` : ''}`,
@@ -781,7 +800,7 @@ export function previewAction(s: RunState, action: Action): Preview {
   if (action.type === 'RITUAL') {
     const r = s.scn.rituals.find((x) => x.id === action.ritual);
     if (r && action.claim) {
-      const o = omenFor(s, r.omen);
+      const o = stagingOmen(s, r, action.claim);
       if (o.value < 0) warnings.push(o.text);
     }
     if (r?.physical === 'light') warnings.push('Lit flames can ignite adjacent fields, trees and cottages.');

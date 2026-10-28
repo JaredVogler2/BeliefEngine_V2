@@ -8,7 +8,7 @@ import { parseExpeditionId, generateExpedition } from '../gen/expedition.ts';
 import { ACHIEVEMENTS, type AchievementCtx, type AchievementDef } from './achievements.ts';
 import { KNOWLEDGE, knowledgeFrom, type KnowledgeDef } from './knowledge.ts';
 import { pledgesOf } from './options.ts';
-import { PROGRESS_VERSION, emptyProgress, type AtlasLaw, type Progress, type RunRecord } from './types.ts';
+import { PROGRESS_VERSION, emptyProgress, type AtlasLaw, type Progress, type RunRecord, type RunVariant } from './types.ts';
 import { UNLOCKS, type UnlockDef } from './unlocks.ts';
 
 export const MAX_RUNS = 300;
@@ -32,6 +32,11 @@ export function strategyKey(s: RunState): string {
   const biome = parseExpeditionId(s.scenarioId) ? generateExpedition(s.seed).bp.biome : s.scenarioId;
   const laws = [...new Set(s.stats.lawsActivated.map((l) => l.split('@')[0]))].sort();
   return `${biome}|${laws.join('+') || 'none'}${s.stats.tradeDeals > 0 ? '|trade' : ''}`;
+}
+
+/** The V2 mode a run was played in, or null for Classic. */
+export function variantOf(s: RunState): RunVariant | null {
+  return s.flags.reality === 2 ? 'lab' : s.flags.reality === 3 ? 'living' : s.flags.reality === 1 ? 'chronicle' : null;
 }
 
 export function makeRecord(s: RunState, opts: { debug: boolean; finishedAt?: string }): RunRecord {
@@ -63,6 +68,7 @@ export function makeRecord(s: RunState, opts: { debug: boolean; finishedAt?: str
     rescued: s.stats.homesSpared + s.stats.livesSaved,
     debug: opts.debug,
     ...(s.flags.inventor ? { custom: true } : {}),
+    ...(variantOf(s) ? { variant: variantOf(s)! } : {}),
     ...(opts.finishedAt ? { finishedAt: opts.finishedAt } : {}),
   };
   return { ...rec, signature: hashValue([rec.id, rec.result, rec.score, rec.rules, rec.debug]).slice(0, 10) };
@@ -93,10 +99,17 @@ export function applyRun(before: Progress, s: RunState, opts: { debug: boolean; 
   if (opts.debug) return { progress: p, record, duplicate: false, newAchievements: [], newUnlocks: [], newKnowledge: [], newLaws: [], postcard };
   if (record.custom) {
     // an Inventor run is kept apart: no atlas entries, no unlocks, no ranked badges; its own badge only
-    const ctx: AchievementCtx = { s, rec: record, before, runs: p.runs.filter((r) => !r.custom), atlasLaws: new Set(Object.keys(p.atlas.laws)), newKnowledge: [] };
+    const ctx: AchievementCtx = { s, rec: record, before, runs: p.runs.filter((r) => !r.custom && !r.variant), atlasLaws: new Set(Object.keys(p.atlas.laws)), newKnowledge: [] };
     const own = ACHIEVEMENTS.filter((a) => a.id === 'custom_law' && !p.achievements[a.id] && a.test(ctx));
     for (const a of own) p.achievements[a.id] = { run: record.id, ...(opts.finishedAt ? { at: opts.finishedAt } : {}) };
     return { progress: p, record, duplicate: false, newAchievements: own, newUnlocks: [], newKnowledge: [], newLaws: [], postcard };
+  }
+  if (record.variant) {
+    // a V2 mode keeps its own records (personalBest and progressStats split by variant); it unlocks nothing and earns no Classic
+    // badge, so Classic's balance and its records stay exactly V1's. A Generative Chronicle remembers the beliefs it wrote that became
+    // law, as entries to read, never as power for a later run. Reality Lab is unranked: recorded, and nothing else.
+    if (record.variant === 'chronicle') rememberInvented(p, s);
+    return { progress: p, record, duplicate: false, newAchievements: [], newUnlocks: [], newKnowledge: [], newLaws: [], postcard };
   }
 
   // atlas: laws, knowledge, postcards
@@ -126,12 +139,29 @@ export function applyRun(before: Progress, s: RunState, opts: { debug: boolean; 
   p.atlas.postcards[s.scenarioId] = cards.slice(-6);
 
   // achievements, then unlocks (evaluated against the archive including this run)
-  const ctx: AchievementCtx = { s, rec: record, before, runs: p.runs.filter((r) => !r.custom), atlasLaws: new Set(Object.keys(p.atlas.laws)), newKnowledge: newKnowledgeIds };
+  const ctx: AchievementCtx = { s, rec: record, before, runs: p.runs.filter((r) => !r.custom && !r.variant), atlasLaws: new Set(Object.keys(p.atlas.laws)), newKnowledge: newKnowledgeIds };
   const newAchievements = ACHIEVEMENTS.filter((a) => !p.achievements[a.id] && a.test(ctx));
   for (const a of newAchievements) p.achievements[a.id] = { run: record.id, ...(opts.finishedAt ? { at: opts.finishedAt } : {}) };
   const newUnlocks = UNLOCKS.filter((u) => !p.unlocks[u.id] && u.test(ctx));
   for (const u of newUnlocks) p.unlocks[u.id] = { run: record.id, ...(opts.finishedAt ? { at: opts.finishedAt } : {}) };
   return { progress: p, record, duplicate: false, newAchievements, newUnlocks, newKnowledge: KNOWLEDGE.filter((k) => newKnowledgeIds.includes(k.id)), newLaws, postcard };
+}
+
+/** Written beliefs of a Generative Chronicle run that became law, into the atlas (text and what they did; no gameplay effect). */
+function rememberInvented(p: Progress, s: RunState): void {
+  const inv = (p.atlas.invented ??= {});
+  for (const law of s.laws.filter((l) => l.activatedDay !== null)) {
+    const def = s.claims.find((c) => c.id === law.claimId)?.def;
+    if (!def?.reality || def.rival) continue;
+    const key = def.reality.hash;
+    const entry = (inv[key] ??= { hash: key, text: def.text.slice(0, 240), short: def.short.slice(0, 80), mechanics: def.benefit.slice(0, 400), scenarios: [], activations: 0, effects: [] });
+    entry.activations += 1;
+    if (!entry.scenarios.includes(s.scn.name)) entry.scenarios.push(s.scn.name);
+    for (const e of s.log) if (e.law === law.id && e.code !== 'LAW_ACTIVATED' && e.importance >= 2 && !entry.effects.includes(e.code) && entry.effects.length < 12) entry.effects.push(e.code);
+  }
+  // a bounded keepsake: the 60 most recently activated beliefs
+  const keys = Object.keys(inv);
+  if (keys.length > 60) for (const k of keys.slice(0, keys.length - 60)) delete inv[k];
 }
 
 // ------------------------------------------------------------------ stats
@@ -147,10 +177,13 @@ export interface ProgressStats {
   bestDaily: { date: number; score: number } | null;
   achievements: number;
   knowledge: number;
+  /** each V2 mode's own record, apart from Classic's (which the fields above describe) */
+  variants: Record<RunVariant, { runs: number; victories: number; best: number | null }>;
+  invented: number;
 }
 
 export function progressStats(p: Progress): ProgressStats {
-  const real = p.runs.filter((r) => !r.debug && !r.custom);
+  const real = p.runs.filter((r) => !r.debug && !r.custom && !r.variant);
   const wins = real.filter((r) => r.result === 'victory');
   const byMode: Record<string, number[]> = {};
   for (const r of wins) (byMode[r.mode] ??= []).push(r.score);
@@ -169,12 +202,20 @@ export function progressStats(p: Progress): ProgressStats {
     bestDaily: daily ? { date: daily.dailyDate!, score: daily.score } : null,
     achievements: Object.keys(p.achievements).length,
     knowledge: Object.keys(p.atlas.knowledge).length,
+    variants: Object.fromEntries((['chronicle', 'living', 'lab'] as RunVariant[]).map((v) => {
+      const rs = p.runs.filter((r) => !r.debug && r.variant === v);
+      const won = rs.filter((r) => r.result === 'victory');
+      return [v, { runs: rs.length, victories: won.length, best: v === 'lab' || !won.length ? null : Math.max(...won.map((r) => r.score)) }];
+    })) as ProgressStats['variants'],
+    invented: Object.keys(p.atlas.invented ?? {}).length,
   };
 }
 
 /** Best earlier victory with the same scenario/village, difficulty and rules (so comparisons are fair), excluding `rec` itself. */
 export function personalBest(p: Progress, rec: RunRecord): RunRecord | null {
-  const same = p.runs.filter((r) => !r.debug && r.id !== rec.id && r.result === 'victory' && r.scenarioId === rec.scenarioId && r.difficulty === rec.difficulty && r.rules === rec.rules && r.pledges.join() === rec.pledges.join());
+  // a V2 mode is compared only with runs of the same mode (Reality Lab with nothing: it is unranked)
+  if (rec.variant === 'lab') return null;
+  const same = p.runs.filter((r) => !r.debug && r.id !== rec.id && r.result === 'victory' && r.scenarioId === rec.scenarioId && r.difficulty === rec.difficulty && r.rules === rec.rules && r.pledges.join() === rec.pledges.join() && (r.variant ?? null) === (rec.variant ?? null));
   return same.sort((a, b) => b.score - a.score)[0] ?? null;
 }
 
@@ -208,6 +249,9 @@ function cleanRecord(v: unknown): RunRecord | null {
     modifiers: strs(v.modifiers) ?? [], pledges: strs(v.pledges) ?? [], drafted: v.drafted === true, twisted: num(v.twisted) ?? 0, laws: strs(v.laws) ?? [],
     strategy: str(v.strategy, 200) ?? '', apSpent: num(v.apSpent) ?? 0, rescued: num(v.rescued) ?? 0, debug: v.debug === true, signature: str(v.signature, 20) ?? '',
     ...(str(v.finishedAt, 40) ? { finishedAt: str(v.finishedAt, 40)! } : {}),
+    // kept apart on import too: an imported Inventor or V2 run must not turn into a Classic one
+    ...(v.custom === true ? { custom: true } : {}),
+    ...(['chronicle', 'living', 'lab'].includes(String(v.variant)) ? { variant: v.variant as RunVariant } : {}),
   };
 }
 
@@ -271,6 +315,14 @@ export function importProgress(json: string): ImportResult {
     for (const [id, v] of Object.entries(pc)) {
       const cards = strs(v, 12);
       if (cards && id.length <= 100) p.atlas.postcards[id] = cards;
+    }
+    // beliefs a Generative Chronicle made law (keepsakes: text and what they did, no power), bounded like everything else here
+    const inv = isObj(atlas.invented) ? atlas.invented : {};
+    for (const [hash, v] of Object.entries(inv).slice(-60)) {
+      if (!isObj(v) || !/^[A-Za-z0-9_-]{1,40}$/.test(hash)) continue;
+      const text = str(v.text, 240), short = str(v.short, 80), mechanics = str(v.mechanics, 400);
+      if (!text || !short || mechanics === null) continue;
+      (p.atlas.invented ??= {})[hash] = { hash, text, short, mechanics, scenarios: strs(v.scenarios, 20) ?? [], activations: Math.max(1, Math.min(9999, num(v.activations) ?? 1)), effects: strs(v.effects, 12) ?? [] };
     }
   }
   return { ok: true, progress: p, migrated: ver < PROGRESS_VERSION };

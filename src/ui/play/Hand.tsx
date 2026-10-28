@@ -21,7 +21,8 @@ export function Hand() {
   const pickingStarter = state.starter === null;
   // Generative Reality runs write in the reality language; Inventor runs keep V1's composer
   const inventor = !!state.flags.inventor && !state.v2 && !pickingStarter && !state.outcome;
-  const reality = !!state.v2 && !pickingStarter && !state.outcome;
+  // a Living Village is persuaded with its own stories: no composer there
+  const reality = !!state.v2 && !state.v2.living && !pickingStarter && !state.outcome;
 
   const info = (c: HandCard) => {
     const on = findClaimDef(state, c.id)?.spec.thresholds.on ?? 0.6;
@@ -81,6 +82,9 @@ export function Hand() {
               <span className="c-meta">Inventor · unranked</span>
             </span>
           </button>
+        )}
+        {!!state.v2?.living && !pickingStarter && !state.outcome && (
+          <span className="chip violet" data-testid="living-chip" title="A Living Village: the chapter's own stories, and villagers who remember, argue and demand proof. More of them think each day.">Living Village</span>
         )}
         {reality && (
           <button className="claim chip-claim write" onClick={() => store.set({ composing: true })} data-testid="reality-open" title="Any sentence about how this world works. The game shows exactly what it can make real. Reading is free.">

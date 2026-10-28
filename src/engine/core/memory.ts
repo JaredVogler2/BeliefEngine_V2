@@ -22,6 +22,7 @@ export function memoryFactor(v: Villager, claim: Id): number {
     if (m.claim !== claim) continue;
     if (m.kind === 'law_failed') f -= 0.14;
     else if (m.kind === 'proof_failed') f -= 0.08;
+    else if (m.kind === 'law_harmed') f -= 0.1;
     else if (m.kind === 'law_worked') f += 0.05;
   }
   return Math.max(0.55, Math.min(1.15, f));

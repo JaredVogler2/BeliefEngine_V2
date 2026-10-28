@@ -109,6 +109,8 @@ export function Title() {
 // ------------------------------------------------------------------ scenario select + briefing
 
 type ModeTab = 'story' | 'expedition' | 'daily' | 'reality';
+/** the V2 mode a run was played in (flags.reality), as its records name it */
+const MODE_LABEL: Record<1 | 2 | 3, string> = { 1: 'Generative Chronicle (its own records)', 2: 'Reality Lab (unranked)', 3: 'Living Village (its own records)' };
 
 function ModifierList({ ids }: { ids: string[] }) {
   if (!ids.length) return null;
@@ -191,6 +193,10 @@ export function Scenarios() {
               of it (and what it cannot), and a belief only changes the world once enough villagers hold it. These runs also have chickens and loose stones to work with.
               Reading is offline unless you choose otherwise.
             </p>
+            <p className="muted small" data-testid="mode-notes">
+              <b>Generative Chronicle</b> (Begin): write your own laws; its own records. <b>Living Village</b>: the chapter&apos;s own stories, with villagers who remember,
+              argue and demand proof; its own records. <b>Reality Lab</b>: stronger beliefs, never ranked. Classic (the other tabs) keeps its records apart from all three.
+            </p>
             <div className="grid2">
               {list.map((sc) => (
                 <div key={sc.id} className="card scn-card" data-testid={`reality-scn-${sc.id}`}>
@@ -202,6 +208,7 @@ export function Scenarios() {
                   </div>
                   <div className="row wrap" style={{ gap: '0.5rem' }}>
                     <button className="btn primary" onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), reality: true }); }} data-testid={`begin-reality-${sc.id}`}>Begin</button>
+                    <button className="btn" title="The chapter's own stories, and villagers who remember, argue, demand proof and put their own claims: more of them think each day. Its own records." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), living: true }); }} data-testid={`begin-living-${sc.id}`}>Living Village</button>
                     <button className="btn" title="Three clauses, wider reach and stronger beliefs; never ranked." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), realityLab: true }); }} data-testid={`begin-lab-${sc.id}`}>Reality Lab (unranked)</button>
                   </div>
                 </div>
@@ -490,7 +497,7 @@ export function Debrief() {
         <p>{d.saved} of {state.villagers.length} survived. {d.homesSpared} home(s) and {d.livesSpared} life/lives spared by laws.{d.lost.length ? ` Lost: ${d.lost.map((l) => `${l.name} (${l.cause}, day ${l.day})`).join('; ')}.` : ''}</p>
         <h2>Score {d.score}</h2>
         <table className="breakdown"><tbody>{Object.entries(d.breakdown).map(([k, v]) => <tr key={k}><td>{k}</td><td>{v}</td></tr>)}</tbody></table>
-        <p className="small muted" data-testid="seed-info">{d.seedInfo}{kind !== 'story' ? ` · village ${state.scenarioId}` : ''}{state.modifiers.length ? ` · twists: ${state.modifiers.join(', ')}` : ''}. Score is a rough guide only; the story above matters more.</p>
+        <p className="small muted" data-testid="seed-info">{d.seedInfo}{kind !== 'story' ? ` · village ${state.scenarioId}` : ''}{state.modifiers.length ? ` · twists: ${state.modifiers.join(', ')}` : ''}{state.flags.reality ? ` · ${MODE_LABEL[state.flags.reality as 1 | 2 | 3]}` : ''}. Score is a rough guide only; the story above matters more.</p>
         <ul className="small">{d.tips.map((t, i) => <li key={i}>{t}</li>)}</ul>
         <div className="row wrap" style={{ marginTop: '1rem' }}>
           <button className="btn" data-testid="share" onClick={() => { void navigator.clipboard?.writeText(link).then(() => store.toast('Link copied. It holds only the mode, the seed and the version.', 'good'), () => store.toast(link)); }}><Icon name="share" /> Share this {kind === 'story' ? 'seed' : 'village'}</button>

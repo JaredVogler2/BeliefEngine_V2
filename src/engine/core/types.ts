@@ -341,7 +341,8 @@ export type Duty = 'work' | 'rest' | 'evacuate' | 'shelter' | 'watch' | 'messeng
 
 /** A bounded record of something a villager saw: a law failing or working, a proof backfiring. */
 export interface MemoryItem {
-  kind: 'law_failed' | 'law_worked' | 'proof_failed';
+  /** law_harmed (V2): a belief the Keeper wrote damaged their livelihood */
+  kind: 'law_failed' | 'law_worked' | 'proof_failed' | 'law_harmed';
   day: number;
   claim?: Id;
   text: string;
@@ -644,4 +645,8 @@ export interface CreateRunOptions {
   reality?: boolean;
   /** Reality Lab: a Generative Reality run with relaxed balance, unranked (computation and safety limits are never relaxed) */
   realityLab?: boolean;
+  /** the written-belief rules to create a Generative Reality run under (default: the current ones); for replaying older records */
+  realityRules?: number;
+  /** Living Village: the chapter with villager minds at full voice (more of them think each day); its own stories only, own records */
+  living?: boolean;
 }

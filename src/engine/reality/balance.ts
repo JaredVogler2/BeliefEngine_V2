@@ -16,9 +16,15 @@ import { OPERATORS } from './operators.ts';
  *   conditions    = x 0.8 per condition test (at least 0.5);  duration: one night 1, while the law holds 1.25
  *   belief power  = sum of clauses x (1 + 0.1 per extra clause)
  *
- * And from power, exactly as for V1's written beliefs: support needed max(60%, 0.5 + power/160) rounded up to 5%; firm believers
- * 3 + power/8 (3..8, never more than the electorate can give); ramp 72 - power; decay 18 + power/2; Influence 1 / 2 / 3 below
- * power 10 / 30 / above. Balanced play caps power at 60, narrowing reach and then magnitude; Reality Lab caps it at 120.
+ * And from power. Rules 1 (phases 04-10), exactly as for V1's written beliefs: support needed max(60%, 0.5 + power/160) rounded up
+ * to 5%; firm believers 3 + power/8 (3..8); ramp 72 - power; decay 18 + power/2. Rules 2 (phase 11) brings written beliefs closer to
+ * authored laws of equal power, which ask 55-60% and 2-4 believers (V1's Fire Wall, power about 40: 60% and 3): support
+ * 0.5 + p/200 rounded up to 5% (55%..85%), believers 3 + p/15 (3..7), ramp 80 - p/2 (50..80), decay 18 + 0.4 p, where p is the
+ * power per region the belief is held in (each region is its own law and gets its own share; a radius is paid once per region);
+ * never less than the chapter's own law that does the same thing asks (reality/twin.ts).
+ * Measured against the tournament (scripts/tournament-v2.ts): under rules 1 no written belief reached law within a chapter.
+ * Either way never more believers than the electorate can give; Influence 1 / 2 / 3 below power 10 / 30 / above. Balanced play
+ * caps power at 60, narrowing reach and then magnitude; Reality Lab caps it at 120.
  */
 
 export const MAX_POWER = 60;
@@ -62,19 +68,21 @@ function countTests(c: Clause['where']): number {
   return ('all' in c ? c.all : c.any).reduce((a, x) => a + countTests(x), 0);
 }
 
-export function clausePower(c: Clause, regions: number): number {
+export function clausePower(c: Clause, regions: number, rules = 1): number {
   const e = c.effect as Record<string, unknown>;
   const whole = 4 * Math.max(1, regions);
-  // an operator's own radius is its reach (V1's stamps); a "near" selector only narrows a region-wide effect, so it never costs more
-  const reach = typeof e.radius === 'number' ? reachOf(e.radius) : c.target.near ? Math.min(whole, reachOf(c.target.near.radius)) : whole;
+  // an operator's own radius is its reach (V1's stamps); a "near" selector only narrows a region-wide effect, so it never costs more.
+  // Rules 2: a belief held in several regions acts around its sources in each of them, so a radius is paid once per region.
+  const per = rules >= 2 ? Math.max(1, regions) : 1;
+  const reach = typeof e.radius === 'number' ? reachOf(e.radius) * per : c.target.near ? Math.min(whole, reachOf(c.target.near.radius) * per) : whole;
   const op = OPERATORS[c.effect.op];
   const cond = Math.max(0.5, 0.8 ** countTests(c.where));
   const dur = c.duration === 'while_active' ? 1.25 : 1;
   return reach * magnitudeOf(c) * triggerEase(c.when) * (op.weight / 8) * cond * dur;
 }
 
-export function beliefPower(ast: RealityAst): number {
-  const sum = ast.clauses.reduce((a, c) => a + clausePower(c, ast.regions.length), 0);
+export function beliefPower(ast: RealityAst, rules = 1): number {
+  const sum = ast.clauses.reduce((a, c) => a + clausePower(c, ast.regions.length, rules), 0);
   return sum * (1 + 0.1 * (ast.clauses.length - 1));
 }
 
@@ -94,10 +102,10 @@ const clamp = (x: number, lo: number, hi: number): number => Math.max(lo, Math.m
 const roundUp05 = (x: number): number => Math.ceil(x * 20 - 1e-9) / 20;
 
 /** Narrow the strongest clause (reach first, then magnitude) until the belief fits the cap; every change is reported. */
-function narrow(ast: RealityAst, cap: number, notes: string[]): RealityAst {
+function narrow(ast: RealityAst, cap: number, notes: string[], rules: number): RealityAst {
   const out: RealityAst = JSON.parse(JSON.stringify(ast)) as RealityAst;
-  for (let guard = 0; guard < 16 && beliefPower(out) > cap; guard++) {
-    const powers = out.clauses.map((c) => clausePower(c, out.regions.length));
+  for (let guard = 0; guard < 16 && beliefPower(out, rules) > cap; guard++) {
+    const powers = out.clauses.map((c) => clausePower(c, out.regions.length, rules));
     const k = powers.indexOf(Math.max(...powers));
     const c = out.clauses[k];
     const e = c.effect as Record<string, unknown>;
@@ -121,17 +129,59 @@ function narrow(ast: RealityAst, cap: number, notes: string[]): RealityAst {
   return out;
 }
 
-export function balanceReality(input: RealityAst, opts: { lab?: boolean; maxBelievers?: number } = {}): RealityBalance {
+/** An authored law of the chapter that does what the belief does (reality/twin.ts): a written belief never asks less than it. */
+export interface AuthoredFloor {
+  short: string;
+  thresholds: RuleThresholds;
+  /** the watchers that law needs on the deck: a written copy never needs fewer */
+  watchers?: number;
+}
+
+/** Raise a copy's watcher count to its authored twin's (an adjustment the player is told about, like any narrowing). */
+function floorWatchers(ast: RealityAst, min: number, short: string, notes: string[]): RealityAst {
+  let raised = false;
+  const fix = (t: Trigger): Trigger => {
+    if ('event' in t) {
+      if (t.event === 'watchers' && (t.min ?? 1) < min) {
+        raised = true;
+        return { ...t, min };
+      }
+      return t;
+    }
+    if ('all' in t) return { all: t.all.map(fix) };
+    if ('any' in t) return { any: t.any.map(fix) };
+    return { not: fix(t.not) };
+  };
+  const out: RealityAst = { ...ast, clauses: ast.clauses.map((c) => ({ ...c, when: fix(c.when) })) };
+  if (raised) notes.push(`Needs at least ${min} watchers on the deck, as “${short}” does.`);
+  return raised ? out : ast;
+}
+
+export function balanceReality(input: RealityAst, opts: { lab?: boolean; maxBelievers?: number; rules?: number; floor?: AuthoredFloor | null } = {}): RealityBalance {
   const adjustments: string[] = [];
   const cap = opts.lab ? LAB_MAX_POWER : MAX_POWER;
-  const ast = narrow(input, cap, adjustments);
-  const power = Math.round(beliefPower(ast) * 10) / 10;
-  const on = clamp(roundUp05(0.5 + power / 160), 0.6, 0.9);
+  const rules = opts.rules ?? 1;
+  const floored = rules >= 2 && opts.floor?.watchers ? floorWatchers(input, opts.floor.watchers, opts.floor.short, adjustments) : input;
+  const ast = narrow(floored, cap, adjustments, rules);
+  const power = Math.round(beliefPower(ast, rules) * 10) / 10;
+  const r2 = rules >= 2;
+  const f = r2 ? (opts.floor ?? null) : null;
+  // rules 2: a belief held in several regions is a law in each, and each region gets only its own share of the effect, so each
+  // region's adoption is priced by that share; the whole power is what it costs to write (Influence) and how it is rated
+  const local = r2 ? power / Math.max(1, ast.regions.length) : power;
+  let on = r2 ? clamp(roundUp05(0.5 + local / 200), 0.55, 0.85) : clamp(roundUp05(0.5 + power / 160), 0.6, 0.9);
+  let wanted = r2 ? clamp(3 + Math.floor(local / 15), 3, 7) : clamp(3 + Math.floor(power / 8), 3, 8);
+  if (f && (f.thresholds.on > on || f.thresholds.minSupporters > wanted)) {
+    on = Math.max(on, f.thresholds.on);
+    wanted = Math.max(wanted, f.thresholds.minSupporters);
+    adjustments.push(`Asks at least what “${f.short}” asks (${Math.round(on * 100)}% support, ${wanted} firm believers): this belief does what that story of the village does, and a written copy is never the cheaper road.`);
+  }
   const off = Math.max(0.25, Math.round((on - 0.15) * 100) / 100);
-  const wanted = clamp(3 + Math.floor(power / 8), 3, 8);
   const minSupporters = opts.maxBelievers !== undefined ? clamp(Math.min(wanted, opts.maxBelievers), 2, 8) : wanted;
   if (minSupporters < wanted) adjustments.push(`Firm believers needed lowered from ${wanted} to ${minSupporters}: not enough people live there to ever give more. (The share of support needed is not lowered.)`);
-  const thresholds: RuleThresholds = { on, off, minSupporters, ramp: clamp(Math.round(72 - power), 40, 70), decay: clamp(Math.round(18 + power * 0.5), 18, 40) };
+  const ramp = r2 ? Math.min(clamp(Math.round(80 - local / 2), 50, 80), f?.thresholds.ramp ?? 100) : clamp(Math.round(72 - power), 40, 70);
+  const decay = r2 ? Math.max(clamp(Math.round(18 + local * 0.4), 18, 40), f?.thresholds.decay ?? 0) : clamp(Math.round(18 + power * 0.5), 18, 40);
+  const thresholds: RuleThresholds = { on, off, minSupporters, ramp, decay };
   const hash = mechanicsHash(ast);
   return { ast, hash, power, rating: ratingOf(power), apCost: apCostOf(power), thresholds, adjustments, checksum: hash53(canonicalize({ hash, power, thresholds })) };
 }

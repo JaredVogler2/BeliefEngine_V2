@@ -9,6 +9,7 @@ import { countWoodcutters, runDawnNeeds, runDeliveries, runHarvest } from '../wo
 import { updateSmoke } from '../world/sickness.ts';
 import { runNight } from '../world/hazards.ts';
 import { runRealityLaws, type RealityPlan } from '../reality/execute.ts';
+import { settleLawHarm } from '../reality/harm.ts';
 import { realityDawn, realityDusk, realityNight } from '../reality/entities.ts';
 import { captureMemories } from '../mind/memory.ts';
 import { planMinds } from '../mind/decide.ts';
@@ -74,6 +75,8 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   runFactionPlan(ctx); // H' factions endorse or announce
   runDawnNeeds(ctx);
   if (reality) realityDawn(ctx, reality);
+  // the price of hazardous magic: those a written belief harmed tonight remember who wrote it (rules 2)
+  if (reality) settleLawHarm(ctx);
 
   const ev = evaluate(s); // I  threat and win/loss
   if (ev.over) {
