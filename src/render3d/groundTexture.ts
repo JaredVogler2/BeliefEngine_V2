@@ -31,8 +31,14 @@ const PAL = {
 
 export interface GroundTexture {
   texture: THREE.CanvasTexture;
+  /** ash on tiles that burned out since the ground was painted (the engine never unburns a tile; the canvas is uploaded again, once a night) */
+  burn(tiles: [number, number][]): void;
+  /** how many tiles the ground shows as ash */
+  ashTiles(): number;
   dispose(): void;
 }
+
+const ASH = 'rgba(40,38,34,0.78)';
 
 export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedNum: number, maxAniso: number): GroundTexture {
   const { w, h } = snap;
@@ -281,8 +287,14 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
   }
   // burnt tiles
   g.putImageData(img, 0, 0);
-  g.fillStyle = 'rgba(40,38,34,0.78)';
-  for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) if (snap.burned[ty * w + tx]) g.fillRect(tx * PPT + 2, ty * PPT + 2, PPT - 4, PPT - 4);
+  g.fillStyle = ASH;
+  let ash = 0;
+  for (let ty = 0; ty < h; ty++)
+    for (let tx = 0; tx < w; tx++)
+      if (snap.burned[ty * w + tx]) {
+        g.fillRect(tx * PPT + 2, ty * PPT + 2, PPT - 4, PPT - 4);
+        ash++;
+      }
   // contact shadows: the soft dark a building leaves in the grass and dust around its feet (what ambient occlusion would add), multiplied in
   const AO: Record<string, number> = { home: 0.95, cabin: 0.85, hall: 1.3, chapel: 1.05, mill: 1.05, market: 1.15, shelter: 1.15, granary: 0.9, belltower: 0.85, well: 0.45, pen: 0.95, campfire: 0.3, beacon: 0.4 };
   g.save();
@@ -307,5 +319,16 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
-  return { texture, dispose: () => texture.dispose() };
+  return {
+    texture,
+    burn(tiles) {
+      if (!tiles.length) return;
+      g.fillStyle = ASH;
+      for (const [tx, ty] of tiles) g.fillRect(tx * PPT + 2, ty * PPT + 2, PPT - 4, PPT - 4);
+      ash += tiles.length;
+      texture.needsUpdate = true;
+    },
+    ashTiles: () => ash,
+    dispose: () => texture.dispose(),
+  };
 }

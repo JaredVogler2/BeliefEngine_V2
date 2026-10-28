@@ -12,6 +12,7 @@ import { buildHeightField, buildTerrainMesh, type TerrainMesh } from './terrain.
 import { CloudSea } from './clouds.ts';
 import { Water } from './water.ts';
 import { MaterialLib } from './materials.ts';
+import { HazardsLayer } from './hazards.ts';
 import { createLayers } from './layers.ts';
 import { EffectsLayer } from './effects.ts';
 import { MagicField, attachMagicToStandard } from './magic.ts';
@@ -502,6 +503,12 @@ export class World3D implements WorldRenderer {
       return;
     }
     if (changes.water) this.water?.setState(snap, !this.opts.reducedMotion);
+    // ground that burned out tonight turns to ash now, not only when the village is next built
+    if (changes.fire && prev) {
+      const ash: [number, number][] = [];
+      for (let i = 0; i < snap.burned.length; i++) if (snap.burned[i] && !prev.burned[i]) ash.push([i % snap.w, Math.floor(i / snap.w)]);
+      this.terrainMesh?.surface.burn(ash);
+    }
     this.syncForecastOverlay();
     this.applyForecast(snap, this.opts.reducedMotion);
     for (const l of this.layers) l.update(snap, changes, this.ctx);
@@ -759,6 +766,13 @@ export class World3D implements WorldRenderer {
   realityInfo(): RealityDrawn & { airborne: number } {
     const layer = this.layers.find((l) => l instanceof RealityLayer) as RealityLayer | undefined;
     return layer ? layer.info() : { coops: 0, hens: 0, strays: 0, stones: 0, placed: 0, bank: 0, airborne: 0 };
+  }
+
+  /** the wolves, burning tiles (and the buildings among them), smoky tiles and ash the world is drawing now: read by tests, never by the game */
+  hazardInfo(): { wolves: number; packMarks: number; fireTiles: number; smokeTiles: number; puffs: number; burning: string[]; ashTiles: number } {
+    const layer = this.layers.find((l) => l instanceof HazardsLayer) as HazardsLayer | undefined;
+    const ashTiles = this.terrainMesh?.surface.ashTiles() ?? 0;
+    return layer ? { ...layer.hazardCounts(), burning: layer.burningBuildings(), ashTiles } : { wolves: 0, packMarks: 0, fireTiles: 0, smokeTiles: 0, puffs: 0, burning: [], ashTiles };
   }
 
   stats(): { fps: number; effects: number; zoom: number } {

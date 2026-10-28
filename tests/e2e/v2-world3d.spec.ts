@@ -146,6 +146,101 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('the dangers on the ground are drawn where the engine has them: the packs the 2D map shows, the smoke round a lit fire, fire on the ground', async ({ page }, testInfo) => {
+    test.setTimeout(420_000);
+    const errors = watchConsole(page);
+    // Ashwood seed 1, the morning of day 6: three packs out, and the smoke of a fire lit at the first campfire on day 4
+    const ash = GameSession.create({ scenarioId: 'ashwood', seed: 1 });
+    expect(ash.act({ type: 'PICK_STARTER', claim: 'wolves_fear_smoke' }).ok).toBe(true);
+    while (ash.state.day < 4) ash.endDay();
+    expect(ash.act({ type: 'RITUAL', ritual: 'burn_smoke', landmark: 'c_n1' }).ok).toBe(true);
+    while (ash.state.day < 6) ash.endDay();
+    // Redbank seed 2, the morning of day 3: the beacons lit on days 1 and 2 set Ivo's home alight
+    const red = GameSession.create({ scenarioId: 'redbank', seed: 2 });
+    expect(red.act({ type: 'PICK_STARTER', claim: 'river_fears_fire' }).ok).toBe(true);
+    for (let d = 0; d < 2; d++) {
+      for (const l of red.state.world.landmarks.filter((x) => x.kind === 'beacon')) red.act({ type: 'RITUAL', ritual: 'light_beacon', landmark: l.id });
+      red.endDay();
+    }
+    const runs = [
+      {
+        name: 'ashwood',
+        state: ash.state,
+        want: { wolves: 9, packMarks: 3, fireTiles: 0, smokeTiles: 21, burning: [] as string[], ashTiles: 0 },
+        // the overview (a pack in the forest shows by its mark, the smoke lies round the lit fire), and the Grey pack at the pen
+        views: { hazards: { x: 11, z: 8.5, dist: 15, elevationDeg: 50 }, wolves: { x: 16.5, z: 9.5, dist: 5, elevationDeg: 36 } },
+        nights: [] as { fireTiles: number; burning: string[]; ashTiles: number }[],
+      },
+      {
+        name: 'redbank',
+        state: red.state,
+        want: { wolves: 0, packMarks: 0, fireTiles: 1, smokeTiles: 0, burning: ['h_ivo'], ashTiles: 0 },
+        views: { fire: { x: 18.5, z: 4.5, dist: 7, elevationDeg: 38 } },
+        // three more nights played in the 3D world: the home burns on, its ruins burn (flames from the ground now), and then its tile is ash
+        nights: [
+          { fireTiles: 1, burning: ['h_ivo'], ashTiles: 0 },
+          { fireTiles: 1, burning: [], ashTiles: 0 },
+          { fireTiles: 0, burning: [], ashTiles: 1 },
+        ],
+      },
+    ];
+    // what the page's own run says the 2D map shows (its rules: today's packs or yesterday's, one wolf more than a pack's size; a standing
+    // home on a burning tile drawn burning; burned-out ground drawn as ash)
+    const shown = () =>
+      page.evaluate(() => {
+        const s = (window as unknown as { __belief: { state: { day: number; threat: { pack?: number }[]; scn: { features: { wolves?: boolean } }; world: { w: number; packs: { size: number }[]; fire: number[]; smoke: number[]; burned: number[]; landmarks: { id: string; x: number; y: number; hp: number }[] } } } }).__belief.state;
+        const packsOn = (back: number) => s.threat[Math.max(0, Math.min(s.day, s.threat.length) - back)]?.pack ?? 0;
+        const active = s.scn.features.wolves ? Math.min(s.world.packs.length, Math.max(packsOn(1), packsOn(2))) : 0;
+        return {
+          wolves: s.world.packs.slice(0, active).reduce((n, p) => n + p.size + 1, 0),
+          packMarks: active,
+          fireTiles: s.world.fire.filter((f) => f > 0).length,
+          smokeTiles: s.world.smoke.filter((d) => d > 0).length,
+          burning: s.world.landmarks.filter((l) => l.hp > 0 && s.world.fire[l.y * s.world.w + l.x] > 0).map((l) => l.id),
+          ashTiles: s.world.burned.filter((b) => b).length,
+        };
+      });
+    const drawn = () => page.evaluate(() => (window as unknown as { __beRenderer: { hazardInfo: () => { wolves: number; packMarks: number; fireTiles: number; smokeTiles: number; puffs: number; burning: string[]; ashTiles: number } } }).__beRenderer.hazardInfo());
+    const drawnNow = async () => {
+      const d = await drawn();
+      return { wolves: d.wolves, packMarks: d.packMarks, fireTiles: d.fireTiles, smokeTiles: d.smokeTiles, burning: d.burning, ashTiles: d.ashTiles };
+    };
+    for (const run of runs) {
+      await page.goto(URL_3D);
+      await page.evaluate((v) => localStorage.setItem('be:save:v1', v), serializeRun(run.state));
+      await page.goto(URL_3D);
+      await page.getByTestId('continue').click();
+      await world3d(page);
+      expect(await shown(), run.name).toEqual(run.want);
+      await expect.poll(drawnNow, { message: `${run.name}: what the 3D world draws` }).toEqual(run.want);
+      // and the flames or the haze are really in the air
+      await expect.poll(async () => (await drawn()).puffs, { message: `${run.name}: flames or haze drawn`, timeout: 30_000 }).toBeGreaterThan(0);
+      if (process.env.BE_SHOTS === '1') {
+        for (const [what, view] of Object.entries(run.views)) {
+          await page.evaluate((v) => {
+            const r = (window as unknown as { __beRenderer: { setView: (v: { x: number; z: number; dist: number; elevationDeg: number }) => void; advance: (s: number) => void } }).__beRenderer;
+            r.setView(v);
+            r.advance(3);
+          }, view);
+          await page.waitForTimeout(1500);
+          // (the software rasteriser once handed the screenshot an empty frame: wait until the canvas is painted)
+          await expect.poll(mapPainted(page), { timeout: 20_000 }).toBeGreaterThan(0.25);
+          await page.screenshot({ path: `docs/screenshots/v2-phase17/world3d-${run.name}-${what}-${testInfo.project.name.startsWith('phone') ? 'phone' : 'desktop'}.jpg`, type: 'jpeg', quality: 85 });
+        }
+      }
+      // nights played while the 3D world draws: it keeps up with the engine without being rebuilt
+      for (const [i, night] of run.nights.entries()) {
+        await page.evaluate(() => (window as unknown as { __belief: { store: { endDay: () => void } } }).__belief.store.endDay());
+        await page.waitForTimeout(400);
+        await page.evaluate(() => (window as unknown as { __belief: { store: { closeDigest: () => void } } }).__belief.store.closeDigest());
+        const now = await shown();
+        expect({ fireTiles: now.fireTiles, burning: now.burning, ashTiles: now.ashTiles }, `${run.name} night ${i + 1}`).toEqual(night);
+        await expect.poll(drawnNow, { message: `${run.name} night ${i + 1}: what the 3D world draws` }).toEqual(now);
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+
   test('what a written law did is drawn in the 3D world: the hens it saved, the stone carried to the bank, the bank raised', async ({ page }, testInfo) => {
     test.setTimeout(360_000);
     const fx = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces.json', import.meta.url), 'utf8')) as Record<string, { opts: CreateRunOptions; actions: Action[] }>;

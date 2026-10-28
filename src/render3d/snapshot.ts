@@ -103,7 +103,9 @@ export interface SceneSnapshot {
   laws: SceneLaw[];
   ties: SceneTie[];
   regions: { id: string; rects: [number, number, number, number][] }[];
-  packs: { id: string; x: number; y: number; size: number }[];
+  packs: { id: string; x: number; y: number; size: number; hunger: number }[];
+  /** how many of `packs` (in order) the chapter has sent so far: the ones the map shows (the 2D map's own rule) */
+  activePacks: number;
   /** the regions where each story can become law, so choosing a story can show the ground it would govern */
   claimRegions: Record<string, string[]>;
   /** what kind of danger the chapter has, so the sky can say so */
@@ -120,6 +122,14 @@ export interface SceneReality {
   bank: [number, number][];
   /** what written laws did last night, as the executor recorded it: the effects the renderer may animate, and nothing else */
   night: { event: number; law: string; claim: string; op: string; targets: string[]; amount: number | null; day: number }[];
+}
+
+/** The packs the chapter has sent by now (today's, or yesterday's while they are still about), as the 2D map draws them. */
+function activePacksOf(s: RunState): number {
+  if (!s.scn.features.wolves) return 0;
+  const now = s.threat[Math.min(s.day, s.threat.length) - 1]?.pack ?? 0;
+  const before = s.threat[Math.max(0, Math.min(s.day, s.threat.length) - 2)]?.pack ?? 0;
+  return Math.min(s.world.packs.length, Math.max(now, before));
 }
 
 export function getSceneSnapshot(s: RunState): SceneSnapshot {
@@ -175,7 +185,8 @@ export function getSceneSnapshot(s: RunState): SceneSnapshot {
     }),
     ties: s.edges.map((e) => ({ a: e.a, b: e.b, ab: e.ab, ba: e.ba, kind: e.kind })),
     regions: w.regions.map((r) => ({ id: r.id, rects: r.rects.map((q) => [q[0], q[1], q[2], q[3]] as [number, number, number, number]) })),
-    packs: w.packs.map((p) => ({ id: p.id, x: p.x, y: p.y, size: p.size })),
+    packs: w.packs.map((p) => ({ id: p.id, x: p.x, y: p.y, size: p.size, hunger: p.hunger })),
+    activePacks: activePacksOf(s),
     claimRegions: Object.fromEntries(allClaimDefs(s).map((d) => [d.id, d.regions.slice()])),
     threat: s.scn.threatKind,
     reality: s.v2

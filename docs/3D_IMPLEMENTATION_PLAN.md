@@ -8,7 +8,8 @@ when it fires and invisible when it does not.
 
 **Status of this plan:** stage 0's merge is done (2026-10-28: V1 `main` at `22b7b1c`, which carries JaredVogler2/BeliefEngine#2 and
 JaredVogler2/BeliefEngine#3, merged as ordinary history; verification and the new capture set are recorded in [`PROGRESS.md`](PROGRESS.md));
-stages 1-9 are NOT STARTED. Nothing here is done until its evidence exists. V1's own visual pass (its standard, plan and report) is kept in
+stage 1 is IN PROGRESS (its first two rows, the dangers on the ground, VERIFIED 2026-10-28 in phase 17's review follow-up; its other
+four rows NOT STARTED); stages 2-9 are NOT STARTED. Nothing here is done until its evidence exists. V1's own visual pass (its standard, plan and report) is kept in
 [`v1/`](v1/3D_QUALITY_REPORT.md); the baseline numbers below predate it.
 
 ## Baseline the plan starts from
@@ -17,7 +18,7 @@ Measured in this repository on the V1 renderer as imported (headless Chromium 12
 report): WebGL2, sRGB + ACES, one shadowed sun, no environment light, no post-processing; **566 draw calls and ≈223 k triangles per
 frame** at the low tier (1366×768, 0.69 render scale, ≈2.9 fps on the software rasteriser), **1,101 and ≈495 k at high**, 1.5 M
 triangles for Ashwood's forest at high. Daylight only: no frame is ever at night. Wolf packs, live fire and smoke, the social
-lens, the flood forecast and name labels are not drawn in 3D. The plate ends in a cut edge in front of a gradient.
+lens, the flood forecast and name labels are not drawn in 3D (packs, fire, smoke and ash are since stage 1's first rows, below). The plate ends in a cut edge in front of a gradient.
 
 ## Stage 0: bring in V1's open 3D work (merged 2026-10-28)
 
@@ -36,8 +37,8 @@ Every stage below starts from that merged renderer. Doing stages 1-9 first would
 
 | Change | Where | Acceptance |
 |---|---|---|
-| Draw wolf packs (position, size, target) from `snap.packs` | new `render3d/packs.ts`, `snapshot.ts` already carries them | an Ashwood capture shows every pack the 2D map shows |
-| Draw live fire and smoke tiles from `snap.fire` / `snap.smoke`; burned ground updates mid-run from `changes.fire` / `changes.terrain` | `landmarks.ts`, `particles.ts`, `groundTexture.ts`, `World3D.setState` | a beacon-ignition night shows flames on the tiles the engine burns, smoke where it says smoke |
+| Draw wolf packs (position, size, target) from `snap.packs` | new `render3d/hazards.ts` (packs, fire and smoke are one layer); `snapshot.ts` now also carries each pack's hunger and the 2D map's count of packs out | an Ashwood capture shows every pack the 2D map shows. **VERIFIED** 2026-10-28: as many wolves per pack as the 2D map draws, around the engine's position, trotting to where the engine moves them; a mark over each pack that shows through the trees at the overview; a starving pack's coat and eyes run red ([`render3d-hazards.test.ts`](../tests/unit/render3d-hazards.test.ts), [`v2-world3d.spec.ts`](../tests/e2e/v2-world3d.spec.ts) "the dangers on the ground…" on desktop-3d and phone-3d; [overview](screenshots/v2-phase17/world3d-ashwood-hazards-desktop.jpg), [at the pen](screenshots/v2-phase17/world3d-ashwood-wolves-phone.jpg)). A pack's target is not drawn (the 2D map does not draw it either). |
+| Draw live fire and smoke tiles from `snap.fire` / `snap.smoke`; burned ground updates mid-run from `changes.fire` / `changes.terrain` | `hazards.ts`, `groundTexture.ts`, `terrain.ts`, `World3D.setState` | a beacon-ignition night shows flames on the tiles the engine burns, smoke where it says smoke. **VERIFIED** 2026-10-28: flames on every burning tile, out of the roof when a standing building is on it; a haze over every tile the engine has smoky; ash painted on the ground the night a tile burns out, without rebuilding the village (Redbank seed 2: the beacons set Ivo's home alight, it burns down, and three nights later its tile is ash, all played in the 3D world; same tests, [capture](screenshots/v2-phase17/world3d-redbank-fire-desktop.jpg)). |
 | The social lens, the flood forecast and high contrast in 3D | `World3D.setOptions` (stored today, never read), `magic.ts`, `effects.ts` | toggling each changes the 3D frame; e2e assertion through a debug hook |
 | Name label on the selected person and the active law | world-anchored DOM labels via `entityScreen` | label follows the entity while the camera moves |
 | Shadow type three r186 still has; sky, particles and ribbons through the tone mapper; particle size from viewport height and DPR | `World3D.ts`, `sky.ts`, `particles.ts`, `effects.ts` | zero console warnings in `v2-world3d.spec.ts` (add a warning watcher) |

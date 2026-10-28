@@ -22,9 +22,47 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 15 Security, privacy, cost and failure | **VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.** Threat model with every attack mapped to a control and a test; a chaos suite (hostile text, hostile structures, a heavier compute load than play can reach, physics limits, double taps, stale confirmations, session scopes, CORS and caching headers, a cold start); the secret scan runs in CI over every tracked file, every commit and the built site; gateway privacy routing (no training always, zero retention by setting); an operator cost monitor. Found and fixed four defects (entry) | [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), entry below, `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts` |
 | 16 Integration and release testing | **Integrated but not live-tested: the six journeys PASS offline and with scripted providers (A Classic offline, B novel laws, C living society, D replay, E MCP over stdio, F phone sizes in Chromium and CI WebKit); V2 runs at scale replay exactly from stored model outputs; LIVE UNVERIFIED; NOT DEPLOYED** | [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md), [`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md), entry below |
 | 17 Adversarial fun review | **Review done; two P0 and five P1 fixed and VERIFIED offline, with mocks and in Chromium; FUN SUBJECTIVE/UNVERIFIED (no playtest); LIVE UNVERIFIED; NOT DEPLOYED.** A model could swap what a sentence's change is (289 of 292 swapped readings trusted → 11); the composer's price was not always the charge (4 of 72 → 0 of 108); written-belief rules 3 price a ward around every home for the ground it covers; ideas, offers, flavour and wording fixed; a first-time player's sentence is understood 35 of 69 times (blind held-out set). V2 is not complete: LIVE, deployment, a playtest and the premium 3D look remain | [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md), [`data/fun-review-v2/`](data/fun-review-v2/), [`data/tournament-v2/`](data/tournament-v2/) `rules3-*`, `tests/unit/reality-rules3.test.ts`, `tests/e2e/v2-review.spec.ts`, [`screenshots/v2-phase17/`](screenshots/v2-phase17/) |
-| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
+| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stage 1 IN PROGRESS (wolf packs, fire, smoke and ash drawn: VERIFIED in Chromium on software WebGL; GPU UNVERIFIED); stages 2-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-28 — Phase 17 follow-up: the dangers on the ground in 3D (VERIFIED in Chromium on software WebGL; GPU UNVERIFIED)
+
+**What was done** (review finding P1-7 in [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md); the first two rows of the 3D plan's stage 1)
+
+- The 3D world drew none of the dangers the 2D map draws: no wolf pack, no live fire, no smoke round a lit fire, and ground that burned
+  out stayed green until the village was next built. New `src/render3d/hazards.ts`, an observer like every layer (positions from the
+  snapshot; only the trot between them and the drift of flames and smoke are the renderer's own):
+  - **packs**: the packs the 2D map shows (today's, or yesterday's while they are still about: the same rule), as many wolves as it draws
+    for each, in a loose ring around where the engine has the pack, trotting to where the engine moves them (in place at once with
+    reduced motion); a starving pack's eyes and coat run red (the engine's threshold, 75);
+  - **a mark over each pack**, sized in pixels and drawn through the trees, fading in as the camera pulls back: at the overview the canopy
+    hides a pack in the forest, and the 2D map labels every pack;
+  - **fire**: flames and smoke on every burning tile; a standing building on the tile burns from its roof (flames born at the ridge: lower,
+    the roof hid them), with a normally blended flame body under the glow so a fire reads over a bright roof or a pale sky;
+  - **smoke**: a low haze over every tile the engine has smoky round a lit fire, thicker where it is thicker, the same at every quality
+    tier (it is information, not decoration);
+  - **ash**: ground that burns out is painted as ash the same night, without rebuilding the village (`groundTexture.ts`, `terrain.ts`,
+    `World3D.setState`; the engine never unburns a tile).
+- `snapshot.ts` also carries each pack's hunger and the 2D map's count of packs out; `World3D.hazardInfo()` reports what is drawn (read by
+  tests, never by the game). PR JaredVogler2/BeliefEngine_V2#4 had been merged (`6815992`), so this work starts a new pull request from
+  the merged `main`.
+
+**Commands and results**: `npm run lint`, `npm run typecheck`: clean. `npm test`: 61 files, 690 passed (`render3d-hazards.test.ts`
+new, 6: packs as the 2D map shows them over seven Ashwood mornings, the trot and reduced motion, a starving pack, flames from exactly the
+burning tiles, a home burning from its roof, the haze over exactly the smoky tiles). The new 3D test (`v2-world3d.spec.ts` "the dangers on
+the ground…": two saved runs loaded into the 3D world and compared with the page's own run, then three nights played in it, ending with
+the burned home's tile drawn as ash) passed on desktop-3d and phone-3d. The whole desktop-3d project (both 3D specs): 24 passed, 2 skipped
+by design, 23.4 min, on the build before the ash repaint; on the final build the restart-leak, both save-resume, 2D/3D toggle and
+first-frame tests: 5 passed. `npm run size`: entry 296 KB gzip of 300, 3D chunk 219 of 270. `npm run scan:secrets`: clean. Captures
+(software WebGL, the test browser's low tier): `world3d-ashwood-hazards-*`, `world3d-ashwood-wolves-*`, `world3d-redbank-fire-*` in
+[`screenshots/v2-phase17/`](screenshots/v2-phase17/), from `BE_SHOTS=1 npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop-3d
+--project=phone-3d -g "dangers on the ground"`.
+
+**Not verified:** a GPU or a real phone (software WebGL only); the look judged by a person. The rest of stage 1 (the forecast, the
+social lens and high contrast in 3D, labels, console warnings, context loss) NOT STARTED.
 
 ---
 
