@@ -19,11 +19,22 @@ what a village believes, and enough shared belief becomes physical law.
   with scripted providers, the AI SDK's mock model, a real Redis and an offline `vercel build`. **No language model has been called
   by this repository: LIVE is UNVERIFIED** until the owner configures a credential ([`docs/AI_SETUP.md`](docs/AI_SETUP.md)). The
   game asks the network for nothing unless the player opts in to online reading and accepts a notice; Classic play never does.
-- No generative reality yet (phases 04-17): written beliefs still use V1's seven-subject vocabulary.
+- **Phases 04-09 are built and verified offline: Generative Reality.** A Generative Reality run (the reality tab: the three chapters
+  or any generated village) lets the player write any sentence about how the world works. It is read into a closed, typed belief
+  language ([`docs/REALITY_LANGUAGE.md`](docs/REALITY_LANGUAGE.md)), previewed in full (what it acts on, the support it needs, what
+  keeps it working, what else it does, who may push back), and becomes law only when enough villagers come to believe it and
+  something physical sets it off; then it changes the run through the engine's own hazards
+  ([`docs/BELIEF_TO_REALITY.md`](docs/BELIEF_TO_REALITY.md)). Villagers have minds: personalities, goals and memories with
+  provenance; a few decide each day; they demand proof, lie for their families, and answer stories with their own
+  ([`docs/MINDS.md`](docs/MINDS.md)). The model's part (reading sentences, proposing villager moves) is built behind the inference
+  service and tested only with scripted providers: **LIVE UNVERIFIED**. Classic play is V1's, hash for hash.
+- **V1's later 3D work is merged** (immersive HUD, end-of-run scene, finishing chain; JaredVogler2/BeliefEngine#2 and
+  JaredVogler2/BeliefEngine#3). Hens, stones and the bank they raise are drawn in 3D and on the classic map; effects are not yet
+  animated as they happen (phase 10).
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
-  dusk) and today's world is measured against it ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)); the work to reach it is
-  planned, not done ([`docs/3D_IMPLEMENTATION_PLAN.md`](docs/3D_IMPLEMENTATION_PLAN.md)).
+  dusk); the baseline report ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)) predates the V1 merge, and the work to reach
+  the standard is planned, not done ([`docs/3D_IMPLEMENTATION_PLAN.md`](docs/3D_IMPLEMENTATION_PLAN.md)).
 
 Where to pick up: [`docs/CONTINUE_HERE.md`](docs/CONTINUE_HERE.md). What every document is: [`docs/README.md`](docs/README.md).
 

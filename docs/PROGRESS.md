@@ -13,12 +13,58 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
 | 07 Agent cognition and memory | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider: no model-backed decision has been made). Every villager of a V2 run has a personality, goals and memories with provenance; a few a day decide at moments that matter (legal moves only, V1 rules decide the effect); the player can talk with any of them; a model may propose decisions and voice answers, checked twice and recorded so replays need no model | [`MINDS.md`](MINDS.md), entry below, [`screenshots/v2-phase07/`](screenshots/v2-phase07/) |
 | 08 Multi-agent social dynamics | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** Influence journal with cause chains; faction leanings; skeptics demanding proof (answered, failed, ignored); competing claims villagers write in the same language (announced, withdrawable, capped, contestable); lies the engine flags and witnesses discover; social energy so decisions redirect rather than add influence. Measured: the social layer moves the outcome of knife-edge chapters (table in the entry) | [`MINDS.md`](MINDS.md) §6, entry below, [`screenshots/v2-phase08/`](screenshots/v2-phase08/) |
-| 09-17 | NOT STARTED | |
+| 09 Belief-to-reality bridge | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** A typed sentence becomes law only through the whole chain (preview → hashed confirmation → real persuasion → threshold with hysteresis → catalyst → executor → V1 hazards), proven in the browser for the three proof claims plus a complete win and a complete loss; below threshold nothing happens; replays need no model and no network. Measured: written beliefs reach law in 6-9 days, so they rarely decide a chapter (phase 11) | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md), entry below, [`screenshots/v2-phase09/`](screenshots/v2-phase09/) |
+| 10-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 09: imagine → persuade → manifest → consequences (VERIFIED offline and with mocks; LIVE UNVERIFIED)
+
+**What was done** (reference: [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md))
+
+- **V1's 3D work merged** (V1 `main` at `22b7b1c`: JaredVogler2/BeliefEngine#2 and JaredVogler2/BeliefEngine#3): immersive HUD,
+  end-of-run scene, finishing chain, 3D browser projects and CI job. Conflicts resolved as planned (V2's docs kept, V1's copies in
+  `docs/v1/`); V2's specs updated for the new HUD (the selection card, the sheet opened on request).
+- **Preview of the whole chain** (`reality/preview.ts`, composer): per clause target and count now, reach, duration, catalyst and
+  whether it could act tonight; support from how many voters; upkeep; side effects only as the engine plays them; who may push back.
+- **Honest side effects**: operator downsides corrected; cooler flames now cool the hearths (V1 cold) and lower fire-kept flood wards.
+- **Fixes the chain exposed**: river-commons effects did nothing (keyed to `river`); district protections summed per target;
+  forecast and evacuations ignored written beliefs (now `reality/project.ts`); stones never lay within reach of a lantern; "the
+  orchard" read as fields without saying so.
+- **Lifted strays fly home** over the river on a still night; WATER_POOLED and CHICKENS_ROSE name the law that caused them.
+- **Provenance** of each written belief from the log, in the debrief and the law ledger.
+- **Drawn**: coops, hens, stones and the raised bank on the classic map and in the 3D world (`render/reality2d.ts`,
+  `render3d/reality.ts`); both expose `realityInfo()` for tests.
+- A generated village can be started as a Generative Reality run from the reality tab.
+
+**Proof chains** (recorded by `scripts/record-bridge.ts`, real persuasion, replayed by hash):
+
+| Chain | Result |
+|---|---|
+| A, Redbank seed 2 | law day 6; 22 hens saved on two flood nights; complete loss (4 drowned) |
+| A told once (control) | never law; bell rung daily; every hen drowned |
+| B, Redbank seed 3 | law day 6; stones made light, one carried; 3 bank tiles raised for good |
+| C, generated village x1.2 (Eastbank) | law day 9; river one step lower, 7 tiles pooled, fire cut, hearths cooled; a skeptic's demand went unanswered |
+| Win, Redbank seed 1 | victory by the Fire Wall; the written belief spread but never became law |
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `BE_REQUIRE_REDIS=1 npm test` | 48 files, **576 passed** (27 in `belief-bridge.test.ts`) |
+| `npx playwright test tests/e2e/v2-bridge.spec.ts --project=desktop --project=phone` | **7 passed** (five full chains on desktop; the preview on both), 5 skipped by design |
+| `npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop-3d --project=phone-3d` | **7 passed**, 3 skipped (slow or other-profile tests); the hens a law saved and the raised bank drawn in 3D |
+| V2 browser specs (`v2-reality`, `v2-minds`, `v2-online`, `v2-bridge`) on desktop and phone | 26 passed, 12 skipped by design |
+| After the merge: classic suite (desktop, phone) | **160 passed**, 60 skipped by design |
+| After the merge: 3D suites (desktop-3d, phone-3d) | 39 passed; the 2 failures were V2's own spec expecting the old side panel, fixed and re-run green |
+| `npm run build`, `npm run size` | entry 285 KB gzip (budget 300), 3D chunk 212 KB (270), composer 25 KB (40), mind panel 3 KB (20) |
+
+**Mock vs LIVE:** no model has been called. A model-proposed reading (scripted) replays to the same hash with the network switched
+off (unit test); live interpretation is **LIVE UNVERIFIED**.
 
 ## 2026-10-28 — Phase 08: social dynamics that change outcomes (VERIFIED offline and with mocks; LIVE UNVERIFIED)
 

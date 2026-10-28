@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { GameSession, eventHash, stateHash, type Action } from '../../src/engine/index.ts';
+import { readFileSync } from 'node:fs';
+import { GameSession, eventHash, replayRun, serializeRun, stateHash, type Action, type CreateRunOptions } from '../../src/engine/index.ts';
 import { browserState, chooseClaim, mapPainted, replayTraceViaUi, startRedbank, traces, watchConsole } from './helpers.ts';
 
 /**
@@ -92,7 +93,7 @@ test.describe('3D world (Three.js, forced on)', () => {
   // same prefix. It takes about 5.5 minutes on a 4-core software rasteriser (twice that on a CI runner), so it runs on request:
   //   BE_SLOW_3D=1 npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop
   test('the first two days of the recorded Fire Wall route, clicked while the 3D world draws, reach the engine’s own state', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'desktop', 'desktop only; the phone runs cover touch');
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only; the phone runs cover touch');
     test.skip(process.env.BE_SLOW_3D !== '1', 'slow on a software rasteriser: set BE_SLOW_3D=1 to run it');
     test.setTimeout(900_000);
     const errors = watchConsole(page);
@@ -110,7 +111,7 @@ test.describe('3D world (Three.js, forced on)', () => {
   });
 
   test('on a phone-sized touch screen the 3D world fits, paints and answers a tap', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'phone', 'touch profile only');
+    test.skip(!testInfo.project.name.startsWith('phone'), 'touch profile only');
     test.setTimeout(180_000);
     const errors = watchConsole(page);
     await startRedbank(page, 1, 'normal', URL_3D);
@@ -119,7 +120,42 @@ test.describe('3D world (Three.js, forced on)', () => {
     await expect.poll(mapPainted(page), { timeout: 20_000 }).toBeGreaterThan(0.25);
     const at = await villagerOnPage(page, 'ivo');
     await page.touchscreen.tap(at.x, at.y - 4);
-    await expect(page.getByTestId('villager-card')).toContainText('Ivo Thatcher');
+    await expect(page.getByTestId('selection-pop')).toContainText('Ivo Thatcher');
     expect(errors).toEqual([]);
+  });
+
+  test('what a written law did is drawn in the 3D world: the hens it saved, the stone carried to the bank, the bank raised', async ({ page }, testInfo) => {
+    test.setTimeout(360_000);
+    const fx = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces.json', import.meta.url), 'utf8')) as Record<string, { opts: CreateRunOptions; actions: Action[] }>;
+    for (const key of ['hens', 'stones'] as const) {
+      // the morning after the night the law acted: the recorded chain up to its last End Day, saved as the game saves
+      const t = fx[key];
+      const last = t.actions.map((a) => a.type).lastIndexOf('END_DAY');
+      const run = replayRun({ ...t.opts, actions: t.actions.slice(0, last) });
+      expect(run.rejected).toEqual([]);
+      const v2 = run.state.v2!;
+      await page.goto(URL_3D);
+      await page.evaluate((v) => localStorage.setItem('be:save:v1', v), serializeRun(run.state));
+      await page.goto(URL_3D);
+      await page.getByTestId('continue').click();
+      await world3d(page);
+      const d = await page.evaluate(() => (window as unknown as { __beRenderer: { realityInfo: () => Record<string, number> } }).__beRenderer.realityInfo());
+      expect(d.hens).toBe(v2.chickens.filter((c) => c.alive).length);
+      expect(d.coops).toBe(v2.coops.length);
+      expect(d.placed).toBe(v2.stones.filter((x) => x.state === 'placed').length);
+      expect(d.bank).toBe(Object.values(v2.bank).filter((h) => h > 0).length);
+      if (key === 'hens') expect(d.hens).toBeGreaterThan(20);
+      if (key === 'stones') expect(d.placed + d.bank).toBeGreaterThan(0);
+      if (process.env.BE_SHOTS === '1') {
+        const at = key === 'hens' ? v2.coops[0] : v2.stones.find((x) => x.state === 'placed')!;
+        await page.evaluate(([x, y]) => {
+          const r = (window as unknown as { __beRenderer: { setView: (v: { x: number; z: number; dist: number; elevationDeg: number }) => void; advance: (s: number) => void } }).__beRenderer;
+          r.setView({ x: x + 0.5, z: y + 0.5, dist: 6.5, elevationDeg: 40 });
+          r.advance(2);
+        }, [at.x, at.y]);
+        await page.waitForTimeout(1500);
+        await page.screenshot({ path: `docs/screenshots/v2-phase09/${key}-3d-${testInfo.project.name.startsWith('phone') ? 'phone' : 'desktop'}.png` });
+      }
+    }
   });
 });

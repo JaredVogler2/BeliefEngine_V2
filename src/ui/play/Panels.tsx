@@ -7,6 +7,7 @@ import { lawWitnesses } from '../../engine/mind/view.ts';
 import { Avatar, Bar, ClaimGlyph, Icon, evIcon } from '../components.tsx';
 import { store, useStore, type SideTab } from '../store.ts';
 import { getRenderer } from './MapView.tsx';
+import { LawProvenance } from './Provenance.tsx';
 
 // a villager's mind and a conversation with them (V2 runs only): its own chunk, loaded when a V2 villager is opened
 const MindPanel = lazy(() => import('./MindPanel.tsx'));
@@ -380,6 +381,7 @@ export function LawsPanel() {
             return w ? <div className="small" data-testid="law-witnesses">{w.saw} of {w.supporters} saw it work themselves{w.saw === 0 ? ': support built on hearsay alone is easily shaken' : ''}.</div> : null;
           })()}
           <div className="small muted">{l.note}</div>
+          {state.v2 && findClaimDef(state, l.claimId)?.reality && !l.rival && <LawProvenance state={state} claim={l.claimId} />}
           <ul>
             <li>{l.benefit}</li>
             <li style={{ color: '#ffb3bf' }}>{l.risk}</li>

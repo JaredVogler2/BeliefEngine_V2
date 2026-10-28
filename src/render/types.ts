@@ -37,6 +37,8 @@ export interface WorldRenderer {
   stats(): { fps: number; effects: number; zoom: number };
   /** the end-of-run tour: a slow drift round the village (the 3D world only) */
   setAmbient?(on: boolean): void;
+  /** what of a Generative Reality run is drawn now (hens, stones, raised bank), for tests */
+  realityInfo?(): { coops: number; hens: number; strays: number; stones: number; placed: number; bank: number };
   /** debug and screenshot hooks (the 3D world only) */
   advance?(seconds: number): void;
   renderNow?(): void;

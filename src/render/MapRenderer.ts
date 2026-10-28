@@ -3,6 +3,7 @@ import { claimDef } from '../engine/core/lookup.ts';
 import { firstName } from '../engine/core/names.ts';
 import { C, TS, hsl, nz, trustColor } from './palette.ts';
 import type { WorldRenderer } from './types.ts';
+import { realityCounts, realityDrawList, type RealityDrawn } from './reality2d.ts';
 import {
   drawBeacon, drawBellTower, drawBridge, drawCabin, drawCampfire, drawChapel, drawField, drawGranary, drawHall, drawHome, drawLabel, drawMarket, drawMill, drawPack, drawPen, drawRoadState, drawShelter, drawTree, drawVillager, drawWell, flame,
 } from './sprites.ts';
@@ -857,6 +858,8 @@ export class MapRenderer implements WorldRenderer {
         list.push({ y: py + 6, f: () => drawPack(g, px, py, reduced ? 0 : t, p.size, p.id, p.hunger >= 75) });
       });
     }
+    // Generative Reality: coops and hens, loose and placed stones, the raised bank
+    if (s.v2) realityDrawList(g, s, reduced ? 0 : t, list);
     // fire
     for (let i = 0; i < w.fire.length; i++) {
       if (w.fire[i] <= 0) continue;
@@ -1342,5 +1345,10 @@ export class MapRenderer implements WorldRenderer {
 
   stats(): { fps: number; effects: number; zoom: number } {
     return { fps: this.fps, effects: this.effects.length, zoom: Math.round(this.cam.zoom * 100) / 100 };
+  }
+
+  /** what of a Generative Reality run the map is drawing now (hens, stones, raised bank): read by tests, never by the game */
+  realityInfo(): RealityDrawn {
+    return realityCounts(this.state ?? null);
   }
 }

@@ -91,22 +91,22 @@ visibility in tiles of cover, speed ×0.2..2, health, fear and labour in points,
 
 ## 4. Operators (`operators.ts`)
 
-| Operator | Family | Targets | Parameters | Runs | Order | Lasts | Downside (shown in every preview) |
+| Operator | Family | Targets | Parameters | Runs | Order | Lasts | Downside (only what the engine plays; the preview lists it per clause, phase 09) |
 |---|---|---|---|---|---|---|---|
 | `CHANGE_LIGHT` | light | lantern | delta -2..2 | yes | 3 | temporary | brighter lanterns burn their fuel twice as fast |
-| `WEATHER_MODIFIER` | weather | rain | mode attract/repel/redirect; magnitude 1-3; toward region? | yes | 5 | temporary | rain is moved, not made: the water lands on the low ground of the region it is sent to |
-| `RELOCATE_RESOURCE` | resource | water | water; magnitude 1-3; toward region | yes | 6 | temporary | the water taken from the river pools where it is sent |
-| `REDIRECT_FLOW` | hydrology | water | mode repel/attract/slow; magnitude 1-3; radius 0-4 | yes | 10 | temporary | water kept from one place goes somewhere else; drawing it in floods what is near the source |
-| `MOVE_AWAY` / `MOVE_TOWARD` | movement | wolf, water, chicken | magnitude 1-3; radius 0-4 | yes | 11 | temporary | what is driven off ends up elsewhere / what is drawn in arrives where the source stands |
-| `MODIFY_VISIBILITY` | light | home, livestock | delta -3..3 | yes | 12 | temporary | a pack that cannot find one place hunts the next |
-| `MODIFY_DURABILITY` | structure | bridge, home | delta -3..3 | yes | 15 | temporary | a structure the village trusts too much draws crowds onto it |
-| `MODIFY_MOVEMENT` | movement | fire, wolf | delta -3..3 | yes | 18 | temporary | slowed flames smoulder where they are; slowed packs linger near the village (water is slowed by `REDIRECT_FLOW` slow) |
-| `SET_MATERIAL_PROPERTY` | materials | stone, home, bridge, field | mass/flammability/hardness; delta -3..3 | yes | 20 | temporary | light stones float off in floodwater and batter what is downstream |
-| `ALTER_TEMPERATURE` | thermal | fire | delta -3..3 | yes | 25 | temporary | hotter flames destroy more; cooler ones make beacons and hearths weaker comfort |
-| `GROW_ENTITY` / `DECAY_ENTITY` | growth | field | magnitude 1-3 | yes | 30 | temporary | faster crops need more hands and water / withered crops mean less food |
-| `APPLY_FORCE` | dynamics | chicken | direction up/away/toward; magnitude 1-3 | yes | 40 | temporary | what flies can be carried off by the wind and land out of reach (stones are not thrown: a belief changes their weight) |
+| `WEATHER_MODIFIER` | weather | rain | mode attract/repel/redirect; magnitude 1-3; toward region? | yes | 5 | temporary | rain is moved, not made: where no crops drink it, it pools on the low ground of the region it is sent to |
+| `RELOCATE_RESOURCE` | resource | water | water; magnitude 1-3; toward region | yes | 6 | temporary | the water taken from the river pools on the low ground where it is sent |
+| `REDIRECT_FLOW` | hydrology | water | mode repel/attract/slow; magnitude 1-3; radius 0-4 | yes | 10 | temporary | drawing water in floods the ground near the source; turning it aside spares only the ground within reach |
+| `MOVE_AWAY` / `MOVE_TOWARD` | movement | wolf, water, chicken | magnitude 1-3; radius 0-4 | yes | 11 | temporary | what is driven off waits at the edge of the warded ground / what is drawn in arrives where the source stands |
+| `MODIFY_VISIBILITY` | light | home, livestock | delta -3..3 | yes | 12 | temporary | a hidden pen or home is spared, not the pack: it waits at the edge |
+| `MODIFY_DURABILITY` | structure | bridge, home | delta -3..3 | yes | 15 | temporary | none beyond its price (a weaker structure is the harm itself) |
+| `MODIFY_MOVEMENT` | movement | fire, wolf | delta -3..3 | yes | 18 | temporary | faster flames spread further, faster packs arrive sooner (water is slowed by `REDIRECT_FLOW` slow) |
+| `SET_MATERIAL_PROPERTY` | materials | stone, home, bridge, field | mass/flammability/hardness; delta -3..3 | yes | 20 | temporary | a stone made light that stands in floodwater floats off and rams the bridge |
+| `ALTER_TEMPERATURE` | thermal | fire | delta -3..3 | yes | 25 | temporary | hotter flames destroy more; cooler ones warm the hearths less (the weak lose health) and, clearly cooler, lower the flood wards fire keeps |
+| `GROW_ENTITY` / `DECAY_ENTITY` | growth | field | magnitude 1-3 | yes | 30 | temporary | none beyond its price / withered crops mean less food |
+| `APPLY_FORCE` | dynamics | chicken | direction up/away/toward; magnitude 1-3 | yes | 40 | temporary | a lift of 2+ drifts with a strong wind, across the river if it blows that way (strays lay no eggs; a lifted stray flies home on a still night); pushed hens can be driven into floodwater |
 | `INFLUENCE_MOTIVATION` | behavior | villager | courage/calm/diligence; magnitude 1-2 | yes | 50 | temporary | calm people are harder to convince of anything, yours included |
-| `GIVE_STATUS_EFFECT` | status | villager, home | fireproof/sick_resistant/warm; magnitude 1-3 | yes | 55 | temporary | people who feel protected linger where the danger is |
+| `GIVE_STATUS_EFFECT` | status | villager, home | fireproof/sick_resistant/warm; magnitude 1-3 | yes | 55 | temporary | none beyond its price and upkeep |
 | `SPAWN_BOUNDED_ENTITY` | spawn | chicken | chicken; count 1-3 | yes | 60 | lasting | each chick costs one food; a coop holds at most twelve |
 | `TRANSFORM_MATERIAL` | materials | stone, home, bridge, field, water | into word | **no**: it would create things from nothing | - | - | - |
 | `MODIFY_STRUCTURE_CONNECTION` | structure | bridge | connect | **no**: not modelled yet | - | - | - |

@@ -2,8 +2,13 @@
  "note": "Recorded by scripts/record-bridge.ts; re-record after any change to the reader, the balance, the social rules or the executor.",
  "hens": {
   "why": "claim A through real persuasion: law on day 6, the hens ride out two flood nights; all Influence went to the hens, so four villagers drown (a complete loss)",
-  "scenarioId": "redbank",
-  "seed": 2,
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 2,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true
+  },
   "sentence": "Chickens fly when the bell rings.",
   "region": null,
   "claimId": "reality_12f5310edc",
@@ -229,8 +234,13 @@
  },
  "hensBelow": {
   "why": "the same village and sentence, told to one person and never again: the bell rings every night, the law never wakes, nothing flies and the hens drown",
-  "scenarioId": "redbank",
-  "seed": 2,
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 2,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true
+  },
   "sentence": "Chickens fly when the bell rings.",
   "region": null,
   "claimId": "reality_12f5310edc",
@@ -401,8 +411,13 @@
  },
  "stones": {
   "why": "claim B through real persuasion: law on day 6; wet stones by the lit lanterns weigh almost nothing, a villager carries one to the bank and the bank stands higher for good",
-  "scenarioId": "redbank",
-  "seed": 3,
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 3,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true
+  },
   "sentence": "Wet stone becomes light beside lanterns.",
   "region": null,
   "claimId": "reality_069a8c1a9e",
@@ -626,8 +641,13 @@
  },
  "rain": {
   "why": "claim C through real persuasion in a nine-day generated village (held in Eastbank): law on the last day; the rain is drawn onto Eastbank (it pools on the low ground), flames burn weaker and the hearths cool",
-  "scenarioId": "x1.2",
-  "seed": 1,
+  "opts": {
+   "scenarioId": "x1.2",
+   "seed": 2,
+   "difficulty": "normal",
+   "mode": "expedition",
+   "reality": true
+  },
   "sentence": "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.",
   "region": "east",
   "claimId": "reality_1eaeab5416",
@@ -636,8 +656,8 @@
   "alive": 9,
   "hens": 0,
   "bank": 0,
-  "stateHash": "1c0c1a012f422e",
-  "eventHash": "076e491e1aa273",
+  "stateHash": "0aa10162712b92",
+  "eventHash": "0a628a4d261467",
   "actions": [
    {
     "type": "PICK_STARTER",
@@ -780,24 +800,18 @@
     "target": "preacher"
    },
    {
-    "type": "MESSENGER",
-    "claim": "reality_1eaeab5416",
-    "from": "preacher",
-    "to": "elder"
-   },
-   {
     "type": "SEED",
     "claim": "reality_1eaeab5416",
-    "target": "farmer"
+    "target": "kchild"
+   },
+   {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "kchild",
+    "to": "pchild"
    },
    {
     "type": "END_DAY"
-   },
-   {
-    "type": "MESSENGER",
-    "claim": "reality_1eaeab5416",
-    "from": "preacher",
-    "to": "pchild"
    },
    {
     "type": "MESSENGER",
@@ -806,6 +820,12 @@
     "to": "preacher"
    },
    {
+    "type": "MESSENGER",
+    "claim": "reality_1eaeab5416",
+    "from": "preacher",
+    "to": "pchild"
+   },
+   {
     "type": "RITUAL",
     "ritual": "ring_bells",
     "landmark": "bell"
@@ -816,14 +836,14 @@
    {
     "type": "MESSENGER",
     "claim": "reality_1eaeab5416",
-    "from": "pchild",
+    "from": "kchild",
     "to": "keeper"
    },
    {
     "type": "MESSENGER",
     "claim": "reality_1eaeab5416",
     "from": "keeper",
-    "to": "farmer"
+    "to": "kchild"
    },
    {
     "type": "RITUAL",
@@ -837,7 +857,7 @@
     "type": "MESSENGER",
     "claim": "reality_1eaeab5416",
     "from": "keeper",
-    "to": "kchild"
+    "to": "farmer"
    },
    {
     "type": "MESSENGER",
@@ -917,8 +937,13 @@
  },
  "win": {
   "why": "a complete win in a Generative Reality run: the written belief is composed and spread, but the authored Fire Wall decides the chapter",
-  "scenarioId": "redbank",
-  "seed": 1,
+  "opts": {
+   "scenarioId": "redbank",
+   "seed": 1,
+   "difficulty": "normal",
+   "mode": "story",
+   "reality": true
+  },
   "sentence": "Chickens fly when the bell rings.",
   "region": null,
   "claimId": "reality_12f5310edc",

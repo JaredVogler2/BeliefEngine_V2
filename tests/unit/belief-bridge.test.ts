@@ -4,7 +4,7 @@ import { GameSession, buildRealityClaim, predictedWater, stateHash, eventHash } 
 import { canonicalize } from '../../src/engine/core/hash.ts';
 import { cloneState } from '../../src/engine/core/clone.ts';
 import { replayRun } from '../../src/engine/core/replay.ts';
-import type { Action, ClaimDef, RunState } from '../../src/engine/core/types.ts';
+import type { Action, ClaimDef, CreateRunOptions, RunState } from '../../src/engine/core/types.ts';
 import { computeModifiers } from '../../src/engine/laws/effects.ts';
 import { computeWater } from '../../src/engine/world/flood.ts';
 import { chainOf } from '../../src/engine/mind/journal.ts';
@@ -23,7 +23,7 @@ import { lightEast, playReality, ring } from '../helpers/reality.ts';
  * conflict, a harm) the social part is shortcut with playReality and the test says so.
  */
 
-interface Trace { scenarioId: string; seed: number; sentence: string; region: string | null; claimId: string; result: string | null; lawDay: number | null; alive: number; hens: number; bank: number; stateHash: string; eventHash: string; actions: Action[] }
+interface Trace { opts: CreateRunOptions; sentence: string; region: string | null; claimId: string; result: string | null; lawDay: number | null; alive: number; hens: number; bank: number; stateHash: string; eventHash: string; actions: Action[] }
 const fx = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces.json', import.meta.url), 'utf8')) as Record<string, Trace>;
 const CHAINS = ['hens', 'hensBelow', 'stones', 'rain', 'win'] as const;
 
@@ -31,7 +31,7 @@ const replays = new Map<string, RunState>();
 function play(key: (typeof CHAINS)[number]): RunState {
   if (!replays.has(key)) {
     const t = fx[key];
-    const r = replayRun({ scenarioId: t.scenarioId, seed: t.seed, reality: true, actions: t.actions });
+    const r = replayRun({ ...t.opts, actions: t.actions });
     expect(r.rejected, `${key}: every recorded action is still legal`).toEqual([]);
     replays.set(key, r.state);
   }
@@ -42,7 +42,7 @@ const events = (s: RunState, code: string, claim?: string) => s.log.filter((e) =
 describe('each chain starts from the words and replays exactly', () => {
   it.each(CHAINS)('%s: the offline reader, in the live village, builds exactly the claim the trace wrote', (key) => {
     const t = fx[key];
-    const g = GameSession.create({ scenarioId: t.scenarioId, seed: t.seed, reality: true });
+    const g = GameSession.create(t.opts);
     expect(g.act(t.actions[0]).ok).toBe(true);
     const r = readBelief(g.state, t.sentence, t.region ? { region: t.region } : {});
     expect(r.kind === 'supported' || r.kind === 'partial').toBe(true);
@@ -408,7 +408,7 @@ describe('replays need no model and no network', () => {
 
   it('a reading a model proposed (scripted here), once written, replays to the same hash with the network switched off', () => {
     const t = fx.hens;
-    const g = GameSession.create({ scenarioId: t.scenarioId, seed: t.seed, reality: true });
+    const g = GameSession.create(t.opts);
     g.act(t.actions[0]);
     const offline = readBelief(g.state, t.sentence);
     if (offline.kind !== 'supported') throw new Error('read');
@@ -417,12 +417,12 @@ describe('replays need no model and no network', () => {
     if (!built.ok) throw new Error(built.message);
     const id = built.draft.claim.id;
     const actions: Action[] = t.actions.map((a) => (a.type === 'COMPOSE' ? { type: 'COMPOSE', claim: built.draft.claim } : 'claim' in a && a.claim === t.claimId ? ({ ...a, claim: id } as Action) : a));
-    const live = GameSession.create({ scenarioId: t.scenarioId, seed: t.seed, reality: true });
+    const live = GameSession.create(t.opts);
     for (const a of actions) expect(live.act(a).ok, JSON.stringify(a).slice(0, 80)).toBe(true);
     vi.stubGlobal('fetch', () => {
       throw new Error('network is off');
     });
-    const rep = replayRun({ scenarioId: t.scenarioId, seed: t.seed, reality: true, actions });
+    const rep = replayRun({ ...t.opts, actions });
     expect(rep.rejected).toEqual([]);
     expect(rep.stateHash).toBe(stateHash(live.state));
     expect(rep.state.claims.find((c) => c.id === id)!.def!.reality!.ast.source.reader).toBe('model');

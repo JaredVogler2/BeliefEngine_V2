@@ -13,6 +13,7 @@ import { downloadText } from './files.ts';
 import { useWhatIf } from './whatif.ts';
 import { store, useStore } from './store.ts';
 import { V2_FEATURES } from '../v2/features.ts';
+import { RealityProvenance } from './play/Provenance.tsx';
 
 // ------------------------------------------------------------------ title
 
@@ -205,6 +206,19 @@ export function Scenarios() {
                   </div>
                 </div>
               ))}
+              <div className="card scn-card" data-testid="reality-scn-expedition">
+                <h2>A generated village</h2>
+                <p>Any village the generator builds, with its own map, people and crisis: the same seed always builds the same one.</p>
+                <label className="field">
+                  <span>Village seed</span>
+                  <input type="text" inputMode="numeric" value={seedText} onChange={(e) => setSeedText(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} aria-label="Village seed for a Generative Reality run" data-testid="reality-expedition-seed" />
+                </label>
+                <div className="row wrap">
+                  {village && <span className="chip">{village.days} days</span>}
+                  <span className="chip violet">Write your own laws</span>
+                </div>
+                <button className="btn primary" disabled={seedNum === null} onClick={() => { if (seedNum !== null) { sfx('click'); store.newRun({ ...expeditionOptions(seedNum), reality: true }); } }} data-testid="begin-reality-expedition">Begin</button>
+              </div>
             </div>
           </section>
         )}
@@ -457,6 +471,7 @@ export function Debrief() {
           {alt && <button className="btn big" data-testid="try-other" onClick={again}>Try another approach</button>}
         </div>
         {state.flags.inventor && <InventorNote state={state} />}
+        {state.v2 && <RealityProvenance state={state} />}
         {reward && <Rewards reward={reward} />}
         <h2>Why it went this way</h2>
         {d.chains.map((c, i) => (

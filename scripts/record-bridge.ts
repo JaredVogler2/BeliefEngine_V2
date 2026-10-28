@@ -11,13 +11,13 @@ import { GameSession } from '../src/engine/core/session.ts';
 import { replayRun, stateHash } from '../src/engine/core/replay.ts';
 import { lawPusher, lightBeaconsByCoverage } from '../src/engine/ai/bots/lawpusher.ts';
 import { readBelief } from '../src/engine/reality/read.ts';
-import type { Action, RunState } from '../src/engine/core/types.ts';
+import type { Action, CreateRunOptions, RunState } from '../src/engine/core/types.ts';
 
 interface Chain {
   key: string;
   why: string;
-  scenarioId: string;
-  seed: number;
+  /** exactly the options the game's own screens start this run with (a chapter from the reality tab, or a generated village) */
+  opts: CreateRunOptions;
   sentence: string;
   region?: string;
   /** the story the bot pushes; null: the written belief itself */
@@ -32,16 +32,18 @@ const A = 'Chickens fly when the bell rings.';
 const B = 'Wet stone becomes light beside lanterns.';
 const C = 'At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.';
 
+const chapter = (scenarioId: string, seed: number): CreateRunOptions => ({ scenarioId, seed, difficulty: 'normal', mode: 'story', reality: true });
+
 const CHAINS: Chain[] = [
-  { key: 'hens', why: 'claim A through real persuasion: law on day 6, the hens ride out two flood nights; all Influence went to the hens, so four villagers drown (a complete loss)', scenarioId: 'redbank', seed: 2, sentence: A, push: null, catalystFrom: 6 },
-  { key: 'hensBelow', why: 'the same village and sentence, told to one person and never again: the bell rings every night, the law never wakes, nothing flies and the hens drown', scenarioId: 'redbank', seed: 2, sentence: A, push: null, catalystFrom: 1, starve: true },
-  { key: 'stones', why: 'claim B through real persuasion: law on day 6; wet stones by the lit lanterns weigh almost nothing, a villager carries one to the bank and the bank stands higher for good', scenarioId: 'redbank', seed: 3, sentence: B, push: null, catalystFrom: 4 },
-  { key: 'rain', why: 'claim C through real persuasion in a nine-day generated village (held in Eastbank): law on the last day; the rain is drawn onto Eastbank (it pools on the low ground), flames burn weaker and the hearths cool', scenarioId: 'x1.2', seed: 1, sentence: C, region: 'east', push: null, catalystFrom: 4 },
-  { key: 'win', why: 'a complete win in a Generative Reality run: the written belief is composed and spread, but the authored Fire Wall decides the chapter', scenarioId: 'redbank', seed: 1, sentence: A, push: 'river_fears_fire', catalystFrom: 5 },
+  { key: 'hens', why: 'claim A through real persuasion: law on day 6, the hens ride out two flood nights; all Influence went to the hens, so four villagers drown (a complete loss)', opts: chapter('redbank', 2), sentence: A, push: null, catalystFrom: 6 },
+  { key: 'hensBelow', why: 'the same village and sentence, told to one person and never again: the bell rings every night, the law never wakes, nothing flies and the hens drown', opts: chapter('redbank', 2), sentence: A, push: null, catalystFrom: 1, starve: true },
+  { key: 'stones', why: 'claim B through real persuasion: law on day 6; wet stones by the lit lanterns weigh almost nothing, a villager carries one to the bank and the bank stands higher for good', opts: chapter('redbank', 3), sentence: B, push: null, catalystFrom: 4 },
+  { key: 'rain', why: 'claim C through real persuasion in a nine-day generated village (held in Eastbank): law on the last day; the rain is drawn onto Eastbank (it pools on the low ground), flames burn weaker and the hearths cool', opts: { scenarioId: 'x1.2', seed: 2, difficulty: 'normal', mode: 'expedition', reality: true }, sentence: C, region: 'east', push: null, catalystFrom: 4 },
+  { key: 'win', why: 'a complete win in a Generative Reality run: the written belief is composed and spread, but the authored Fire Wall decides the chapter', opts: chapter('redbank', 1), sentence: A, push: 'river_fears_fire', catalystFrom: 5 },
 ];
 
 function record(c: Chain): Record<string, unknown> {
-  const g = GameSession.create({ scenarioId: c.scenarioId, seed: c.seed, reality: true });
+  const g = GameSession.create(c.opts);
   const opening = c.push && g.state.scn.starters.includes(c.push) ? c.push : g.state.scn.starters[0];
   g.act({ type: 'PICK_STARTER', claim: opening });
   const reading = readBelief(g.state, c.sentence, c.region ? { region: c.region } : {});
@@ -81,12 +83,12 @@ function record(c: Chain): Record<string, unknown> {
     for (let d = 0; d < 20 && !g.state.outcome; d++) bot.playDay(g);
   }
   const actions: Action[] = g.log.slice();
-  const rep = replayRun({ scenarioId: c.scenarioId, seed: c.seed, actions, reality: true });
+  const rep = replayRun({ ...c.opts, actions });
   if (rep.rejected.length || rep.stateHash !== stateHash(g.state)) throw new Error(`${c.key}: the trace does not replay to the live run (${JSON.stringify(rep.rejected)})`);
   const s = g.state;
   const lawDay = s.log.find((e) => e.code === 'LAW_ACTIVATED' && e.claim === id)?.day ?? null;
   const out = {
-    why: c.why, scenarioId: c.scenarioId, seed: c.seed, sentence: c.sentence, region: c.region ?? null, claimId: id,
+    why: c.why, opts: c.opts, sentence: c.sentence, region: c.region ?? null, claimId: id,
     result: s.outcome?.result ?? null, lawDay, alive: s.villagers.filter((v) => v.status !== 'dead').length,
     hens: s.v2!.chickens.filter((h) => h.alive).length, bank: Object.keys(s.v2!.bank).length,
     stateHash: rep.stateHash, eventHash: rep.eventHash, actions,

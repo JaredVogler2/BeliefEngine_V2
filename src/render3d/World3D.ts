@@ -17,6 +17,7 @@ import { EffectsLayer } from './effects.ts';
 import { MagicField, attachMagicToStandard } from './magic.ts';
 import { PostChain, displayUniforms, preCompensate, type PostLook, type PostProfile } from './post.ts';
 import { makeEnvironment } from './env.ts';
+import { RealityLayer, type RealityDrawn } from './reality.ts';
 
 const DEFAULT_OPTS: RenderOpts = {
   reducedMotion: false, lens: 'none', showFlood: true, activeClaim: null, selection: null, hints: [], forecast: null, highContrast: false, quality: 'high', known: new Set(),
@@ -752,6 +753,12 @@ export class World3D implements WorldRenderer {
 
   noteBell(): void {
     for (const l of this.layers) (l as Layer & { noteBell?: () => void }).noteBell?.();
+  }
+
+  /** what of a Generative Reality run the world is drawing now (hens, stones, raised bank): read by tests, never by the game */
+  realityInfo(): RealityDrawn {
+    const layer = this.layers.find((l) => l instanceof RealityLayer) as RealityLayer | undefined;
+    return layer ? layer.info() : { coops: 0, hens: 0, strays: 0, stones: 0, placed: 0, bank: 0 };
   }
 
   stats(): { fps: number; effects: number; zoom: number } {
