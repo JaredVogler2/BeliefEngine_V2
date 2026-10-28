@@ -10,7 +10,7 @@ export function makeSky(): THREE.Mesh {
     depthWrite: false,
     depthTest: false,
     fog: false,
-    uniforms: { uTop: { value: new THREE.Color(0xa9cbe6) }, uHorizon: { value: new THREE.Color(0xf1ead0) }, uBottom: { value: new THREE.Color(0xc9d6bc) }, uTime: { value: 0 }, uCloud: { value: 0.3 }, uCloudCol: { value: new THREE.Color(0xffffff) }, ...displayUniforms },
+    uniforms: { uTop: { value: new THREE.Color(0xa9cbe6) }, uHorizon: { value: new THREE.Color(0xf1ead0) }, uBottom: { value: new THREE.Color(0xc9d6bc) }, uTime: { value: 0 }, uCloud: { value: 0.3 }, uCloudCol: { value: new THREE.Color(0xffffff) }, uNight: { value: 0 }, ...displayUniforms },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
       void main() {
@@ -26,6 +26,7 @@ export function makeSky(): THREE.Mesh {
       uniform float uTime;
       uniform float uCloud;
       uniform vec3 uCloudCol;
+      uniform float uNight;
       ${DISPLAY_GLSL}
       float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       float vn(vec2 p) {
@@ -56,6 +57,15 @@ export function makeSky(): THREE.Mesh {
         float cover = smoothstep(thr, thr + 0.22, n) * band;
         float shade = mix(1.0, 0.72, smoothstep(0.35, 0.8, n));
         c = mix(c, uCloudCol * shade, clamp(cover * (0.55 + 0.45 * uCloud), 0.0, 0.95));
+        // at night a few stars in the clear upper sky, each a small soft dot that breathes
+        if (uNight > 0.01) {
+          vec2 cell = vUv * vec2(230.0, 130.0);
+          vec2 g = floor(cell);
+          float r = h21(g);
+          float dotS = smoothstep(0.16, 0.0, length(fract(cell) - 0.5));
+          float tw = 0.65 + 0.35 * sin(uTime * 1.7 + h21(g + 3.7) * 6.283);
+          c += vec3(0.82, 0.88, 1.0) * step(0.9935, r) * dotS * tw * uNight * smoothstep(0.55, 0.95, y) * (1.0 - cover);
+        }
         vec2 d = vUv - 0.5;
         float vig = 1.0 - dot(d, d) * 0.55;
         // alpha -0.5: the sky is background for the finishing chain (no ink, no glow); the screen never shows this alpha

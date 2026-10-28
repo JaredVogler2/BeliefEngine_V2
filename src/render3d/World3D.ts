@@ -6,7 +6,7 @@ import { PROFILES, type Layer, type Quality, type QualityProfile, type WorldCont
 import { engineToWorld, worldToTile } from './coords.ts';
 import { rng, seedFrom } from './rand.ts';
 import { makeSky } from './sky.ts';
-import { Atmosphere, Rain, moodFor } from './atmosphere.ts';
+import { Atmosphere, Rain, duskOf, mix as mixMood, moodFor, nightOf, type Mood } from './atmosphere.ts';
 import { getSceneChanges, getSceneSnapshot, type SceneSnapshot } from './snapshot.ts';
 import { buildHeightField, buildTerrainMesh, type TerrainMesh } from './terrain.ts';
 import { CloudSea } from './clouds.ts';
@@ -19,6 +19,7 @@ import { EffectsLayer } from './effects.ts';
 import { MagicField, attachMagicToStandard } from './magic.ts';
 import { DEFAULT_LOOK, PostChain, displayUniforms, preCompensate, type PostLook, type PostProfile } from './post.ts';
 import { makeEnvironment } from './env.ts';
+import { HomeLight, attachHomeLight } from './homelight.ts';
 import { RealityLayer, type RealityDrawn } from './reality.ts';
 
 const DEFAULT_OPTS: RenderOpts = {
@@ -40,6 +41,26 @@ function floatBuffersLikely(): boolean {
 
 /** how much of the haze high contrast keeps */
 const CONTRAST_FOG = 0.3;
+/** seconds for the light to go from the planning afternoon to night (End Day), or back at dawn */
+const NIGHT_SECONDS = 2.6;
+const DEG = Math.PI / 180;
+const SUNSET = new THREE.Color(0xff8a4a);
+/** how bright the lamplight is at full night, as light falling on what is round it */
+const LAMPS = 2.4;
+/** how far colours under the moon fade toward grey at full night (lamplight and glow keep theirs) */
+const MOON_GREY = 0.6;
+/** the hour at which the sun touches the horizon: the sky is at its warmest */
+const SUNDOWN = 0.45;
+const smooth = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+/** the key light from `bearing` (its horizontal direction) at `elevation` degrees above the horizon */
+function keyDir(bearing: THREE.Vector3, elevation: number): THREE.Vector3 {
+  const h = Math.hypot(bearing.x, bearing.z) || 1;
+  const c = Math.cos(elevation * DEG);
+  return new THREE.Vector3((bearing.x / h) * c, Math.sin(elevation * DEG), (bearing.z / h) * c);
+}
 
 /** which quality tier to start in: an explicit ?quality=, else the setting, with software-rendered and phone-sized windows stepped down */
 export function chooseQuality(setting: 'high' | 'low', w: number): Quality {
@@ -66,8 +87,14 @@ export class World3D implements WorldRenderer {
   private fill = new THREE.DirectionalLight(0xa9c4e8, 1.0);
   private sky: THREE.Mesh;
   private fog = new THREE.FogExp2(0xd9e4d6, 0.0105);
-  /** where the sun stands, as a direction from the village (the light, the shadows and the sky's glow all use it) */
-  private sunDir = new THREE.Vector3(-0.6, 0.58, 0.52).normalize();
+  /** where the planning afternoon's sun stands, as a direction from the village (the light, the shadows and the sky's glow all use
+   * it): low in the south-west, 24° up, behind the player's left shoulder (the standard asks 10-25° late in the day) */
+  private sunDir = keyDir(new THREE.Vector3(-0.6, 0, 0.52), 24);
+  /** 0 the planning afternoon, 1 night (while the night's summary is open); eased toward `hourGoal` */
+  private hour = 0;
+  private hourGoal = 0;
+  /** lamplight from the homes and fires, lit as the sun goes down (one for the renderer's lifetime) */
+  private home = new HomeLight();
   /** the finishing chain (ink, hollows, glow, tone mapping, smoothing); null where the browser cannot draw into a high-range buffer */
   private post: PostChain | null = null;
   /** a debug switch: draw straight to the screen even though the chain exists (before/after comparisons) */
@@ -254,6 +281,7 @@ export class World3D implements WorldRenderer {
     this.canvas.removeEventListener('webglcontextlost', this.onLost);
     this.canvas.removeEventListener('webglcontextrestored', this.onRestored);
     this.disposeWorld();
+    this.home.dispose();
     this.sky.geometry.dispose();
     (this.sky.material as THREE.Material).dispose();
     this.post?.dispose();
@@ -301,7 +329,11 @@ export class World3D implements WorldRenderer {
   setOptions(o: Partial<RenderOpts>): void {
     const prevQuality = this.opts.quality;
     const prevContrast = this.opts.highContrast;
+    if (o.night !== undefined) this.hourGoal = o.night ? 1 : 0;
     this.opts = { ...this.opts, ...o };
+    // under reduced motion the night falls (and the day comes back) as a cut
+    const cut = this.opts.reducedMotion && this.hour !== this.hourGoal;
+    if (cut) this.hour = this.hourGoal;
     this.cam.reduced = this.opts.reducedMotion;
     if (this.ctx) this.ctx.reducedMotion = this.opts.reducedMotion;
     if (o.quality && o.quality !== prevQuality) this.setQuality(chooseQuality(o.quality, this.W));
@@ -309,6 +341,47 @@ export class World3D implements WorldRenderer {
     if (o.forecast !== undefined || o.showFlood !== undefined) this.syncForecastOverlay();
     for (const l of this.layers) (l as Layer & { setOptions?: (o: RenderOpts) => void }).setOptions?.(this.opts);
     if (this.opts.highContrast !== prevContrast) this.applyContrast();
+    if (o.night !== undefined || cut) this.applyMood();
+  }
+
+  /** where the key light comes from at this hour, its colour and strength: the day's sun sinks toward the horizon warming to orange,
+   * then a cool moon rises on the other side (and the other way at dawn) */
+  private keyLight(day: Mood, night: Mood): { dir: THREE.Vector3; color: THREE.Color; intensity: number } {
+    const h = this.hour;
+    if (h <= 0) return { dir: this.sunDir.clone(), color: new THREE.Color(day.sunColor), intensity: day.sunIntensity };
+    const dayElevation = Math.asin(this.sunDir.y) / DEG;
+    if (h < 0.5) {
+      const k = h / 0.5;
+      const e = k * k * (3 - 2 * k);
+      return { dir: keyDir(this.sunDir, dayElevation + (3 - dayElevation) * e), color: new THREE.Color(day.sunColor).lerp(SUNSET, e), intensity: day.sunIntensity * (1 - 0.92 * e) };
+    }
+    const k = (h - 0.5) / 0.5;
+    const e = k * k * (3 - 2 * k);
+    // the moon rises in the east as the sun sets in the west, on the player's side of the sky so what faces them is moonlit
+    const moon = new THREE.Vector3(-this.sunDir.x, 0, this.sunDir.z);
+    return { dir: keyDir(moon, 3 + 37 * e), color: new THREE.Color(night.sunColor), intensity: night.sunIntensity * (0.15 + 0.85 * e) };
+  }
+
+  /** the light at this hour (read by tests, never by the game) */
+  timeInfo(): { hour: number; goal: number; keyElevation: number; windows: number; lamps: number } {
+    const day = this.atmo.current;
+    const key = this.keyLight(day, nightOf(day));
+    return { hour: this.hour, goal: this.hourGoal, keyElevation: Math.asin(key.dir.y) / DEG, windows: this.moodAt(day, nightOf(day)).windows, lamps: this.home.strength };
+  }
+
+  /** how much lamplight falls on a tile's ground, 0..1, before the hour's strength (tests) */
+  lampAt(x: number, y: number): number {
+    return this.home.at(x + 0.5, y + 0.5);
+  }
+
+  /**
+   * Measurement hook (scripts/palette-3d.ts): hide the backdrop (the sky and the sea of cloud, which stage 3 replaces with landform) and
+   * clear to pure magenta, so a frame tells which pixels show the world. Never used by the game.
+   */
+  maskBackdrop(on: boolean): void {
+    this.sky.visible = !on;
+    if (this.clouds) this.clouds.group.visible = !on;
+    this.renderer.setClearColor(on ? 0xff00ff : 0xcfdccf, 1);
   }
 
   /** high contrast: shapes inked at full strength and darker, less glow (the haze is thinned as each frame is drawn) */
@@ -451,6 +524,8 @@ export class World3D implements WorldRenderer {
     this.syncForecastOverlay();
     for (const l of this.layers) l.update(snap, getSceneChanges(null, snap), ctx);
     for (const l of this.layers) (l as Layer & { setOptions?: (o: RenderOpts) => void }).setOptions?.(this.opts);
+    this.home.reset(snap, (x, z) => terrain.heightAt(x, z), gone);
+    attachHomeLight(this.scene, this.home.uniforms);
     this.buildMs = performance.now() - t0;
   }
 
@@ -472,10 +547,31 @@ export class World3D implements WorldRenderer {
     if (instant) this.applyMood();
   }
 
+  /** the weather's mood carried through the hour: afternoon, sundown, night (the moods multiply with the time of day, not replace it) */
+  private moodAt(day: Mood, night: Mood): Mood {
+    const hr = this.hour;
+    if (hr <= 0) return day;
+    if (hr >= 1) return night;
+    const dusk = duskOf(day);
+    return hr < SUNDOWN ? mixMood(day, dusk, smooth(0, SUNDOWN, hr)) : mixMood(dusk, night, smooth(SUNDOWN, 1, hr));
+  }
+
   private applyMood(): void {
-    const m = this.atmo.current;
-    this.sun.color.setHex(m.sunColor);
-    this.sun.intensity = m.sunIntensity;
+    const day = this.atmo.current;
+    const night = nightOf(day);
+    const m = this.moodAt(day, night);
+    // how far into the night it is: the moonlit colours fade and the stars come out once the sun is down
+    const h = smooth(SUNDOWN, 1, this.hour);
+    const key = this.keyLight(day, night);
+    this.sun.color.copy(key.color);
+    this.sun.intensity = key.intensity;
+    if (this.snap) {
+      const cx = this.snap.w / 2;
+      const cz = this.snap.h / 2;
+      this.sun.position.set(cx + key.dir.x * 60, key.dir.y * 60, cz + key.dir.z * 60);
+      this.sun.target.position.set(cx, 0, cz);
+      this.sun.target.updateMatrixWorld();
+    }
     this.hemi.color.setHex(m.hemiSky);
     this.hemi.groundColor.setHex(m.hemiGround);
     // with the sky's light in the environment map the hemisphere light only carries the weather's tint; the map is scaled by how
@@ -499,16 +595,19 @@ export class World3D implements WorldRenderer {
     this.clouds?.setMood(m);
     u.uCloud.value = m.cloud;
     (u.uCloudCol.value as THREE.Color).setHex(m.cloudColor);
+    u.uNight.value = h;
     if (this.water) {
-      this.water.setTint(new THREE.Color(m.waterTint, m.waterTint, m.waterTint));
+      this.water.setTint(new THREE.Color(m.waterTint, m.waterTint, m.waterTint), MOON_GREY * h);
       this.water.setRain(this.reduced() ? 0 : m.rain);
-      this.water.setLight(this.sun.position.clone().sub(this.sun.target.position).normalize(), this.sun.color.clone().multiplyScalar(Math.min(1, m.sunIntensity / 3)), new THREE.Color(m.skyTop));
+      this.water.setLight(this.sun.position.clone().sub(this.sun.target.position).normalize(), this.sun.color.clone().multiplyScalar(Math.min(1, this.sun.intensity / 3)), new THREE.Color(m.skyTop));
     }
     if (this.ctx) {
       this.ctx.weather.wind = m.wind;
       this.ctx.weather.rain = m.rain;
     }
     for (const l of this.layers) (l as Layer & { setWeatherGlow?: (k: number) => void }).setWeatherGlow?.(m.windows);
+    // the lamps are lit as the sun goes down and put out at dawn (in a dark storm by day only the windows glow, as before)
+    this.home.setStrength(LAMPS * smooth(0.2, 0.8, this.hour), MOON_GREY * h);
   }
 
   private configureLight(snap: SceneSnapshot): void {
@@ -553,6 +652,9 @@ export class World3D implements WorldRenderer {
     this.syncForecastOverlay();
     this.applyForecast(snap, this.opts.reducedMotion);
     for (const l of this.layers) l.update(snap, changes, this.ctx);
+    // a home whose people are gone goes dark; a fire lit tonight lights the ground round it (and what was built since takes the light)
+    this.home.set(snap);
+    attachHomeLight(this.scene, this.home.uniforms);
   }
 
   private reduced(): boolean {
@@ -567,7 +669,14 @@ export class World3D implements WorldRenderer {
     (this.sky.material as THREE.ShaderMaterial).uniforms.uTime.value = this.time;
     this.cam.update(dt);
     if (this.ctx) this.ctx.viewDistance = this.cam.distance;
-    if (this.atmo.update(dt)) this.applyMood();
+    const moodMoved = this.atmo.update(dt);
+    let hourMoved = false;
+    if (this.hour !== this.hourGoal) {
+      const step = dt / NIGHT_SECONDS;
+      this.hour = this.hourGoal > this.hour ? Math.min(this.hourGoal, this.hour + step) : Math.max(this.hourGoal, this.hour - step);
+      hourMoved = true;
+    }
+    if (moodMoved || hourMoved) this.applyMood();
     this.rain?.update(this.time, this.reduced() ? 0 : this.atmo.current.rain, this.atmo.current.wind);
     this.clouds?.tick(this.reduced() ? 0 : this.time);
     if (this.ctx) {
@@ -685,6 +794,14 @@ export class World3D implements WorldRenderer {
     if (!p) return null;
     const v = p.project(this.cam.camera);
     if (v.z > 1 || Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02) return null;
+    return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
+  }
+
+  /** where the middle of a tile is on screen now, on its ground (the palette measurements sample water and land with it) */
+  tileScreen(x: number, y: number): { x: number; y: number } | null {
+    if (!this.ctx) return null;
+    const v = new THREE.Vector3(x + 0.5, this.ctx.heightAt(x + 0.5, y + 0.5), y + 0.5).project(this.cam.camera);
+    if (v.z > 1 || Math.abs(v.x) > 1 || Math.abs(v.y) > 1) return null;
     return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
   }
 

@@ -487,7 +487,8 @@ export class LandmarksLayer implements Layer {
           const L = this.lights[lit++];
           L.visible = true;
           L.position.set(v.root.position.x, v.root.position.y + (v.kind === 'beacon' ? 0.7 : 0.4), v.root.position.z);
-          L.intensity = (v.kind === 'beacon' ? 2.6 : 1.8) * (0.85 + 0.15 * Math.sin(time * 13 + lit));
+          // brighter when the windows glow (dark weather, night): a lit fire is what the eye goes to after dark
+          L.intensity = (v.kind === 'beacon' ? 2.6 : 1.8) * (0.85 + 0.15 * Math.sin(time * 13 + lit)) * (1 + 0.7 * this.glowTarget);
         }
       }
     }

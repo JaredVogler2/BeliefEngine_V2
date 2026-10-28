@@ -21,6 +21,8 @@ export interface RenderOpts {
   quality: 'high' | 'low';
   /** villager ids whose exact belief is known (scouted) */
   known: Set<string>;
+  /** the night's summary is open: the 3D world shows the night (the classic map ignores it) */
+  night?: boolean;
 }
 
 export interface HitResult {

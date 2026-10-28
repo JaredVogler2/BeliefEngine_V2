@@ -365,6 +365,7 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       highContrast: ui.settings.highContrast,
       quality: ui.settings.quality === 'low' ? 'low' : 'high',
       known,
+      night: !!ui.digest,
     });
     if (ui.lastAction && lastAction.current !== ui.lastAction) {
       lastAction.current = ui.lastAction;

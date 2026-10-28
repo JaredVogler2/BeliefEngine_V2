@@ -62,7 +62,7 @@ const AFTERMATH: Mood = {
   skyTop: 0x6c7b90, skyHorizon: 0xcdc3b0, windows: 0.8, waterTint: 0.7, wind: 0.8, rain: 0, exposure: 0.97, cloud: 0.8, cloudColor: 0xaeb4bc,
 };
 
-const mix = (a: Mood, b: Mood, t: number): Mood => {
+export const mix = (a: Mood, b: Mood, t: number): Mood => {
   const c = (x: number, y: number): number => new THREE.Color(x).lerp(new THREE.Color(y), t).getHex();
   const n = (x: number, y: number): number => x + (y - x) * t;
   return {
@@ -71,6 +71,54 @@ const mix = (a: Mood, b: Mood, t: number): Mood => {
     waterTint: n(a.waterTint, b.waterTint), wind: n(a.wind, b.wind), rain: n(a.rain, b.rain), exposure: n(a.exposure, b.exposure), cloud: n(a.cloud, b.cloud), cloudColor: c(a.cloudColor, b.cloudColor),
   };
 };
+
+const lerpHex = (a: number, b: number, t: number): number => new THREE.Color(a).lerp(new THREE.Color(b), t).getHex();
+
+/**
+ * The same weather at sundown, between the planning afternoon and the night (and again at dawn): a warm horizon under a deepening sky,
+ * clouds lit from below, the first windows lit. The key light itself (a low orange sun) is set by the hour, not here.
+ */
+export function duskOf(m: Mood): Mood {
+  const overcast = Math.min(1, Math.max(0, (m.cloud - 0.3) / 0.7));
+  return {
+    ...m,
+    hemiSky: lerpHex(0xa99cc0, 0x8a8c98, overcast),
+    hemiGround: 0x5a4c3c,
+    hemiIntensity: m.hemiIntensity * 0.8,
+    fillIntensity: 0.55,
+    fog: lerpHex(0xd6b49c, 0x9a948e, overcast),
+    skyTop: lerpHex(0x5a6c9c, 0x4c5462, overcast),
+    skyHorizon: lerpHex(0xf4b47e, 0xa89a8c, overcast),
+    windows: Math.max(m.windows, 0.6),
+    waterTint: m.waterTint * 0.8,
+    cloudColor: lerpHex(0xf2b894, 0x8a8890, overcast),
+  };
+}
+
+/**
+ * The same weather at night (3D plan, stage 2): a cool moon for the key light, a deep blue-teal sky and haze, every window lit, the
+ * water darker. Rain and wind are the day's own: a storm goes on through the night. An overcast night is greyer and darker.
+ */
+export function nightOf(m: Mood): Mood {
+  const overcast = Math.min(1, Math.max(0, (m.cloud - 0.3) / 0.7));
+  return {
+    ...m,
+    sunColor: 0x9db4dc,
+    sunIntensity: 2.5 * (1 - 0.45 * overcast),
+    hemiSky: lerpHex(0x6a84ac, 0x56606e, overcast),
+    hemiGround: 0x2c3830,
+    hemiIntensity: 1.4,
+    fillIntensity: 0.45,
+    fog: lerpHex(0x41596a, 0x454e55, overcast),
+    fogDensity: m.fogDensity * 1.1,
+    skyTop: lerpHex(0x0c1a2c, 0x1d252e, overcast),
+    skyHorizon: lerpHex(0x50687a, 0x4a525a, overcast),
+    windows: 1,
+    waterTint: m.waterTint * 0.34,
+    exposure: m.exposure,
+    cloudColor: lerpHex(0x6f8296, 0x4a535e, overcast),
+  };
+}
 
 /**
  * The mood for a moment of the run. `surge` is tonight's predicted flood depth (0..4+), from the forecast the player can also read

@@ -369,6 +369,75 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('End Day brings the night: the sun sets, a moon rises and lived-in homes light their lamps while the night is told; day comes back after, and under reduced motion the change is a cut', async ({ page }, testInfo) => {
+    test.setTimeout(300_000);
+    const errors = watch3D(page);
+    const phone = testInfo.project.name.startsWith('phone');
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    type Hour = { hour: number; goal: number; keyElevation: number; windows: number; lamps: number };
+    const time = () => page.evaluate(() => (window as unknown as { __beRenderer: { timeInfo: () => Hour } }).__beRenderer.timeInfo());
+    const endDay = () => page.evaluate(() => (window as unknown as { __belief: { store: { endDay: () => void } } }).__belief.store.endDay());
+    const planning = await time();
+    expect(planning).toMatchObject({ hour: 0, goal: 0, lamps: 0 });
+    // the planning afternoon's sun stands low in the sky, as the standard asks (10-25°)
+    expect(planning.keyElevation).toBeGreaterThanOrEqual(10);
+    expect(planning.keyElevation).toBeLessThanOrEqual(25);
+    // lamplight falls round every home someone lives in, and not on open ground far from every building
+    const lamps = await page.evaluate(() => {
+      const w = window as unknown as {
+        __beRenderer: { lampAt: (x: number, y: number) => number };
+        __belief: { state: { villagers: { homeId: string; status: string }[]; world: { w: number; h: number; landmarks: { id: string; kind: string; x: number; y: number; hp: number }[] } } };
+      };
+      const s = w.__belief.state;
+      const lived = new Set(s.villagers.filter((v) => v.status !== 'dead').map((v) => v.homeId));
+      const homes = s.world.landmarks.filter((l) => (l.kind === 'home' || l.kind === 'cabin') && l.hp > 0 && lived.has(l.id));
+      let open: [number, number] | null = null;
+      for (let y = 0; y < s.world.h && !open; y++)
+        for (let x = 0; x < s.world.w && !open; x++) if (s.world.landmarks.every((l) => Math.hypot(l.x - x, l.y - y) > 3.5)) open = [x, y];
+      return { homes: homes.length, lit: homes.filter((l) => w.__beRenderer.lampAt(l.x, l.y) > 0.5).length, open: open ? w.__beRenderer.lampAt(open[0], open[1]) : null };
+    });
+    expect(lamps.homes).toBeGreaterThan(3);
+    expect(lamps.lit).toBe(lamps.homes);
+    expect(lamps.open).toBe(0);
+
+    // End Day: while the night is told the sun goes down, a cool moon comes up high and the lamps are lit
+    await endDay();
+    await expect(page.getByTestId('digest')).toBeVisible();
+    await expect.poll(async () => (await time()).goal).toBe(1);
+    await expect.poll(async () => (await time()).hour, { message: 'night falls', timeout: 60_000 }).toBe(1);
+    const night = await time();
+    expect(night.keyElevation, 'the moon stands high').toBeGreaterThan(30);
+    expect(night.windows).toBe(1);
+    expect(night.lamps).toBeGreaterThan(1);
+    await expect.poll(mapPainted(page), { message: 'the night is drawn, not black', timeout: 20_000 }).toBeGreaterThan(0.25);
+    if (process.env.BE_SHOTS === '1') await page.screenshot({ path: `docs/screenshots/v2-3d-stage2/night-digest-${phone ? 'phone' : 'desktop'}.jpg`, type: 'jpeg', quality: 85 });
+
+    // dawn: the summary is closed and the light comes back for the next day's planning
+    await page.getByTestId('digest-continue').click();
+    await expect.poll(async () => (await time()).hour, { message: 'day comes back', timeout: 60_000 }).toBe(0);
+    expect((await time()).lamps).toBe(0);
+
+    // under reduced motion the change is a cut: the first reading that knows it is night already shows the night
+    await page.evaluate(() => (window as unknown as { __belief: { store: { setSettings: (s: { reducedMotion: boolean }) => void } } }).__belief.store.setSettings({ reducedMotion: true }));
+    await endDay();
+    await expect(page.getByTestId('digest')).toBeVisible();
+    const reading = async (goal: number): Promise<Hour> => {
+      const until = Date.now() + 20_000;
+      let t = await time();
+      while (t.goal !== goal && Date.now() < until) t = await time();
+      return t;
+    };
+    const cut = await reading(1);
+    expect(cut.goal).toBe(1);
+    expect(cut.hour).toBe(1);
+    await page.getByTestId('digest-continue').click();
+    const back = await reading(0);
+    expect(back.goal).toBe(0);
+    expect(back.hour).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
   test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
     test.setTimeout(300_000);

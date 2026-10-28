@@ -41,6 +41,7 @@ const FRAG = /* glsl */ `
   uniform vec3 uDeep;
   uniform vec3 uShallow;
   uniform vec3 uTint;
+  uniform float uGrey;
   uniform float uTierF;
   uniform float uRain;
   #include <fog_pars_fragment>
@@ -86,6 +87,8 @@ const FRAG = /* glsl */ `
       float ring = smoothstep(0.045, 0.0, abs(length(f) - t * 0.42)) * (1.0 - t) * uRain * uTierF;
       col += vec3(0.7, 0.8, 0.85) * ring * 0.55;
     }
+    // at night the water's colour fades toward a cool grey like everything else under the moon
+    col = mix(col, dot(col, vec3(0.2126, 0.7152, 0.0722)) * vec3(0.80, 0.94, 1.16), uGrey);
     col *= uTint;
     float edge = vDepth + (vn(p * 9.0) - 0.5) * 0.04;
     float alpha = smoothstep(0.0, 0.05, edge) * mix(0.8, 0.96, smoothstep(0.1, 0.6, d));
@@ -202,9 +205,10 @@ export class Water {
           uSunDir: { value: new THREE.Vector3(0.5, 0.8, 0.3).normalize() },
           uSunColor: { value: new THREE.Color(1.0, 0.86, 0.62) },
           uSky: { value: new THREE.Color(0.62, 0.76, 0.86) },
-          uDeep: { value: new THREE.Color(0x0e5f73) },
-          uShallow: { value: new THREE.Color(0x3fa59a) },
+          uDeep: { value: new THREE.Color(0x0a4456) },
+          uShallow: { value: new THREE.Color(0x2d7f7a) },
           uTint: { value: new THREE.Color(1, 1, 1) },
+          uGrey: { value: 0 },
           uTierF: { value: tier === 'high' ? 1 : tier === 'medium' ? 0.5 : 0 },
           uRain: { value: 0 },
         },
@@ -237,9 +241,10 @@ export class Water {
     this.mat.uniforms.uRain.value = v;
   }
 
-  /** the water's colour shifts with the weather: murky and dark in a flood */
-  setTint(t: THREE.Color): void {
+  /** the water's colour shifts with the weather (murky and dark in a flood) and fades toward grey under the moon by `grey` (0..1) */
+  setTint(t: THREE.Color, grey = 0): void {
     (this.mat.uniforms.uTint.value as THREE.Color).copy(t);
+    this.mat.uniforms.uGrey.value = grey;
   }
 
   private setTargets(snap: SceneSnapshot): void {

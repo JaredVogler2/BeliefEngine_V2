@@ -7,6 +7,7 @@
  *       [--quality high] [--hud 0|1] [--url http://127.0.0.1:5173] [--wait 1500] [--renderer 3d|2d] [--day 5] [--policy evidence-first] [--seed 1] [--scenario redbank]
  *       [--resolve 1 --t 1.2]   play day N in full, load the dawn after it, then play that day's real events and let 1.2 s of effects run
  *       [--settle 4] [--dpr 2]
+ *       [--night 1]   the light of the night (as while the night's summary is open), settled before the shot and before --resolve
  *       [--trace hens]   a recorded Generative Reality chain (tests/fixtures/v2-bridge-traces.json) instead of a bot
  *       [--save run.json]   a saved run instead (its own script says how it was made)
  */
@@ -93,6 +94,13 @@ if (!hud) {
   await page.addStyleTag({ content: '.hud, .topbar, .side, .sidebar, .claims, .hand, .planbar, .bottombar, .map-tools, .coach, .tip, header, footer { visibility: hidden !important; } .stage { position: fixed !important; inset: 0 !important; }' });
 }
 await page.waitForTimeout(wait);
+if (arg('night', '0') === '1' && renderer === '3d') {
+  await page.evaluate(() => {
+    const r = (window as unknown as { __beRenderer: { setOptions: (o: { night: boolean }) => void; advance: (s: number) => void } }).__beRenderer;
+    r.setOptions({ night: true });
+    r.advance(3);
+  });
+}
 if (resolve) {
   await page.evaluate(
     ([ev, prev, t]) => {
