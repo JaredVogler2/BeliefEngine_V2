@@ -78,6 +78,7 @@ in this repository stays MOCK.
 
 ## 6. Versions a release carries
 
-Engine rules `1.0.0` (Classic, hash for hash with V1), save schema 1 (with an optional ledger), written-belief rules 2 (recorded per
-run; rules 1 runs replay exactly), belief language `reality-1`, offline reader `offline-v2.2`, prompts `interpret-v2.2026-10-27` and
+Engine rules `1.0.0` (Classic, hash for hash with V1), save schema 1 (with an optional ledger), written-belief rules 3 (recorded per
+run; rules 1 and 2 runs replay exactly; a Living Village is created under 2), belief language `reality-1`, offline reader
+`offline-v2.3`, prompts `interpret-v2.2026-10-27` and
 `npc-v2.2026-10-27`, ledger 1 with validator `reality-1/npc-2/talk-1`, MCP errors version 2.

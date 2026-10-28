@@ -62,6 +62,12 @@ Release, settings and costs: [`docs/RELEASE.md`](docs/RELEASE.md). What is verif
   every request watched; novel laws; a living society; replay that a newer model cannot reinterpret; MCP over stdio; phone sizes in
   CI's WebKit), V2 runs at scale replay exactly from their stored model outputs (`npm run test:sim:v2`), and the release guide
   names every setting ([`docs/FINAL_ACCEPTANCE.md`](docs/FINAL_ACCEPTANCE.md): **integrated but not live-tested**).
+- **Phase 17: attacked by eight reviewers.** Two promises found broken and fixed: a model's reading could swap what a sentence says
+  will happen (now held to the words: 289 of 292 swapped readings were trusted, 11 are), and the composer's price was not always the
+  charge (now one number for the composer, MCP and the engine). Written-belief rules 3 price a ward around every home for the ground it
+  covers (the cheap universal answer is now the dearest), ideas are ones the village can make real, an impossible wish is offered a
+  helpful belief, flavour words are named as flavour. Measured honestly on sentences written blind: the offline reader understands
+  35 of 69 first attempts ([`docs/FUN_REVIEW_V2.md`](docs/FUN_REVIEW_V2.md)). Fun is unverified: no one has played it.
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
   dusk); the baseline report ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)) predates the V1 merge, and the work to reach

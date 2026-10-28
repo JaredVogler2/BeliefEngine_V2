@@ -37,10 +37,10 @@ Where each check could fire at all (cases): a disbelieved story with a move to s
 
 | Step | p50 | p95 | n |
 |---|---|---|---|
-| offlineReading | 20.71 | 39.5 | 332 |
-| mockPipelineReading | 47.48 | 87 | 332 |
-| v1Reading | 2.91 | 48.19 | 332 |
-| policyDecision | 0.12 | 0.85 | 64 |
+| offlineReading | 2.52 | 7.17 | 332 |
+| mockPipelineReading | 6.67 | 13.84 | 332 |
+| v1Reading | 2.17 | 41.32 | 332 |
+| policyDecision | 0.12 | 0.73 | 64 |
 
 ## Tokens and cost: list-price ESTIMATES, not measured
 

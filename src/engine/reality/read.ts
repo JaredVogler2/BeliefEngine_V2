@@ -224,17 +224,22 @@ const QUANTIFIER_MODS = new Set(['every', 'each', 'all', 'all the', 'their', 'an
 /** Verbs whose object is the place itself ("wolves avoid the pens"); only for places that are not also a power (the lanterns, the bell). */
 const PLACE_VERBS = ['avoid', 'shun', 'fear', 'flee', 'flee from', 'circle', 'stay off', 'keep off'];
 const POWER_ANCHORS = new Set(['belltower', 'beacon', 'campfire']);
-const ANCHOR_PHRASES: { phrase: string; anchor: string; radius: number; active: boolean }[] = (() => {
-  const out: { phrase: string; anchor: string; radius: number; active: boolean }[] = [];
+type AnchorPhrase = { phrase: string; anchor: string; radius: number; active: boolean };
+/** Every way of naming a place to measure from, grouped by the place's word (a sentence is only tried against the words it has). */
+const ANCHOR_PHRASES: [string, AnchorPhrase[]][] = (() => {
+  const out: [string, AnchorPhrase[]][] = [];
   for (const [anchor, words] of Object.entries(ANCHOR_WORDS)) {
     const preps = [...NEAR_PREPS, ...(POWER_ANCHORS.has(anchor) ? [] : PLACE_VERBS.map((phrase) => ({ phrase, radius: 2 })))];
-    for (const w of words)
+    for (const w of words) {
+      const group: AnchorPhrase[] = [];
       for (const prep of preps)
         for (const mods of [[], ['the'], ['a'], ...ANCHOR_MODS.map((x) => [x]), ...ANCHOR_MODS.map((x) => ['the', x])]) {
           // "the walls of every house" are the houses' own walls, not a place near them
           if (prep.phrase === 'of' && mods.some((x) => QUANTIFIER_MODS.has(x))) continue;
-          out.push({ phrase: [prep.phrase, ...mods, w].join(' '), anchor, radius: prep.radius, active: mods.some((x) => (ACTIVE_MODIFIERS[anchor] ?? []).includes(x)) });
+          group.push({ phrase: [prep.phrase, ...mods, w].join(' '), anchor, radius: prep.radius, active: mods.some((x) => (ACTIVE_MODIFIERS[anchor] ?? []).includes(x)) });
         }
+      out.push([w, group]);
+    }
   }
   return out;
 })();
@@ -270,12 +275,14 @@ export function mentionsOf(toks: Tok[], s: RunState): Mention[] {
   for (const c of CONDITIONS) for (const p of c.phrases) add('cond', p, { test: c.test });
   for (const t of TRIGGERS) for (const p of t.phrases) add('trigger', p, { event: t.event, ...(t.min ? { min: t.min } : {}) });
   for (const [p, senses] of SENSE_INDEX) add('sense', p, { senses });
-  for (const a of ANCHOR_PHRASES)
-    if (possible(a.phrase))
-      for (const hit of findAll(toks, a.phrase)) {
-        const n = normalizeBelief(ANCHOR_WORDS[a.anchor].find((w) => a.phrase.endsWith(` ${w}`)) ?? '').split(' ').length || 1;
-        cands.push({ cat: 'anchor', toks: hit.slice(-n), soft: hit.slice(0, -n), at: hit[hit.length - n], end: hit[hit.length - 1] + 1, phrase: a.phrase, anchor: a.anchor, radius: a.radius, active: a.active });
-      }
+  for (const [word, group] of ANCHOR_PHRASES)
+    if (possible(word))
+      for (const a of group)
+        if (possible(a.phrase))
+          for (const hit of findAll(toks, a.phrase)) {
+            const n = normalizeBelief(word).split(' ').length || 1;
+            cands.push({ cat: 'anchor', toks: hit.slice(-n), soft: hit.slice(0, -n), at: hit[hit.length - n], end: hit[hit.length - 1] + 1, phrase: a.phrase, anchor: a.anchor, radius: a.radius, active: a.active });
+          }
   for (const p of placesOf(s)) {
     add('place', p.phrase, { region: p.region });
     for (const prep of ['in', 'on', 'over', 'to', 'toward', 'towards', 'onto', 'across', 'of', 'at'])

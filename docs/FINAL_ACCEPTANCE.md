@@ -9,8 +9,11 @@ the command that shows it, the seed and versions, and a real screenshot where on
 - **Evidence tree:** branch `claude/gracious-heisenberg-x6dvn1`, phase 16 commit (after `877a3a2`, which is phase 15 merged with
   `main`). **Environment:** Linux container, Node 22.22.0, Playwright 1.63.0 with Chromium 153.0.8010.12 (desktop 1366×768 and a
   Pixel 7 profile at 390×844), software WebGL for 3D, Redis 7 for the quota store; Firefox, WebKit and three iPhone profiles in CI only.
-  **Versions:** engine rules `1.0.0`, save schema 1, written-belief rules 2, language `reality-1`, reader `offline-v2.2`, prompts
+  **Versions (phase 16):** engine rules `1.0.0`, save schema 1, written-belief rules 2, language `reality-1`, reader `offline-v2.2`, prompts
   `interpret-v2.2026-10-27` / `npc-v2.2026-10-27`, ledger 1 (validator `reality-1/npc-2/talk-1`), MCP SDK 1.32.2, AI SDK 7.0.155.
+- **Since phase 16:** phase 17's adversarial review ([`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md)) fixed two P0 and five P1 issues in
+  `d3b83c1`; new runs are under written-belief rules 3 and reader `offline-v2.3`, and runs recorded under rules 1 and 2 replay to their
+  hashes. The verdict above is unchanged.
 - **Authorizations:** none given for deployment or spend; none used.
 - **Not claimed:** a live URL, a live model call, a human playtest, a real iPhone, GPU frame times, a remote MCP service, a premium
   3D look.

@@ -21,10 +21,43 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 14 Replay, persistence and evals | **VERIFIED offline (gate met): a Generative run replays like a Classic one once its inputs are recorded; a complete browser win and four losses replay offline with no provider call; evaluations measured offline and with MOCK stand-ins, LIVE not run** | [`REPLAY_V2.md`](REPLAY_V2.md), entry below, [`data/evals/REPORT.md`](data/evals/REPORT.md), `tests/unit/ledger*.test.ts`, `tests/unit/evals.test.ts` |
 | 15 Security, privacy, cost and failure | **VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.** Threat model with every attack mapped to a control and a test; a chaos suite (hostile text, hostile structures, a heavier compute load than play can reach, physics limits, double taps, stale confirmations, session scopes, CORS and caching headers, a cold start); the secret scan runs in CI over every tracked file, every commit and the built site; gateway privacy routing (no training always, zero retention by setting); an operator cost monitor. Found and fixed four defects (entry) | [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), entry below, `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts` |
 | 16 Integration and release testing | **Integrated but not live-tested: the six journeys PASS offline and with scripted providers (A Classic offline, B novel laws, C living society, D replay, E MCP over stdio, F phone sizes in Chromium and CI WebKit); V2 runs at scale replay exactly from stored model outputs; LIVE UNVERIFIED; NOT DEPLOYED** | [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md), [`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md), entry below |
-| 17 | NOT STARTED | |
+| 17 Adversarial fun review | **Review done; two P0 and five P1 fixed and VERIFIED offline, with mocks and in Chromium; FUN SUBJECTIVE/UNVERIFIED (no playtest); LIVE UNVERIFIED; NOT DEPLOYED.** A model could swap what a sentence's change is (289 of 292 swapped readings trusted → 11); the composer's price was not always the charge (4 of 72 → 0 of 108); written-belief rules 3 price a ward around every home for the ground it covers; ideas, offers, flavour and wording fixed; a first-time player's sentence is understood 35 of 69 times (blind held-out set). V2 is not complete: LIVE, deployment, a playtest and the premium 3D look remain | [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md), [`data/fun-review-v2/`](data/fun-review-v2/), [`data/tournament-v2/`](data/tournament-v2/) `rules3-*`, `tests/unit/reality-rules3.test.ts`, `tests/e2e/v2-review.spec.ts`, [`screenshots/v2-phase17/`](screenshots/v2-phase17/) |
 | 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-28 — Phase 17: adversarial fun review (fixes VERIFIED; FUN UNVERIFIED; LIVE UNVERIFIED; NOT DEPLOYED)
+
+**What was done** (reference: [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md); fixes in `d3b83c1`)
+
+- **Reviewed** as eight reviewers against the running code: ten failure cases with reproductions and code paths, four non-issues
+  checked, the seven questions answered from evidence, a rubric. Evidence script `scripts/fun-review-v2.ts`, run on this tree and on a
+  checkout of `5132f26` for the "before" numbers ([`data/fun-review-v2/`](data/fun-review-v2/)).
+- **P0-1 effect fidelity**: a model's reading is held to the change its words name (`fidelity.ts` `changesNamed`); swapped-effect
+  readings trusted at full confidence 289/292 → 11/292, honest readings unchanged (191/193).
+- **P0-2 price truth**: the composer's price is the engine's charge for every run (4 of 72 written beliefs showed 3 and charged 2, and
+  the button refused a legal write); MCP reports the same number.
+- **P1 fixes**: written-belief rules 3 (a clause measured from every landmark of a kind priced for the ground they cover; the charge from
+  the whole power; "Every night", "any home", the acting reach; a Living Village stays under 2); village-aware ideas (Ashwood 0/3 →
+  3/3 understood); helpful offers for impossible sentences (3/8 harmful → 0/8); flavour kept and shown; no repeated left-out line;
+  reader `offline-v2.3` (place words, merged repeats, typed contractions) and its anchor phrases indexed by word (reading p50
+  12.9 → 2.5 ms).
+- **Measured honestly**: two blind sets of first-time players' sentences written by independent agents; the dev set the fixes used:
+  22/68 → 36/68; the held-out set: 34/69 → **35/69**; impossible sentences accepted: 0 both. The rules-3 tournament (30 seeds a chapter)
+  is published: Redbank's spamming village-wide ward 20/30 → 0/30, lantern-ward play unchanged; Harvest unchanged; Ashwood's best bot
+  policy 21/30 → 15/30 (its three-hamlet ward now costs what it always showed).
+
+**Commands and results**: lint and typecheck clean; `npm test` 60 files, 684 passed; the V2 browser specs (bridge, ux, journeys,
+reality, modes, online, minds) on desktop and phone 52 passed, 20 skipped by design; `v2-review.spec.ts` 6 passed (screenshots in
+[`screenshots/v2-phase17/`](screenshots/v2-phase17/)); `v2-world3d` and `v2-bridge` on desktop-3d 4 passed; the flaky 3D phone
+person-click (CI on `5132f26`) passed 6 of 6 repeats after the fix; `npm run eval`: corpora unchanged (172/172, 78/80, 51/80);
+`test:sim:v2` at 20 seeds and 40 villages under rules 3: 620 of 620 replayed exactly, 8,212 stand-in decisions accepted, 0 refused;
+`npm run size` entry 296 KB gzip of 300. Chains recorded under rules 1 and 2 replay to their recorded hashes.
+
+**Not verified:** FUN (no human playtest; all judgements are the reviewers'); LIVE (no credential: no model-backed playthrough, no
+no-key/live comparison); a real iPhone; a GPU; the premium 3D look. NOT DEPLOYED. V2 is not complete by the strict finish.
 
 ---
 

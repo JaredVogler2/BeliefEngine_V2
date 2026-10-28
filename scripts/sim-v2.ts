@@ -24,6 +24,7 @@ import type { Action, CreateRunOptions, NpcChoiceInput, RunState } from '../src/
 import { expeditionId } from '../src/engine/gen/expedition.ts';
 import { buildNpcRequest } from '../src/engine/mind/request.ts';
 import { REALITY_LANG } from '../src/engine/reality/ontology.ts';
+import { REALITY_RULES } from '../src/engine/reality/state.ts';
 import { runRef } from '../src/ai/client.ts';
 import { fromWire } from '../src/engine/reality/wire.ts';
 import { demoInterpretV2, interpretV2Prompt, stampId, toWireV2, type InterpretV2Request } from '../server/ai/tasks/interpret-v2.ts';
@@ -165,9 +166,9 @@ const byPolicy = policies.map((p) => {
   return `| ${p} | ${rs.length} | ${rs.filter((r) => r.result === 'victory').length} | ${rs.reduce((a, r) => a + r.modelDecisions, 0)} | ${rs.reduce((a, r) => a + r.modelReadings, 0)} | ${rs.filter((r) => r.replayed).length} |`;
 });
 const md = [
-  '# Generative Reality at scale, with stored model outputs (phase 16)',
+  '# Generative Reality at scale, with stored model outputs (phase 16; re-run under written-belief rules 3 in phase 17)',
   '',
-  `\`npx tsx scripts/sim-v2.ts --seeds ${seeds} --villages ${villages}\`, ${new Date().toISOString().slice(0, 10)}. **MOCK ONLY**: every "model" output is the scripted stand-in's`,
+  `\`npx tsx scripts/sim-v2.ts --seeds ${seeds} --villages ${villages}\`, ${new Date().toISOString().slice(0, 10)}, written-belief rules ${REALITY_RULES}. **MOCK ONLY**: every "model" output is the scripted stand-in's`,
   '(no model was called; `fetch` throws). What this measures: that model-shaped inputs pass the server\'s and the engine\'s checks at scale,',
   'and that a run whose action log stores them replays exactly with no provider. It says nothing about a real model\'s judgement.',
   'Win rates here are not comparable with the policy-only tournament (`docs/data/tournament-v2/`): the stand-in replaces the thinking villagers\' own policy each morning with a fixed rule (believers spread, skeptics investigate or challenge, the rest ask or wait).',

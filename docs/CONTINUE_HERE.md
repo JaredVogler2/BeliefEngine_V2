@@ -36,7 +36,11 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
   References: [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md).
 - **16 Integration and release testing: integrated but not live-tested** (journeys A-F PASS offline and with scripted providers;
   LIVE UNVERIFIED; NOT DEPLOYED). References: [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md).
-- **17 Adversarial fun review: NOT STARTED. It is the next task (below).**
+- **17 Adversarial fun review: done (review, not a gate): two P0 and five P1 issues found and fixed, verified offline, with mocks
+  and in Chromium; FUN SUBJECTIVE/UNVERIFIED (no playtest); LIVE UNVERIFIED; NOT DEPLOYED.** Written-belief rules 3 and reader
+  `offline-v2.3` for new runs; rules 1 and 2 runs replay exactly. Reference: [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md).
+- **V2 is not complete** by the program's strict finish: no real provider call, no deployment, no human playtest, the premium 3D
+  look not met. Everything else is built and verified offline. What is left needs the owner (below).
 
 ## Last good commit / branch
 
@@ -51,7 +55,21 @@ phase 13: `6ba4996` (MCP V2 tools, error kinds, online reader, stdio proof, docs
 check, privacy controls, evals); phase 15: `bd223ed` (chaos suite, physics limits, secret scan in CI, privacy routing, cost
 monitor, SECURITY/PRIVACY/COST_AND_QUOTAS). JaredVogler2/BeliefEngine_V2#3 was merged into `main` at phase 14 (`dc56db9`); phase 15
 onwards is in JaredVogler2/BeliefEngine_V2#4 (`main` merged into the branch at `877a3a2`, no file changes; history never rewritten).
-Phase 16: the commit after `877a3a2` (journey tests, sim-v2, FINAL_ACCEPTANCE, RELEASE).
+Phase 16: `9946f67`, `bef3af9`, `5132f26` (journey tests, sim-v2, FINAL_ACCEPTANCE, RELEASE). Phase 17: `d3b83c1` (the fixes:
+rules 3, effect fidelity, price truth, ideas, offers, reader v2.3) and the commit after it (FUN_REVIEW_V2, the reader's speed-up, the
+sim re-run, docs).
+
+## Working files changed in phase 17
+
+New: `src/engine/reality/ideas.ts`, `scripts/fun-review-v2.ts`, `tests/unit/reality-rules3.test.ts`, `tests/e2e/v2-review.spec.ts`,
+`tests/fixtures/{novice-holdout-3,novice-dev-4,v2-bridge-traces-rules2}.json`, `docs/FUN_REVIEW_V2.md`, `docs/data/fun-review-v2/`,
+`docs/data/tournament-v2/rules3-*`, `docs/screenshots/v2-phase17/`. Changed: `src/engine/reality/{balance,cost,build,preview,state}.ts`
+(rules 3: coverage pricing, the charge from the whole power, "Every night"/"any home", the acting reach), `src/engine/core/create.ts`
+(a Living Village always under rules 2), `src/engine/reality/fidelity.ts` (the effect held to the words: `changesNamed`), `src/engine/
+reality/{read,lexicon,ast}.ts` (reader v2.3: flavour as narrative, helpful offers, place words, merged repeats, anchor phrases indexed
+by word, `sameChange`), `src/ui/play/RealityCompose.tsx` (village ideas, "kept as words only", no repeated left-out note),
+`scripts/{eval,sim-v2}.ts`, `tests/fixtures/{v2-bridge-traces,npc-cases-1}.json` (re-recorded / regenerated), the tests named in
+[`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md), `tests/e2e/v2-world3d.spec.ts` (a person-click aimed only where the raycast answers with them).
 
 ## Working files changed in phase 16
 
@@ -114,7 +132,9 @@ invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging ome
 
 ## Commands run and exact results
 
-Phase 16 (entry in [`PROGRESS.md`](PROGRESS.md)): `npm test` 59 files, 670 passed; the whole Chromium suite 195 passed, 73 skipped, 0 failed;
+Phase 17 (entry in [`PROGRESS.md`](PROGRESS.md)): `npm test` 60 files, 684 passed; the V2 browser specs on desktop and phone 52
+passed, 20 skipped; `v2-review.spec.ts` 6 passed; the V2 3D specs on desktop-3d 4 passed; `test:sim:v2` 620 of 620 replayed exactly
+under rules 3; the rules-3 tournament published; reading p50 2.5 ms. Phase 16: `npm test` 59 files, 670 passed; the whole Chromium suite 195 passed, 73 skipped, 0 failed;
 `test:sim:v2` 620 of 620 replayed exactly; `test:sim:smoke` 256/256; hosting verified with a Generative Reality run. Phase 15: lint and typecheck clean; `npm test` 58 files, 662 passed; the consent-touching browser specs (desktop and phone) 42 passed, 14 skipped, 0 failed; entry
 295 KB gzip of 300; the secret
 scan clean over the tree, the history and `dist/`. Phase 14: `npm test` 56 files, 641 tests (two timing-sensitive ones need a quiet machine);
@@ -149,30 +169,32 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
    plan); the strongest written law in each chapter does what one of the chapter's own stories does (priced at least as high);
    Harvest's growth belief leaves about 3.5 idle days once it holds (dead time). Generated villages were not in the tournament.
    Classic is unchanged.
-3. **Entry bundle**: 295 of 300 KB gzip (measured at phase 15). New V2 engine code ships in the entry (it must be present wherever a day resolves). If
+3. **Entry bundle**: 296 of 300 KB gzip (measured at phase 17). New V2 engine code ships in the entry (it must be present wherever a day resolves). If
    headroom runs out, move the V2-only engine to a chunk installed before any V2 run starts (a hook in `resolve.ts`), never after.
 4. **V1's later 3D work is merged**; any further V1 change would merge the same way (procedure at the end of this file). CI now
    has a separate 3D job (software WebGL, about 30-45 minutes).
 5. **3D tests are slow on a software rasteriser** (≈3 fps): keep new 3D browser tests short; long traces behind `BE_SLOW_3D=1`.
 6. V1 defects D7, D8, D9 ([`V1_AUDIT.md`](V1_AUDIT.md) §12) are still open.
-7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
-   richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
+7. The offline reader understands about half of a first-time player's sentences (35 of 69 written blind, phase 17); the model
+   contracts are where broad comprehension and richer villager voices are meant to come from, and they are unmeasured until a
+   provider is configured.
+8. **Ashwood is harder under rules 3**: the three-hamlet smoke ward now costs the 3 Influence it always showed; the best bot policy
+   wins 15 of 30 seeds (phase 11: 21). A measurement of bots, not people.
+9. Open P2s from phase 17: a doubter's model-proposed "spread" is logged as telling the story (text in hashed events: needs a minds
+   version); "never" is not named as a promise; skeptics rarely act; the phone's low 3D tier reads as blocks and outlines.
 
-## Next exact code changes (phase 17: adversarial fun review)
+## Next exact actions
 
-[`../prompts/17_ADVERSARIAL_FUN_REVIEW.md`](../prompts/17_ADVERSARIAL_FUN_REVIEW.md). A skeptical review of the running game and its
-evidence, not a build phase:
+All seventeen program phases have been worked. What remains needs the owner, or a person:
 
-1. **Ten or more real failure and edge cases**, each with a reproduction seed, the run's ledger and the code path (headless
-   simulations, the evaluation corpus and the browser; no live tokens: none exist). Candidates already seen: a villager policy
-   choosing "spread" for a story they now disbelieve (it spreads doubt: the persona judge would flag it), written laws that take 6-9
-   days to wake, the reader's coverage of unfamiliar phrasings (13/30 untuned), the 3D look (phase 10's bar NOT MET), finite
-   attention capping how many written laws a village can hold.
-2. **The seven questions** answered with evidence, and FUN marked subjective/unverified (no human playtest exists).
-3. **Rank P0/P1/P2; fix every P0 and the top five P1**; re-run the impacted browser, sim, security and provider tests.
-4. `docs/FUN_REVIEW_V2.md` (rubric: 3D art, cause and effect, social emergence, agency, rule variety, replayability, speed and cost,
-   security, mobile UX), PROGRESS and README current, the verified fixes committed with their SHA. Do not call V2 complete: LIVE,
-   deployment, a human playtest and the premium 3D look are unverified or not met.
+1. **LIVE**: configure a credential privately ([`RELEASE.md`](RELEASE.md) §4), run `npm run ai:smoke` and the live checklist in
+   [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md); then `npx tsx scripts/fun-review-v2.ts` with a real model behind the server (compare
+   no-key and live) and record the results there, never before they exist.
+2. **Deployment**: only with the owner's authorisation ([`RELEASE.md`](RELEASE.md)).
+3. **A human playtest** by [`PLAYTEST_PROTOCOL.md`](PLAYTEST_PROTOCOL.md), phone first, uncoached; record first sentences (with consent)
+   to measure the reader where it matters.
+4. **Code that can still be done without the owner**: the phase 17 P2s above; the 3D art stages ([`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md));
+   reader coverage measured only on new blind sets (never quote the dev set).
 
 ## Parallel track: the 3D world
 

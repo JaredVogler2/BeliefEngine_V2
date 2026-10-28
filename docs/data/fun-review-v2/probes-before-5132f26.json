@@ -121,6 +121,11 @@
    "charged": 2
   }
  ],
+ "coverage": {
+  "homes": 8,
+  "tilesWithin2": 104,
+  "oneCircle": 21
+ },
  "novice": {
   "dev": {
    "doable": 68,
@@ -162,5 +167,46 @@
     ]
    }
   }
+ },
+ "personas": {
+  "runs": 24,
+  "rows": {
+   "skeptic": {
+    "villagerRuns": 80,
+    "acts": 14,
+    "byIntent": {
+     "stage_evidence": 9,
+     "spread": 1,
+     "challenge": 1,
+     "ask": 2,
+     "persuade": 1
+    }
+   },
+   "trusting": {
+    "villagerRuns": 104,
+    "acts": 224,
+    "byIntent": {
+     "ask": 40,
+     "spread": 62,
+     "comfort": 49,
+     "stage_evidence": 66,
+     "persuade": 7
+    }
+   },
+   "middle": {
+    "villagerRuns": 144,
+    "acts": 217,
+    "byIntent": {
+     "ask": 28,
+     "spread": 56,
+     "stage_evidence": 81,
+     "persuade": 21,
+     "comfort": 30,
+     "challenge": 1
+    }
+   }
+  },
+  "spreads": 119,
+  "spreadsThatCooledTheListener": 0
  }
 }
