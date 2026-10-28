@@ -12,8 +12,8 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **04 Generative belief language: VERIFIED** (engine gate). Reference: [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md).
 - **05 Interpreter and compiler: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Generalisation (second held-out corpus,
   scored untuned): 51/80 labels, 13/30 supported sentences read faithfully; V1's composer on the same sentences: 34/80 and 3/30.
-- **06 Simulation primitives: IN PROGRESS** (executor, 17 operators, chickens and loose stones verified in engine tests; their 3D
-  drawing waits for phase 10).
+- **06 Simulation primitives: VERIFIED (gate)**; hens, stones and the raised bank are drawn in 3D and on the classic map (phase 09).
+  Stated limits: turned-aside floodwater is not conserved elsewhere; faster growth has no water demand.
 - **07 Agent cognition and memory: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Reference: [`MINDS.md`](MINDS.md).
 - **08 Multi-agent social dynamics: VERIFIED offline and with mocks; LIVE UNVERIFIED** (the gate's "one real provider run makes
   faction behaviour observably different" needs a credential). Reference: [`MINDS.md`](MINDS.md) §6.
@@ -23,8 +23,9 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 
 ## Last good commit / branch
 
-Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2` (open pull request JaredVogler2/BeliefEngine_V2#2),
-on top of `main@534448e`. Phase 03: `0344851`; phases 04/06 (engine): `e33209b`; phase 05: `e093c4f` … `70575ad`; phase 07:
+Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2`. JaredVogler2/BeliefEngine_V2#2 was merged into `main`
+at phase 03 (`d9312bc`); everything since is in the open follow-up JaredVogler2/BeliefEngine_V2#3 (`main` merged into the branch
+without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`; phases 04/06 (engine): `e33209b`; phase 05: `e093c4f` … `70575ad`; phase 07:
 `802dbe2` … `d842cc6`; phase 08: `e48a7ca`; V1 merge: `08877e7`, `1b7086b`; phase 09: `07e06f7` (engine) and the commit after it
 (browser chains, drawing, provenance UI, docs).
 
