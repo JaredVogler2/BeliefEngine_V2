@@ -7,11 +7,13 @@
  *       [--quality high] [--hud 0|1] [--url http://127.0.0.1:5173] [--wait 1500] [--renderer 3d|2d] [--day 5] [--policy evidence-first] [--seed 1] [--scenario redbank]
  *       [--resolve 1 --t 1.2]   play day N in full, load the dawn after it, then play that day's real events and let 1.2 s of effects run
  *       [--settle 4] [--dpr 2]
+ *       [--trace hens]   a recorded Generative Reality chain (tests/fixtures/v2-bridge-traces.json) instead of a bot
+ *       [--save run.json]   a saved run instead (its own script says how it was made)
  */
 import { chromium } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { GameSession, serializeRun } from '../src/engine/index.ts';
+import { GameSession, serializeRun, type Action, type CreateRunOptions } from '../src/engine/index.ts';
 import { policyById } from '../src/engine/ai/bots/generic.ts';
 
 const args = process.argv.slice(2);
@@ -37,20 +39,37 @@ const lens = arg('lens', '');
 const focus = arg('focus', ''); // villager:ivo or landmark:br: put the camera close on it before the shot
 mkdirSync(dirname(out), { recursive: true });
 
-const g = GameSession.create({ scenarioId: scenario, seed });
+// --trace hens: a recorded Generative Reality chain (tests/fixtures/v2-bridge-traces.json) instead of a bot: its own run options,
+// replayed action by action to the start of --day (with --resolve, through that day's End Day)
+const traceKey = arg('trace', '');
+const trace = traceKey ? (JSON.parse(readFileSync('tests/fixtures/v2-bridge-traces.json', 'utf8')) as Record<string, { opts: CreateRunOptions; actions: Action[] }>)[traceKey] : null;
+if (traceKey && !trace) throw new Error(`no recorded chain "${traceKey}"`);
+const g = GameSession.create(trace ? trace.opts : { scenarioId: scenario, seed });
 const p = policyById(policy);
-for (let i = 1; i < day && !g.state.outcome; i++) p.playDay(g);
+const queue = trace ? trace.actions.slice() : [];
+/** a recorded chain's actions until the run reaches `until` (a new day) or the chain runs out */
+const playTraceTo = (until: number): void => {
+  while (queue.length && g.state.day < until && !g.state.outcome) g.act(queue.shift()!);
+};
+if (trace) playTraceTo(day);
+else for (let i = 1; i < day && !g.state.outcome; i++) p.playDay(g);
 const resolve = arg('resolve', '0') === '1';
 const tAfter = Number(arg('t', '1.0'));
 let prevJson = '';
 let dayEvents: unknown[] = [];
 if (resolve) {
+  // the day's own actions first (the bell rung, the lantern lit), then the night itself
+  if (trace) while (queue.length && queue[0].type !== 'END_DAY') g.act(queue.shift()!);
   prevJson = serializeRun(g.state);
   const from = g.state.log.length;
-  p.playDay(g);
+  if (trace) playTraceTo(day + 1);
+  else p.playDay(g);
   dayEvents = g.state.log.slice(from);
 }
-const json = serializeRun(g.state);
+// --save file.json: a saved run (as the game saves it) instead of either; for states a bot or a chain does not reach, built and
+// described by the script that wrote them
+const saveFile = arg('save', '');
+const json = saveFile ? readFileSync(saveFile, 'utf8') : serializeRun(g.state);
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: Number(arg('dpr', '1')), hasTouch: W < 700 });

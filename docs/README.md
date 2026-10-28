@@ -18,11 +18,13 @@ the date and provenance before trusting a number: **only the V2 records were pro
 | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) | phases 04 and 06: the AST v2 belief language, its world vocabulary and operators, price, grounding, the night executor, the new entities and the V1 bridge |
 | [`MINDS.md`](MINDS.md) | phase 07: villager minds (personality, goals, memories with provenance), who thinks and what they can do, the model's `npc v2` contract, and conversations |
 | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md) | phase 09: the whole chain from a typed sentence to a changed world (preview, confirmation, persuasion, threshold, catalyst, consequences, provenance), the three proof claims and what the measurements found |
+| [`3D_EFFECTS.md`](3D_EFFECTS.md) | phase 10: what written laws look like in 3D (the effect registry keyed by logged events, hens rising to the engine's height, the screenshot matrix, measured draw calls) and what is not met |
 | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md) | the art direction and the measurable visual bar for the 3D world |
 | [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md) | the staged plan to reach that bar on the existing Three.js renderer |
 | [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) | what the 3D world looks like today, from real browser captures, scored honestly |
 | [`screenshots/v2-baseline/`](screenshots/v2-baseline/) | those captures (real Three.js canvas and the 2D map, never mock-ups) |
 | [`screenshots/v2-phase03/`](screenshots/v2-phase03/) | the composer's consent notice and a simulated online reading, from the running production build |
+| `screenshots/v2-phase05/` … [`screenshots/v2-phase10/`](screenshots/v2-phase10/) | each later phase's frames from the production build (composer, minds, social layer, the belief-to-reality chain, the 3D effect matrix) |
 
 ## Inherited V1 reference (describes the game as migrated; still true unless a V2 record says otherwise)
 

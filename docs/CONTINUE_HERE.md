@@ -19,7 +19,11 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
   faction behaviour observably different" needs a credential). Reference: [`MINDS.md`](MINDS.md) §6.
 - **09 Belief-to-reality bridge: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Reference: [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md).
 - **V1's 3D work (JaredVogler2/BeliefEngine#2 and JaredVogler2/BeliefEngine#3) is merged** into V2 (`08877e7`).
-- **10 3D visual effects: NOT STARTED. It is the next task (below).**
+- **10 3D visual effects: IN PROGRESS.** The effect registry and three physical laws drawn as the engine computed them are
+  **VERIFIED** (unit tests over the recorded chains; both 3D browser suites, 46 passed). The gate's "looks like premium real-time
+  gameplay" is **NOT MET** by my own reading (daylight diorama; the art stages 1-9 of [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md)
+  remain); GPU and phone frame times **UNVERIFIED**. Reference: [`3D_EFFECTS.md`](3D_EFFECTS.md).
+- **11 Generative gameplay and balance: next (below).**
 
 ## Last good commit / branch
 
@@ -27,7 +31,8 @@ Branch `claude/gracious-heisenberg-x6dvn1` of `JaredVogler2/BeliefEngine_V2`. Ja
 at phase 03 (`d9312bc`); everything since is in the open follow-up JaredVogler2/BeliefEngine_V2#3 (`main` merged into the branch
 without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`; phases 04/06 (engine): `e33209b`; phase 05: `e093c4f` … `70575ad`; phase 07:
 `802dbe2` … `d842cc6`; phase 08: `e48a7ca`; V1 merge: `08877e7`, `1b7086b`; phase 09: `07e06f7` (engine) and the commit after it
-(browser chains, drawing, provenance UI, docs).
+(browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
+matrix, docs).
 
 ## Working files changed in phase 09
 
@@ -75,30 +80,26 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 10: make generated laws beautiful and physically honest in 3D)
+## Next exact code changes (phase 11: an exciting strategy game, not a wish machine)
 
-[`../prompts/10_THREE_D_VISUAL_EFFECTS.md`](../prompts/10_THREE_D_VISUAL_EFFECTS.md). Start from V1's renderer (now merged): capture
-the merged renderer against [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md) first (the baseline report predates the merge).
+[`../prompts/11_GENERATIVE_GAMEPLAY_AND_BALANCE.md`](../prompts/11_GENERATIVE_GAMEPLAY_AND_BALANCE.md). Measured before any change:
+under the current rules no written belief reaches law within a chapter (Redbank seed 1, every policy).
 
-1. **A visual effect registry keyed by event codes and law ids** (`REALITY_EFFECT` with its clause's operator, `CHICKENS_ROSE`,
-   `BANK_RAISED`, `STONE_RAMS_BRIDGE`, `WATER_POOLED`, `FIRE_WARDS_COOLED`, `STRAYS_FLEW_HOME`): each plays only for a logged event,
-   from positions the engine computed, skippable, reduced-motion aware. Read `render3d/effects.ts` (V1's planner) first.
-2. **Forces**: hens rising on the bell night along an arc to the engine's altitude, with ground shadows, drifting with the logged
-   wind, coming down at dawn; strays crossing the river.
-3. **Materials and water**: light stones' tint and bob, the haul to the bank, the bank's courses rising; pooled water spreading on the
-   low ground; flood wards sinking when flames cool.
-4. **Fire and temperature**: cooler flames visibly smaller and dimmer where the law acts; hearth smoke thinner.
-5. **Social**: villagers gesture when they tell, argue or demand proof (the people layer's `gesture`), filaments only along trust
-   edges.
-6. **Art pass** to the standard (night and dusk, lanterns as local light, sculpted valley) and the screenshot matrix of the prompt
-   (day 1, two activations, compound weather, debate near the bridge, suppressed rule, debrief; 390×844 and 320×568; quality tiers,
-   context loss, restart memory). Performance on a real GPU stays UNVERIFIED unless measured on one.
+1. **A Generative Reality tournament** (`scripts/tournament-v2.ts`, policies in `src/engine/ai/bots/reality.ts`): no-op, spam a broad
+   law, evidence-first, bridge-based persuasion, inventive compound, careful low-power synergy, rival antagonist (an adversarial
+   proposer through `NPC_DECIDE`), all through the same actions; AP, activation day, survival, collateral, reach, dead time, cost 0.
+2. **Balance written beliefs under a recorded rules version** (`s.v2.rules`, older runs keep 1 and replay exactly): thresholds nearer
+   authored laws of equal power; a belief that waits for a catalyst can be staged like an authored story, its omen read from what it
+   does (`reality/demonstrate.ts`). Find and fix one dominant free win.
+3. **Modes and strategic events**: Living Village beside Classic, Generative Chronicle and Reality Lab with separate records; a leader
+   who opposes a law that damages livelihoods; trust as the price of hazardous magic; counterfactual retry on failure.
+4. Gate evidence: two very different creative laws viable, a third that can backfire, a win/lose arc in a reasonable session.
 
 ## Parallel track: the 3D world
 
 [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md): stage 0 (merge V1's 3D work) is done; stage 1 (draw packs, fire,
-smoke, forecast, lens and labels in 3D) and stage 2 (time of day) remain. Hens, stones and the raised bank are drawn (phase 09);
-their effects are not yet animated (phase 10).
+smoke, forecast, lens and labels in 3D) and stage 2 (time of day) remain, and with them phase 10's "premium" bar. Written laws'
+effects are drawn and animated from logged events (phase 10, [`3D_EFFECTS.md`](3D_EFFECTS.md)).
 
 ## What MUST NOT be rewritten
 

@@ -35,6 +35,8 @@ export class RealityLayer implements Layer {
   private readonly hens: THREE.InstancedMesh;
   private readonly heads: THREE.InstancedMesh;
   private readonly combs: THREE.InstancedMesh;
+  private readonly beaks: THREE.InstancedMesh;
+  private readonly tails: THREE.InstancedMesh;
   private readonly stones: THREE.InstancedMesh;
   private readonly coops: THREE.InstancedMesh;
   private readonly roofs: THREE.InstancedMesh;
@@ -60,9 +62,12 @@ export class RealityLayer implements Layer {
       this.mats.push(m);
       return m;
     };
-    this.hens = new THREE.InstancedMesh(mk(new THREE.SphereGeometry(0.14, 10, 8).scale(1.3, 1, 1)), mat({ color: 0xfaf6ec, emissive: 0x3a3226, emissiveIntensity: 0.35 }), MAX_HENS);
-    this.heads = new THREE.InstancedMesh(mk(new THREE.SphereGeometry(0.075, 8, 6)), mat({ color: 0xfaf6ec, emissive: 0x3a3226, emissiveIntensity: 0.35 }), MAX_HENS);
+    this.hens = new THREE.InstancedMesh(mk(new THREE.SphereGeometry(0.12, 10, 8).scale(1.3, 1, 1)), mat({ color: 0xfaf6ec, emissive: 0x3a3226, emissiveIntensity: 0.35 }), MAX_HENS);
+    this.heads = new THREE.InstancedMesh(mk(new THREE.SphereGeometry(0.065, 8, 6)), mat({ color: 0xfaf6ec, emissive: 0x3a3226, emissiveIntensity: 0.35 }), MAX_HENS);
     this.combs = new THREE.InstancedMesh(mk(new THREE.BoxGeometry(0.05, 0.05, 0.03)), mat({ color: 0xc0392b, emissive: 0x400a05, emissiveIntensity: 0.3 }), MAX_HENS);
+    // a beak pointing forward (+x before the hen's turn) and a tail swept up and back: what makes a white blob read as a hen
+    this.beaks = new THREE.InstancedMesh(mk(new THREE.ConeGeometry(0.022, 0.06, 5).rotateZ(-Math.PI / 2)), mat({ color: 0xe0a030, emissive: 0x3a2405, emissiveIntensity: 0.3 }), MAX_HENS);
+    this.tails = new THREE.InstancedMesh(mk(new THREE.ConeGeometry(0.06, 0.14, 5).rotateZ(Math.PI / 2 - 0.7)), mat({ color: 0xece4d2, emissive: 0x3a3226, emissiveIntensity: 0.3 }), MAX_HENS);
     const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false });
     this.mats.push(shadowMat);
     this.shadows = new THREE.InstancedMesh(mk(new THREE.CircleGeometry(0.17, 12).rotateX(-Math.PI / 2)), shadowMat, MAX_HENS);
@@ -70,7 +75,7 @@ export class RealityLayer implements Layer {
     this.coops = new THREE.InstancedMesh(mk(new THREE.BoxGeometry(0.5, 0.36, 0.42)), mat({ color: 0xa8703f }), MAX_COOPS);
     this.roofs = new THREE.InstancedMesh(mk(new THREE.ConeGeometry(0.4, 0.24, 4).rotateY(Math.PI / 4)), mat({ color: 0x6b4428 }), MAX_COOPS);
     this.bank = new THREE.InstancedMesh(mk(new THREE.BoxGeometry(0.98, 0.2, 0.4)), mat({ color: 0xb3a88f, roughness: 1 }), MAX_BANK);
-    for (const [name, mesh] of [['reality-hens', this.hens], ['reality-hen-heads', this.heads], ['reality-hen-combs', this.combs], ['reality-hen-shadows', this.shadows], ['reality-stones', this.stones], ['reality-coops', this.coops], ['reality-coop-roofs', this.roofs], ['reality-bank', this.bank]] as const) {
+    for (const [name, mesh] of [['reality-hens', this.hens], ['reality-hen-heads', this.heads], ['reality-hen-combs', this.combs], ['reality-hen-beaks', this.beaks], ['reality-hen-tails', this.tails], ['reality-hen-shadows', this.shadows], ['reality-stones', this.stones], ['reality-coops', this.coops], ['reality-coop-roofs', this.roofs], ['reality-bank', this.bank]] as const) {
       mesh.name = name;
       mesh.count = 0;
       mesh.castShadow = true;
@@ -132,17 +137,13 @@ export class RealityLayer implements Layer {
       const [jx, jy] = jitter(h.id);
       const w = engineToWorld(h.x + jx, h.y + jy);
       const y = above(w.x, w.z) + 0.16 + h.alt * 0.55;
-      this.henBase.push({ id: h.id, x: w.x, y, z: w.z, ground: above(w.x, w.z), phase: (jx + jy) * 9 });
-      this.set(this.hens, n, w.x, y, w.z, jx * 3, 1);
+      const phase = (jx + jy) * 9;
+      this.henBase.push({ id: h.id, x: w.x, y, z: w.z, ground: above(w.x, w.z), phase });
+      this.placeHen(n, w.x, y, w.z, phase * 0.33, 0);
       this.set(this.shadows, n, w.x, above(w.x, w.z) + 0.02, w.z, 0, 1);
-      this.set(this.heads, n, w.x + 0.16, y + 0.11, w.z, 0, 1);
-      this.set(this.combs, n, w.x + 0.17, y + 0.19, w.z, 0, 1);
       n++;
     }
-    this.hens.count = n;
-    this.heads.count = n;
-    this.combs.count = n;
-    this.shadows.count = n;
+    for (const mesh of [this.hens, this.heads, this.combs, this.beaks, this.tails, this.shadows]) mesh.count = n;
     n = 0;
     let placed = 0;
     for (const st of r.stones.slice(0, MAX_STONES)) {
@@ -150,7 +151,7 @@ export class RealityLayer implements Layer {
       const y = above(w.x, w.z);
       const k = 0.7 + Math.min(4, st.base) * 0.15;
       this.set(this.stones, n, w.x, y + 0.08 * k, w.z, st.x * 1.7 + st.y, k);
-      this.stones.setColorAt(n, new THREE.Color(st.state === 'placed' ? 0xb7ad98 : st.wet > 0 ? 0x5f6168 : 0x8d8f96));
+      this.stones.setColorAt(n, new THREE.Color(st.state === 'placed' ? 0xcdc3ab : st.wet > 0 ? 0x86909c : 0xaaa9a1));
       if (st.state === 'placed') placed++;
       n++;
     }
@@ -165,8 +166,19 @@ export class RealityLayer implements Layer {
       for (let c = 0; c < h && n < MAX_BANK; c++) this.set(this.bank, n++, w.x, y + 0.1 + c * 0.2, w.z, 0, 1);
     }
     this.bank.count = n;
-    for (const mesh of [this.hens, this.heads, this.combs, this.shadows, this.stones, this.coops, this.roofs, this.bank]) mesh.instanceMatrix.needsUpdate = true;
+    for (const mesh of [this.hens, this.heads, this.combs, this.beaks, this.tails, this.shadows, this.stones, this.coops, this.roofs, this.bank]) mesh.instanceMatrix.needsUpdate = true;
     this.drawn = { coops: r.coops.length, hens: r.hens.length, strays: r.hens.filter((h) => h.stray).length, stones: r.stones.filter((x) => x.state === 'loose').length, placed, bank: r.bank.length };
+  }
+
+  /** one hen: body, then head, comb and beak ahead of it and the tail behind, all turned by the same yaw; `peck` dips the head */
+  private placeHen(i: number, x: number, y: number, z: number, yaw: number, peck: number): void {
+    const c = Math.cos(yaw);
+    const s = -Math.sin(yaw);
+    this.set(this.hens, i, x, y, z, yaw, 1);
+    this.set(this.heads, i, x + 0.14 * c, y + 0.1 - peck, z + 0.14 * s, yaw, 1);
+    this.set(this.combs, i, x + 0.15 * c, y + 0.17 - peck, z + 0.15 * s, yaw, 1);
+    this.set(this.beaks, i, x + 0.215 * c, y + 0.09 - peck, z + 0.215 * s, yaw, 1);
+    this.set(this.tails, i, x - 0.17 * c, y + 0.07, z - 0.17 * s, yaw, 1);
   }
 
   private set(mesh: THREE.InstancedMesh, i: number, x: number, y: number, z: number, yaw: number, scale: number): void {
@@ -187,15 +199,12 @@ export class RealityLayer implements Layer {
       const up = flying ? this.liftOf(b.id, ctx.reducedMotion) : 0;
       const flap = up > 0 && !ctx.reducedMotion ? Math.sin(time * 18 + b.phase) * 0.035 : 0;
       const peck = up > 0 || ctx.reducedMotion ? 0 : Math.max(0, Math.sin(time * 2.2 + b.phase)) ** 6 * 0.05;
-      const y = b.y + up + flap;
-      this.set(this.hens, i, b.x, y, b.z, b.phase * 0.33, 1);
-      this.set(this.heads, i, b.x + 0.16, y + 0.11 - peck, b.z, 0, 1);
-      this.set(this.combs, i, b.x + 0.17, y + 0.19 - peck, b.z, 0, 1);
+      this.placeHen(i, b.x, b.y + up + flap, b.z, b.phase * 0.33, peck);
       const k = Math.max(0.35, 1 - up / 1.8);
       this.set(this.shadows, i, b.x, b.ground + 0.02, b.z, 0, k);
     });
     this.lifts = this.lifts.filter((l) => l.t < l.dur);
-    for (const mesh of [this.hens, this.heads, this.combs, this.shadows]) mesh.instanceMatrix.needsUpdate = true;
+    for (const mesh of [this.hens, this.heads, this.combs, this.beaks, this.tails, this.shadows]) mesh.instanceMatrix.needsUpdate = true;
   }
 
   /** hens in the air right now (tests read it while a lift plays) */
@@ -210,6 +219,6 @@ export class RealityLayer implements Layer {
   dispose(): void {
     for (const g of this.geos) g.dispose();
     for (const m of this.mats) m.dispose();
-    for (const mesh of [this.hens, this.heads, this.combs, this.shadows, this.stones, this.coops, this.roofs, this.bank]) mesh.dispose();
+    for (const mesh of [this.hens, this.heads, this.combs, this.beaks, this.tails, this.shadows, this.stones, this.coops, this.roofs, this.bank]) mesh.dispose();
   }
 }

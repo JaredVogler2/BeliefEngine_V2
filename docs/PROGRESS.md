@@ -14,12 +14,43 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 07 Agent cognition and memory | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider: no model-backed decision has been made). Every villager of a V2 run has a personality, goals and memories with provenance; a few a day decide at moments that matter (legal moves only, V1 rules decide the effect); the player can talk with any of them; a model may propose decisions and voice answers, checked twice and recorded so replays need no model | [`MINDS.md`](MINDS.md), entry below, [`screenshots/v2-phase07/`](screenshots/v2-phase07/) |
 | 08 Multi-agent social dynamics | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** Influence journal with cause chains; faction leanings; skeptics demanding proof (answered, failed, ignored); competing claims villagers write in the same language (announced, withdrawable, capped, contestable); lies the engine flags and witnesses discover; social energy so decisions redirect rather than add influence. Measured: the social layer moves the outcome of knife-edge chapters (table in the entry) | [`MINDS.md`](MINDS.md) §6, entry below, [`screenshots/v2-phase08/`](screenshots/v2-phase08/) |
 | 09 Belief-to-reality bridge | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** A typed sentence becomes law only through the whole chain (preview → hashed confirmation → real persuasion → threshold with hysteresis → catalyst → executor → V1 hazards), proven in the browser for the three proof claims plus a complete win and a complete loss; below threshold nothing happens; replays need no model and no network. Measured: written beliefs reach law in 6-9 days, so they rarely decide a chapter (phase 11) | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md), entry below, [`screenshots/v2-phase09/`](screenshots/v2-phase09/) |
-| 10-17 | NOT STARTED | |
-| 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
+| 10 3D visual effects | **IN PROGRESS: the effect registry and three physical laws in 3D VERIFIED (they match canonical state, tested over the recorded chains and in the browser); the gate's "looks like premium real-time gameplay" NOT MET by my own reading (the art stages of the 3D plan remain); frame times on a GPU or phone UNVERIFIED** | [`3D_EFFECTS.md`](3D_EFFECTS.md), `tests/unit/render3d-reality.test.ts`, `tests/e2e/v2-world3d.spec.ts`, [`screenshots/v2-phase10/`](screenshots/v2-phase10/) |
+| 11-17 | NOT STARTED | |
+| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 10: written laws in the 3D world (effects VERIFIED; premium look NOT MET; GPU UNVERIFIED)
+
+**What was done** (reference: [`3D_EFFECTS.md`](3D_EFFECTS.md))
+
+- **An effect registry keyed by logged events** (`render3d/plan.ts`, plain data): each written-law event (`REALITY_EFFECT` by its
+  operator, `BANK_RAISED`, `STONE_RAMS_BRIDGE`, `WATER_POOLED`, `FIRE_WARDS_COOLED`, `STRAYS_FLEW_HOME`) and each villager's own choice
+  (`NPC_ACT`, tests, lies, claims) maps to an effect planned from positions and amounts the engine computed; `effects.ts` plays them
+  (lift, chill, gesture added), skippable and reduced-motion aware.
+- **Forces**: the executor now records what each entity effect amounted to once every law's pull was combined (`amount` on the
+  applied effect); a bell night lifts exactly the hens it lifted, to that height, with blob shadows that shrink as they rise.
+- **Written laws described by their own clauses** in the snapshot (trigger, target, operator, what powers them tonight), never by
+  the neutral V1 spec they carry; the ledger in the world no longer shows a bell law as wanting a lantern.
+- **Things drawn legibly**: hens with body, head, comb, beak and tail; stones by state (placed, wet, dry); the bank's courses at the
+  waterline.
+- **The screenshot matrix** (`scripts/capture-matrix-v2.ts`, `capture-3d.ts --trace/--save`): day 1, two activations, compound
+  weather aftermath, debate near the bridge, a law let go (constructed save), the end-of-run scene, 390×844 and 320×568.
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `npx vitest run tests/unit/render3d-reality.test.ts` | **9 passed**: every planned effect names an event of that very night (four chains); lifts only on the nights the law acted, exactly the executor's hens at its height; a law that never woke shows nothing; written laws described by their clauses |
+| `npx playwright test --project=desktop-3d --project=phone-3d` | **46 passed, 4 skipped by design** (29.3 minutes, software WebGL): V1's 3D suite (tiers, context loss, restart memory, picking, camera limits, axe) and V2's (the outcome of a law drawn; a bell night with hens rising and settling) |
+| Matrix frames (`info()`) | high tier 1440×900: 515-750 draw calls, 0.49-0.67 M triangles; low tier 320×568: 147 calls, 0.23 M (SwiftShader, not a GPU) |
+
+**Not met / not verified:** the gate asks that the laws "look like premium real-time gameplay": by my reading of these frames they do
+not (a daylight diorama, not the dusk standard; hens drawn about twice life size; no human has judged it). Frame times on real
+hardware are UNVERIFIED. Both are carried by the 3D plan's stages 1-9.
 
 ## 2026-10-28 — Phase 09: imagine → persuade → manifest → consequences (VERIFIED offline and with mocks; LIVE UNVERIFIED)
 
