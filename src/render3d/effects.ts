@@ -463,6 +463,27 @@ export class EffectsLayer implements Layer {
       case 'focus':
         if (g && !reduced) this.onFocus?.(g.x, g.z);
         break;
+      case 'lift':
+        // the hens themselves rise (the reality layer owns them); a soft ring marks where the law took hold of them
+        if (p.targets?.length && p.height) this.ctx.reality?.lift(p.targets, p.height, p.dur);
+        break;
+      case 'chill':
+        if (g) {
+          magic?.pulse(g.x, g.z, p.radius ?? 1.2, p.dur, p.vocab, { width: 0.06, peak: 0.6, inward: p.vocab === 'rain' });
+          // cooler flames: pale motes sinking over the fire instead of sparks rising from it (hotter: the opposite)
+          const y = this.ctx.heightAt(g.x, g.z) + 1.4;
+          const n = Math.round(26 * k);
+          for (let i = 0; i < n; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const d = Math.random() * (p.radius ?? 1.2);
+            const cool = p.vocab === 'rain';
+            this.sparks.emit(g.x + Math.cos(a) * d, y + (cool ? 0.6 : -1) + Math.random() * 0.4, g.z + Math.sin(a) * d, 0, cool ? -0.6 - Math.random() * 0.5 : 0.9 + Math.random() * 0.6, 0, 1 + Math.random() * 0.6, 0.05, 0.02, col(cool ? 0xdff6ff : 0xffd29a), col(cool ? 0x6fc3ff : 0xff6b57), 0.8, 0.3, 0);
+          }
+        }
+        break;
+      case 'gesture':
+        if (p.to) this.ctx.actors?.gesture(p.to, 'talk', Math.max(0.6, p.dur / 1000));
+        break;
     }
   }
 

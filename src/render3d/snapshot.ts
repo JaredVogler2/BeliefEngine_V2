@@ -2,6 +2,8 @@ import type { Duty, RunState } from '../engine/index.ts';
 import { allClaimDefs, claimDef } from '../engine/core/lookup.ts';
 import { passableMask } from '../engine/world/nav.ts';
 import { triggerSources } from '../engine/laws/effects.ts';
+import { triggerEvents } from '../engine/reality/ast.ts';
+import { fires } from '../engine/reality/execute.ts';
 
 /**
  * A read-only picture of the run for the renderer. The renderer never reads the run state directly and never writes to it: it gets this
@@ -116,6 +118,8 @@ export interface SceneReality {
   stones: { id: string; x: number; y: number; state: 'loose' | 'placed'; wet: number; base: number }[];
   /** tile index and how many levels the bank stands raised there */
   bank: [number, number][];
+  /** what written laws did last night, as the executor recorded it: the effects the renderer may animate, and nothing else */
+  night: { event: number; law: string; claim: string; op: string; targets: string[]; amount: number | null; day: number }[];
 }
 
 export function getSceneSnapshot(s: RunState): SceneSnapshot {
@@ -149,9 +153,21 @@ export function getSceneSnapshot(s: RunState): SceneSnapshot {
       let regionWide = false;
       try {
         const d = claimDef(s, l.claimId);
-        spec = { trigger: d.spec.trigger.kind, radius: d.spec.radius, subject: d.spec.subject, effect: d.spec.effect, rival: !!d.rival };
-        regionWide = ['night', 'evidence', 'always'].includes(d.spec.trigger.kind) && d.spec.subject !== 'stone';
-        sources = regionWide ? [] : triggerSources(s, l, d).map((q) => ({ id: q.id, x: q.x, y: q.y }));
+        if (d.reality) {
+          // a written belief carries a neutral V1 spec only for its thresholds: describe it by its own clauses, and power it from what the
+          // reality executor itself would find tonight (the rung bell, the lit lanterns), never from that placeholder
+          const c = d.reality.ast.clauses[0];
+          const ev = d.reality.ast.clauses.flatMap((cl) => triggerEvents(cl.when));
+          const trigger = ev.includes('lantern') ? 'lit_beacon' : ev.includes('smoke_fire') ? 'smoke_fire' : ev.includes('bell') ? 'bell' : ev.includes('watchers') ? 'watchers' : 'always';
+          spec = { trigger, radius: c.target.near?.radius ?? 0, subject: `reality:${c.target.kind}`, effect: c.effect.op, rival: !!d.rival };
+          regionWide = trigger === 'always';
+          const seen = new Set<string>();
+          sources = regionWide ? [] : d.reality.ast.clauses.flatMap((cl) => fires(s, cl.when, l).sources).filter((q) => (seen.has(q.id) ? false : (seen.add(q.id), true))).map((q) => ({ id: q.id, x: q.x, y: q.y }));
+        } else {
+          spec = { trigger: d.spec.trigger.kind, radius: d.spec.radius, subject: d.spec.subject, effect: d.spec.effect, rival: !!d.rival };
+          regionWide = ['night', 'evidence', 'always'].includes(d.spec.trigger.kind) && d.spec.subject !== 'stone';
+          sources = regionWide ? [] : triggerSources(s, l, d).map((q) => ({ id: q.id, x: q.x, y: q.y }));
+        }
       } catch {
         /* a law whose story is gone draws nothing special */
       }
@@ -168,6 +184,7 @@ export function getSceneSnapshot(s: RunState): SceneSnapshot {
           hens: s.v2.chickens.filter((c) => c.alive).map((c) => ({ id: c.id, x: c.x, y: c.y, alt: c.alt, stray: c.stray })),
           stones: s.v2.stones.filter((x) => x.state !== 'lost').map((x) => ({ id: x.id, x: x.x, y: x.y, state: x.state as 'loose' | 'placed', wet: x.wet, base: x.base })),
           bank: Object.entries(s.v2.bank).filter(([, h]) => h > 0).map(([k, h]) => [Number(k), h] as [number, number]).sort((a, b) => a[0] - b[0]),
+          night: s.v2.lastNight.map((a) => ({ event: a.event, law: a.law, claim: a.claim, op: a.op, targets: a.targets.slice(), amount: a.amount ?? null, day: a.day })),
         }
       : null,
   };

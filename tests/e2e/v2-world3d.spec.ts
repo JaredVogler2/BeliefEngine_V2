@@ -158,4 +158,38 @@ test.describe('3D world (Three.js, forced on)', () => {
       }
     }
   });
+
+  test('a bell night played in the 3D world: the hens the law lifts rise to the engine’s height, hover and settle again', async ({ page }, testInfo) => {
+    test.setTimeout(360_000);
+    const fx = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces.json', import.meta.url), 'utf8')) as Record<string, { opts: CreateRunOptions; actions: Action[] }>;
+    const t = fx.hens;
+    // the morning of day 6 played up to its End Day: the law is about to wake and the bell has been rung
+    const ends = t.actions.map((a, i) => (a.type === 'END_DAY' ? i : -1)).filter((i) => i >= 0);
+    const run = replayRun({ ...t.opts, actions: t.actions.slice(0, ends[5]) });
+    expect(run.rejected).toEqual([]);
+    expect(run.state.day).toBe(6);
+    const coop = run.state.v2!.coops[0];
+    await page.goto(URL_3D);
+    await page.evaluate((v) => localStorage.setItem('be:save:v1', v), serializeRun(run.state));
+    await page.goto(URL_3D);
+    await page.getByTestId('continue').click();
+    await world3d(page);
+    await page.evaluate(([x, y]) => (window as unknown as { __beRenderer: { setView: (v: { x: number; z: number; dist: number; elevationDeg: number }) => void } }).__beRenderer.setView({ x: x + 0.5, z: y + 0.5, dist: 7.5, elevationDeg: 34 }), [coop.x, coop.y]);
+    const info = () => page.evaluate(() => (window as unknown as { __beRenderer: { realityInfo: () => { hens: number; airborne: number } } }).__beRenderer.realityInfo());
+    expect((await info()).airborne).toBe(0);
+    await page.getByTestId('end-day').click();
+    await page.getByTestId('confirm-end').click();
+    await expect(page.getByTestId('digest')).toBeVisible();
+    await page.getByTestId('digest-continue').click();
+    // the resolution plays: the hens the executor lifted are in the air for a while, then back on the ground, all of them alive
+    await expect.poll(async () => (await info()).airborne, { timeout: 60_000, message: 'hens rise' }).toBeGreaterThan(15);
+    if (process.env.BE_SHOTS === '1') {
+      // the waking law draws the camera to its ground; look back at the coop for the picture
+      await page.evaluate(([x, y]) => (window as unknown as { __beRenderer: { setView: (v: { x: number; z: number; dist: number; elevationDeg: number }) => void } }).__beRenderer.setView({ x: x + 0.5, z: y + 0.5, dist: 6.5, elevationDeg: 30 }), [coop.x, coop.y]);
+      await page.waitForTimeout(1200);
+      await page.screenshot({ path: `docs/screenshots/v2-phase10/hens-rising-${testInfo.project.name.startsWith('phone') ? 'phone' : 'desktop'}.png` });
+    }
+    await expect.poll(async () => (await info()).airborne, { timeout: 120_000, message: 'hens settle' }).toBe(0);
+    expect((await info()).hens).toBe(22);
+  });
 });

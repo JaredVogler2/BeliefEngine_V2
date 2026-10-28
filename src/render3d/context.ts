@@ -51,6 +51,11 @@ export interface WorldContext {
   magic?: MagicField;
   /** where a villager or landmark is in the world right now */
   locate?(kind: 'villager' | 'landmark', id: string): import('three').Vector3 | null;
+  /** what a Generative Reality run's things can be asked to do for an event (set by the reality layer) */
+  reality?: {
+    /** these hens rise `height` tiles, hover and settle again over `durMs` */
+    lift(ids: string[], height: number, durMs: number): void;
+  };
   /** what the people on the ground can be asked to do for an event (set by the people layer) */
   actors?: {
     gesture(id: string, kind: string, seconds?: number): void;

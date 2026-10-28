@@ -76,6 +76,9 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
         emit(ctx, {
           step: 'hazard', code: 'WATER_POOLED', importance: 2,
           ...(pool.laws[0] ? { law: pool.laws[0], claim: s.laws.find((l) => l.id === pool.laws[0])?.claimId } : {}),
+          // where it stands, for the map and the 3D world to show exactly that ground: the middle of the pooled tiles, and how many
+          tile: [Math.round(pool.tiles.reduce((a, i) => a + (i % w.w), 0) / pool.tiles.length), Math.round(pool.tiles.reduce((a, i) => a + Math.floor(i / w.w), 0) / pool.tiles.length)] as [number, number],
+          delta: { tiles: [0, pool.tiles.length] },
           text: `Water moved by belief pools on the low ground of ${w.regions.find((r) => r.id === pool.region)?.name ?? pool.region}: ${pool.tiles.length} tiles stand a tile deep.`,
         });
   }

@@ -46,7 +46,13 @@ export type PlanKind =
   /** the camera is invited to look here (skipped for reduced motion) */
   | 'focus'
   /** a ripple travelling outward over the water from a source */
-  | 'ripple';
+  | 'ripple'
+  /** hens rising to the height a law lifted them, hovering, and settling again (the engine's own altitude and hens) */
+  | 'lift'
+  /** cool shimmer over fires a law has made burn weaker */
+  | 'chill'
+  /** a villager gestures as they argue, ask or tell */
+  | 'gesture';
 
 export interface EffectPlan {
   kind: PlanKind;
@@ -65,6 +71,10 @@ export interface EffectPlan {
   /** `tie`: gossip along a real relationship in the village; `event`: a thing the engine logged someone doing (a messenger, a gathering) */
   via?: 'tie' | 'event';
   law?: string;
+  /** entity ids the effect moves (hens for a lift) */
+  targets?: string[];
+  /** world-independent amount: tiles of lift */
+  height?: number;
   /** a short plain-words reason for the log and for assistive text */
   why: string;
 }
@@ -127,6 +137,11 @@ export function lawVocab(law: SceneLaw): Vocab {
   if (law.rival) return 'rival';
   if (law.subject === 'rain') return 'rain';
   if (law.subject === 'grain') return 'safe';
+  // a written belief speaks the vocabulary of what it does: water and rain moved are cyan, growth green
+  if (law.subject.startsWith('reality:')) {
+    if (['WEATHER_MODIFIER', 'RELOCATE_RESOURCE', 'REDIRECT_FLOW'].includes(law.effect) || law.subject === 'reality:water' || law.subject === 'reality:rain') return 'rain';
+    if (law.effect === 'GROW_ENTITY') return 'safe';
+  }
   return 'trust';
 }
 
@@ -207,7 +222,7 @@ export function lawVisuals(snap: SceneSnapshot): LawVisual[] {
       missing: !powered && need ? need : null,
       sources: l.sources.map((s) => engineToWorld(s.x, s.y)),
       candidates: powered ? [] : candidates,
-      river: l.subject === 'river',
+      river: l.subject === 'river' || l.subject === 'reality:water',
       radius: l.radius,
       center: lawCenter(snap, l),
       subject: l.subject,
@@ -385,6 +400,108 @@ export function planResolution(events: GameEvent[], snap: SceneSnapshot, prev: S
         break;
       case 'DEATH':
         if (e.target && person(snap, e.target)) out.push({ kind: 'ring', vocab: 'resist', eventId: e.id, code: e.code, to: e.target, radius: 1.1, delay: delay + 600, dur: r ? 400 : 1700, why: 'A life is lost.' });
+        break;
+      // ---- Generative Reality: only what the executor recorded tonight (snap.reality.night) or the entity rules logged
+      case 'REALITY_EFFECT': {
+        const a = snap.reality?.night.find((n) => n.event === e.id);
+        if (!a) break;
+        const l = lawOf(e);
+        const v: Vocab = l ? lawVocab(l) : 'trust';
+        const reach = l ? lawCenter(snap, l) : null;
+        const hens = new Set(snap.reality?.hens.map((h) => h.id) ?? []);
+        switch (a.op) {
+          case 'APPLY_FORCE': {
+            const ids = a.targets.filter((id) => hens.has(id));
+            if (ids.length && (a.amount ?? 0) > 0)
+              out.push({ kind: 'lift', vocab: 'trust', eventId: e.id, code: e.code, targets: ids, height: a.amount ?? 1, law: a.law, delay: delay + 300, dur: r ? 500 : 3600, why: `${ids.length} hens rise as high as the law lifted them (${a.amount} tile${a.amount === 1 ? '' : 's'}).` });
+            break;
+          }
+          case 'SET_MATERIAL_PROPERTY':
+            for (const id of a.targets.slice(0, 8)) {
+              const st = snap.reality?.stones.find((x) => x.id === id);
+              if (st) out.push({ kind: 'ring', vocab: v, eventId: e.id, code: e.code, at: engineToWorld(st.x, st.y), radius: 0.7, law: a.law, delay: delay + 300, dur: r ? 300 : 1400, why: 'A stone’s weight changes.' });
+            }
+            break;
+          case 'ALTER_TEMPERATURE': {
+            const cool = /weaker/.test(e.text);
+            const fires = snap.landmarks.filter((m) => (m.kind === 'beacon' || m.kind === 'campfire') && m.lit && m.fuelNights > 0);
+            for (const f of fires.slice(0, 6)) out.push({ kind: 'chill', vocab: cool ? 'rain' : 'danger', eventId: e.id, code: e.code, at: engineToWorld(f.x, f.y), radius: 1.2, law: a.law, delay: delay + 300, dur: r ? 400 : 2200, why: cool ? 'Flames burn weaker here.' : 'Flames burn hotter here.' });
+            if (!fires.length && reach) out.push({ kind: 'ring', vocab: cool ? 'rain' : 'danger', eventId: e.id, code: e.code, at: reach, radius: 2.5, law: a.law, delay: delay + 300, dur: r ? 300 : 1500, why: cool ? 'Flames here would burn weaker.' : 'Flames here would burn hotter.' });
+            break;
+          }
+          case 'REDIRECT_FLOW':
+          case 'MOVE_AWAY':
+          case 'MOVE_TOWARD':
+            if (l) for (const src of l.sources.slice(0, 4)) out.push({ kind: 'ripple', vocab: v, eventId: e.id, code: e.code, at: engineToWorld(src.x, src.y), radius: Math.max(2, l.radius), law: a.law, delay: delay + 300, dur: r ? 400 : 2000, why: 'The water is turned here.' });
+            break;
+          case 'WEATHER_MODIFIER':
+          case 'RELOCATE_RESOURCE':
+            if (l) for (const src of l.sources.slice(0, 2)) out.push({ kind: 'ring', vocab: 'rain', eventId: e.id, code: e.code, at: engineToWorld(src.x, src.y), radius: 4, law: a.law, delay: delay + 200, dur: r ? 300 : 1600, why: 'The rain answers.' });
+            break;
+          case 'GROW_ENTITY':
+          case 'DECAY_ENTITY':
+            for (const m of snap.landmarks.filter((x) => x.kind === 'field' && a.targets.includes(x.id)).slice(0, 6)) out.push({ kind: 'ring', vocab: a.op === 'GROW_ENTITY' ? 'safe' : 'danger', eventId: e.id, code: e.code, at: engineToWorld(m.x, m.y), radius: 1.4, law: a.law, delay: delay + 300, dur: r ? 300 : 1500, why: a.op === 'GROW_ENTITY' ? 'The crop ripens faster.' : 'The crop withers.' });
+            break;
+          case 'INFLUENCE_MOTIVATION':
+            for (const id of a.targets.slice(0, 8)) if (person(snap, id)) out.push({ kind: 'rune', vocab: 'trust', eventId: e.id, code: e.code, to: id, law: a.law, delay: delay + 300, dur: r ? 300 : 1300, why: 'Their feelings change (never what they believe).' });
+            break;
+          default:
+            for (const id of a.targets.slice(0, 6)) {
+              const m = snap.landmarks.find((x) => x.id === id);
+              if (m) out.push({ kind: 'ring', vocab: v, eventId: e.id, code: e.code, at: engineToWorld(m.x, m.y), radius: 1.2, law: a.law, delay: delay + 300, dur: r ? 300 : 1400, why: 'The law acts on this.' });
+              else if (person(snap, id)) out.push({ kind: 'ring', vocab: v, eventId: e.id, code: e.code, to: id, radius: 0.9, law: a.law, delay: delay + 300, dur: r ? 300 : 1300, why: 'The law acts on them.' });
+            }
+            break;
+        }
+        break;
+      }
+      case 'BANK_RAISED': {
+        const p = tileAt(e);
+        if (p && e.actor && person(snap, e.actor)) out.push({ kind: 'arc', vocab: 'trust', eventId: e.id, code: e.code, from: e.actor, at: p, delay: delay + 500, dur: r ? 300 : 1300, via: 'event', law: e.law, why: 'A stone made light is carried to the bank.' });
+        if (p) out.push({ kind: 'dust', vocab: 'safe', eventId: e.id, code: e.code, at: p, radius: 1, delay: delay + 900, dur: r ? 300 : 1300, law: e.law, why: 'The bank stands higher here, for good.' });
+        break;
+      }
+      case 'STONE_RAMS_BRIDGE':
+        if (bridge) {
+          out.push({ kind: 'splash', vocab: 'danger', eventId: e.id, code: e.code, at: bridge, radius: 1.4, delay: delay + 600, dur: r ? 400 : 1500, law: e.law, why: 'A stone made light floats off and rams the bridge.' });
+          out.push({ kind: 'dust', vocab: 'danger', eventId: e.id, code: e.code, at: bridge, radius: 1.2, delay: delay + 750, dur: r ? 400 : 1500, law: e.law, why: 'The bridge is struck.' });
+        }
+        break;
+      case 'WATER_POOLED': {
+        const p = tileAt(e);
+        const n = e.delta?.tiles?.[1] ?? 6;
+        if (p) out.push({ kind: 'drops', vocab: 'rain', eventId: e.id, code: e.code, at: p, radius: Math.min(5, 1.5 + Math.sqrt(n) * 0.6), delay: delay + 300, dur: r ? 500 : 2400, law: e.law, why: 'Water moved by belief pools on this low ground.' });
+        break;
+      }
+      case 'FIRE_WARDS_COOLED':
+        for (const f of snap.landmarks.filter((m) => m.kind === 'beacon' && m.lit && m.fuelNights > 0).slice(0, 6))
+          out.push({ kind: 'ring', vocab: 'resist', eventId: e.id, code: e.code, at: engineToWorld(f.x, f.y), radius: 2.2, delay: delay + 400, dur: r ? 300 : 1500, law: e.law, why: 'The ward around this fire stands a step lower tonight.' });
+        break;
+      case 'STRAYS_FLEW_HOME':
+        for (const c of (snap.reality?.coops ?? []).slice(0, 4)) out.push({ kind: 'ring', vocab: 'safe', eventId: e.id, code: e.code, at: engineToWorld(c.x, c.y), radius: 0.9, delay: delay + 500, dur: r ? 300 : 1300, law: e.law, why: 'Strays fly home over the river.' });
+        break;
+      // ---- villagers' own choices (minds)
+      case 'NPC_ACT':
+      case 'NPC_INVESTIGATED': {
+        if (e.actor && person(snap, e.actor)) out.push({ kind: 'gesture', vocab: 'neutral', eventId: e.id, code: e.code, to: e.actor, delay, dur: r ? 200 : 1500, why: 'A villager acts on their own choice.' });
+        const against = /challenge|argues against|doubts|turns against/i.test(e.text);
+        if (e.actor && e.target && e.actor !== e.target && person(snap, e.actor) && person(snap, e.target) && tieExists(snap, e.actor, e.target) && arcs < MAX_ARCS) {
+          out.push({ kind: 'arc', vocab: against ? 'resist' : 'trust', eventId: e.id, code: e.code, from: e.actor, to: e.target, delay: delay + 150, dur: r ? 200 : 1100, via: 'tie', why: against ? 'They argue against the story.' : 'They carry the story themselves.' });
+          arcs++;
+        }
+        break;
+      }
+      case 'TEST_REQUESTED':
+      case 'TEST_MET':
+      case 'TEST_FAILED':
+        if (e.actor && person(snap, e.actor)) out.push({ kind: 'eyes', vocab: e.code === 'TEST_MET' ? 'trust' : e.code === 'TEST_FAILED' ? 'danger' : 'neutral', eventId: e.id, code: e.code, to: e.actor, delay: delay + 200, dur: r ? 300 : 1500, why: e.code === 'TEST_REQUESTED' ? 'They want to see it with their own eyes.' : e.code === 'TEST_MET' ? 'They saw it work.' : 'They saw it fail.' });
+        break;
+      case 'LIE_DISCOVERED':
+        if (e.target && person(snap, e.target)) out.push({ kind: 'ring', vocab: 'resist', eventId: e.id, code: e.code, to: e.target, radius: 1.1, delay: delay + 300, dur: r ? 300 : 1300, why: 'A lie is seen through.' });
+        break;
+      case 'NPC_CLAIM_TELEGRAPHED':
+      case 'NPC_CLAIM_MADE':
+        if (e.actor && person(snap, e.actor)) out.push({ kind: e.code === 'NPC_CLAIM_MADE' ? 'ring' : 'rune', vocab: 'rival', eventId: e.id, code: e.code, to: e.actor, radius: 2, delay: delay + 300, dur: r ? 300 : 1500, why: e.code === 'NPC_CLAIM_MADE' ? 'A villager puts a story of their own to the village.' : 'A villager will answer your story tomorrow.' });
         break;
       case 'RAIN_DISPLACED': {
         // the rain the bells turned away: shown where the engine really added depth, never anywhere else

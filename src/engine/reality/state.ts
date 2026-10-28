@@ -58,6 +58,8 @@ export interface AppliedEffect {
   /** the event that records it */
   event: number;
   text: string;
+  /** what it amounted to once every law's pull was combined, where one number says it: tiles of lift, loads of weight */
+  amount?: number;
 }
 
 export interface RealityState {

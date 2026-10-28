@@ -681,6 +681,13 @@ export function runRealityLaws(ctx: Ctx, mods: Modifiers): RealityPlan {
     }
     applyKey(mods, intents, key, r.value, [...new Set(byKey.get(key)!.map((c) => c.law))].sort());
   }
+  // what each entity effect came to after combining (the renderer animates exactly this: hens to the height they reached)
+  for (const a of applied) {
+    const first = a.targets[0];
+    if (!first) continue;
+    if (a.op === 'APPLY_FORCE' && intents.lift[first] !== undefined) a.amount = intents.lift[first];
+    else if (a.op === 'SET_MATERIAL_PROPERTY' && intents.mass[first] !== undefined) a.amount = intents.mass[first];
+  }
   for (const [ck, c] of [...conflicts.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
     const prop = ck.split('|')[0];
     const names = c.laws.map((id) => `“${claimDef(s, s.laws.find((l) => l.id === id)?.claimId ?? id).short}”`);

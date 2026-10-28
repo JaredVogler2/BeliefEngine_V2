@@ -756,9 +756,9 @@ export class World3D implements WorldRenderer {
   }
 
   /** what of a Generative Reality run the world is drawing now (hens, stones, raised bank): read by tests, never by the game */
-  realityInfo(): RealityDrawn {
+  realityInfo(): RealityDrawn & { airborne: number } {
     const layer = this.layers.find((l) => l instanceof RealityLayer) as RealityLayer | undefined;
-    return layer ? layer.info() : { coops: 0, hens: 0, strays: 0, stones: 0, placed: 0, bank: 0 };
+    return layer ? layer.info() : { coops: 0, hens: 0, strays: 0, stones: 0, placed: 0, bank: 0, airborne: 0 };
   }
 
   stats(): { fps: number; effects: number; zoom: number } {

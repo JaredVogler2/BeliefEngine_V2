@@ -17,7 +17,7 @@
   "alive": 10,
   "hens": 22,
   "bank": 0,
-  "stateHash": "115324e32a28ad",
+  "stateHash": "11446bf8caf00b",
   "eventHash": "19784769060df0",
   "actions": [
    {
@@ -426,7 +426,7 @@
   "alive": 10,
   "hens": 0,
   "bank": 3,
-  "stateHash": "10a232544a9d77",
+  "stateHash": "1a0aad7eb26198",
   "eventHash": "1f74531b72005e",
   "actions": [
    {
@@ -656,8 +656,8 @@
   "alive": 9,
   "hens": 0,
   "bank": 0,
-  "stateHash": "0aa10162712b92",
-  "eventHash": "0a628a4d261467",
+  "stateHash": "038e6f7fafc662",
+  "eventHash": "0767330d583815",
   "actions": [
    {
     "type": "PICK_STARTER",

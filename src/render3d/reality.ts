@@ -42,14 +42,18 @@ export class RealityLayer implements Layer {
   private readonly geos: THREE.BufferGeometry[] = [];
   private readonly mats: THREE.Material[] = [];
   private drawn: RealityDrawn = { coops: 0, hens: 0, strays: 0, stones: 0, placed: 0, bank: 0 };
-  /** each hen's resting place, for the peck */
-  private henBase: { x: number; y: number; z: number; phase: number }[] = [];
+  /** each hen's resting place, for the peck and the lift */
+  private henBase: { id: string; x: number; y: number; z: number; ground: number; phase: number }[] = [];
+  /** blob shadows under the hens: they shrink and fade as a hen rises, so height reads without real-time shadows */
+  private readonly shadows: THREE.InstancedMesh;
+  /** lifts being played: which hens, how high (tiles, as the engine reached), and how far through */
+  private lifts: { ids: Set<string>; height: number; t: number; dur: number }[] = [];
   private readonly m = new THREE.Matrix4();
   private readonly q = new THREE.Quaternion();
   private readonly p = new THREE.Vector3();
   private readonly s = new THREE.Vector3();
 
-  constructor(_ctx: WorldContext) {
+  constructor(ctx: WorldContext) {
     const mk = <T extends THREE.BufferGeometry>(g: T): T => (this.geos.push(g), g);
     const mat = (o: THREE.MeshStandardMaterialParameters): THREE.MeshStandardMaterial => {
       const m = new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0, ...o });
@@ -59,11 +63,14 @@ export class RealityLayer implements Layer {
     this.hens = new THREE.InstancedMesh(mk(new THREE.SphereGeometry(0.14, 10, 8).scale(1.3, 1, 1)), mat({ color: 0xfaf6ec, emissive: 0x3a3226, emissiveIntensity: 0.35 }), MAX_HENS);
     this.heads = new THREE.InstancedMesh(mk(new THREE.SphereGeometry(0.075, 8, 6)), mat({ color: 0xfaf6ec, emissive: 0x3a3226, emissiveIntensity: 0.35 }), MAX_HENS);
     this.combs = new THREE.InstancedMesh(mk(new THREE.BoxGeometry(0.05, 0.05, 0.03)), mat({ color: 0xc0392b, emissive: 0x400a05, emissiveIntensity: 0.3 }), MAX_HENS);
+    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false });
+    this.mats.push(shadowMat);
+    this.shadows = new THREE.InstancedMesh(mk(new THREE.CircleGeometry(0.17, 12).rotateX(-Math.PI / 2)), shadowMat, MAX_HENS);
     this.stones = new THREE.InstancedMesh(mk(new THREE.DodecahedronGeometry(0.2, 0)), mat({ color: 0xffffff, roughness: 0.95 }), MAX_STONES);
     this.coops = new THREE.InstancedMesh(mk(new THREE.BoxGeometry(0.5, 0.36, 0.42)), mat({ color: 0xa8703f }), MAX_COOPS);
     this.roofs = new THREE.InstancedMesh(mk(new THREE.ConeGeometry(0.4, 0.24, 4).rotateY(Math.PI / 4)), mat({ color: 0x6b4428 }), MAX_COOPS);
     this.bank = new THREE.InstancedMesh(mk(new THREE.BoxGeometry(0.98, 0.2, 0.4)), mat({ color: 0xb3a88f, roughness: 1 }), MAX_BANK);
-    for (const [name, mesh] of [['reality-hens', this.hens], ['reality-hen-heads', this.heads], ['reality-hen-combs', this.combs], ['reality-stones', this.stones], ['reality-coops', this.coops], ['reality-coop-roofs', this.roofs], ['reality-bank', this.bank]] as const) {
+    for (const [name, mesh] of [['reality-hens', this.hens], ['reality-hen-heads', this.heads], ['reality-hen-combs', this.combs], ['reality-hen-shadows', this.shadows], ['reality-stones', this.stones], ['reality-coops', this.coops], ['reality-coop-roofs', this.roofs], ['reality-bank', this.bank]] as const) {
       mesh.name = name;
       mesh.count = 0;
       mesh.castShadow = true;
@@ -72,7 +79,30 @@ export class RealityLayer implements Layer {
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       this.group.add(mesh);
     }
+    this.shadows.castShadow = false;
+    this.shadows.receiveShadow = false;
     this.group.name = 'reality';
+    ctx.reality = { lift: (ids, height, durMs) => this.lift(ids, height, durMs) };
+  }
+
+  /** play a lift the engine logged: these hens rise to the height they reached, hover, and settle (never anything the run reads) */
+  lift(ids: string[], height: number, durMs: number): void {
+    if (!ids.length || height <= 0) return;
+    this.lifts.push({ ids: new Set(ids), height, t: 0, dur: Math.max(0.3, durMs / 1000) });
+  }
+
+  /** how far up (world units) a hen is in the lifts playing now */
+  private liftOf(id: string, reduced: boolean): number {
+    let y = 0;
+    for (const l of this.lifts) {
+      if (!l.ids.has(id)) continue;
+      const u = Math.min(1, l.t / l.dur);
+      const top = l.height * 0.55;
+      // rise, hover with a flutter, settle; with reduced motion simply up for the length of the effect, then down
+      const k = reduced ? (u < 1 ? 1 : 0) : u < 0.3 ? 1 - (1 - u / 0.3) ** 2 : u < 0.72 ? 1 : 1 - ((u - 0.72) / 0.28) ** 2;
+      y = Math.max(y, top * k);
+    }
+    return y;
   }
 
   update(snap: SceneSnapshot, changes: { reality: boolean; rebuild: boolean }, ctx: WorldContext): void {
@@ -102,8 +132,9 @@ export class RealityLayer implements Layer {
       const [jx, jy] = jitter(h.id);
       const w = engineToWorld(h.x + jx, h.y + jy);
       const y = above(w.x, w.z) + 0.16 + h.alt * 0.55;
-      this.henBase.push({ x: w.x, y, z: w.z, phase: (jx + jy) * 9 });
+      this.henBase.push({ id: h.id, x: w.x, y, z: w.z, ground: above(w.x, w.z), phase: (jx + jy) * 9 });
       this.set(this.hens, n, w.x, y, w.z, jx * 3, 1);
+      this.set(this.shadows, n, w.x, above(w.x, w.z) + 0.02, w.z, 0, 1);
       this.set(this.heads, n, w.x + 0.16, y + 0.11, w.z, 0, 1);
       this.set(this.combs, n, w.x + 0.17, y + 0.19, w.z, 0, 1);
       n++;
@@ -111,6 +142,7 @@ export class RealityLayer implements Layer {
     this.hens.count = n;
     this.heads.count = n;
     this.combs.count = n;
+    this.shadows.count = n;
     n = 0;
     let placed = 0;
     for (const st of r.stones.slice(0, MAX_STONES)) {
@@ -133,7 +165,7 @@ export class RealityLayer implements Layer {
       for (let c = 0; c < h && n < MAX_BANK; c++) this.set(this.bank, n++, w.x, y + 0.1 + c * 0.2, w.z, 0, 1);
     }
     this.bank.count = n;
-    for (const mesh of [this.hens, this.heads, this.combs, this.stones, this.coops, this.roofs, this.bank]) mesh.instanceMatrix.needsUpdate = true;
+    for (const mesh of [this.hens, this.heads, this.combs, this.shadows, this.stones, this.coops, this.roofs, this.bank]) mesh.instanceMatrix.needsUpdate = true;
     this.drawn = { coops: r.coops.length, hens: r.hens.length, strays: r.hens.filter((h) => h.stray).length, stones: r.stones.filter((x) => x.state === 'loose').length, placed, bank: r.bank.length };
   }
 
@@ -145,25 +177,39 @@ export class RealityLayer implements Layer {
     mesh.setMatrixAt(i, this.m);
   }
 
-  tick(_dt: number, time: number, ctx: WorldContext): void {
-    if (ctx.reducedMotion || !this.henBase.length) return;
-    // a peck now and then: purely a picture of a hen, never anything the simulation reads
+  tick(dt: number, time: number, ctx: WorldContext): void {
+    if (!this.henBase.length) return;
+    for (const l of this.lifts) l.t += dt;
+    const flying = this.lifts.length > 0;
+    if (ctx.reducedMotion && !flying) return;
+    // a peck now and then, and a lift when the engine logged one: purely a picture of a hen, never anything the simulation reads
     this.henBase.forEach((b, i) => {
-      const peck = Math.max(0, Math.sin(time * 2.2 + b.phase)) ** 6 * 0.05;
-      this.set(this.heads, i, b.x + 0.16, b.y + 0.11 - peck, b.z, 0, 1);
-      this.set(this.combs, i, b.x + 0.17, b.y + 0.19 - peck, b.z, 0, 1);
+      const up = flying ? this.liftOf(b.id, ctx.reducedMotion) : 0;
+      const flap = up > 0 && !ctx.reducedMotion ? Math.sin(time * 18 + b.phase) * 0.035 : 0;
+      const peck = up > 0 || ctx.reducedMotion ? 0 : Math.max(0, Math.sin(time * 2.2 + b.phase)) ** 6 * 0.05;
+      const y = b.y + up + flap;
+      this.set(this.hens, i, b.x, y, b.z, b.phase * 0.33, 1);
+      this.set(this.heads, i, b.x + 0.16, y + 0.11 - peck, b.z, 0, 1);
+      this.set(this.combs, i, b.x + 0.17, y + 0.19 - peck, b.z, 0, 1);
+      const k = Math.max(0.35, 1 - up / 1.8);
+      this.set(this.shadows, i, b.x, b.ground + 0.02, b.z, 0, k);
     });
-    this.heads.instanceMatrix.needsUpdate = true;
-    this.combs.instanceMatrix.needsUpdate = true;
+    this.lifts = this.lifts.filter((l) => l.t < l.dur);
+    for (const mesh of [this.hens, this.heads, this.combs, this.shadows]) mesh.instanceMatrix.needsUpdate = true;
   }
 
-  info(): RealityDrawn {
-    return { ...this.drawn };
+  /** hens in the air right now (tests read it while a lift plays) */
+  airborne(): number {
+    return this.lifts.length ? this.henBase.filter((b) => this.liftOf(b.id, false) > 0.05).length : 0;
+  }
+
+  info(): RealityDrawn & { airborne: number } {
+    return { ...this.drawn, airborne: this.airborne() };
   }
 
   dispose(): void {
     for (const g of this.geos) g.dispose();
     for (const m of this.mats) m.dispose();
-    for (const mesh of [this.hens, this.heads, this.combs, this.stones, this.coops, this.roofs, this.bank]) mesh.dispose();
+    for (const mesh of [this.hens, this.heads, this.combs, this.shadows, this.stones, this.coops, this.roofs, this.bank]) mesh.dispose();
   }
 }
