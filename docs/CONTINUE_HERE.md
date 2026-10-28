@@ -114,7 +114,8 @@ invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging ome
 
 ## Commands run and exact results
 
-Phase 15 (entry in [`PROGRESS.md`](PROGRESS.md)): lint and typecheck clean; `npm test` 58 files, 662 passed; the consent-touching browser specs (desktop and phone) 42 passed, 14 skipped, 0 failed; entry
+Phase 16 (entry in [`PROGRESS.md`](PROGRESS.md)): `npm test` 59 files, 670 passed; the whole Chromium suite 195 passed, 73 skipped, 0 failed;
+`test:sim:v2` 620 of 620 replayed exactly; `test:sim:smoke` 256/256; hosting verified with a Generative Reality run. Phase 15: lint and typecheck clean; `npm test` 58 files, 662 passed; the consent-touching browser specs (desktop and phone) 42 passed, 14 skipped, 0 failed; entry
 295 KB gzip of 300; the secret
 scan clean over the tree, the history and `dist/`. Phase 14: `npm test` 56 files, 641 tests (two timing-sensitive ones need a quiet machine);
 the whole Chromium suite 192 passed, 72 skipped, 0 failed; `npm run eval` (report in `docs/data/evals/`). Phase 13 (entry in [`PROGRESS.md`](PROGRESS.md)): the MCP tests 62 passed (V1's 45 unchanged); the stdio proof ends on the

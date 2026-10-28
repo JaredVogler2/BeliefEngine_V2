@@ -51,7 +51,7 @@ Live model calls so far: **none**. Inference spend so far: **0**. Deployments: *
   verify, Vercel settings by name, OIDC, cost caps, rollback), the README's Classic-offline / Generative table (and no "LLM-enabled"
   claim while LIVE is unverified). The hosting check now also plays a Generative Reality run under the production CSP.
 
-**Commands and results**: the new journey tests pass (`journeys-v2.test.ts` 7, `mcp-v2-stdio.test.ts` 4, `v2-journeys.spec.ts` 3 passed and 1 skipped by design); `npm run verify:hosting` verified with the Generative Reality flow; `npm run test:sim:smoke` 256/256, SMOKE OK; `npm run typecheck` and lint clean. The full unit suite, the whole Chromium suite and `test:sim:v2` at 20 seeds: (being measured at this commit; recorded in the next commit).
+**Commands and results**: the new journey tests pass (`journeys-v2.test.ts` 7, `mcp-v2-stdio.test.ts` 4, `v2-journeys.spec.ts` 3 passed and 1 skipped by design); `npm run verify:hosting` verified with the Generative Reality flow; `npm run test:sim:smoke` 256/256, SMOKE OK; `npm run typecheck` and lint clean. `npm test` 59 files, 670 passed; the whole Chromium suite (desktop + phone) 195 passed, 73 skipped by design, 0 failed (20.7 min); `test:sim:v2` at 20 seeds and 40 villages: 620 of 620 replayed exactly; `npm run size` entry 295 KB gzip of 300; `npm run scan:secrets -- --history --dist` clean; screenshots in [`screenshots/v2-phase16/`](screenshots/v2-phase16/). The 3D suite and the cross-browser smoke run in CI.
 
 **Not verified:** LIVE (no credential): the live checklist is listed and not run; NOT DEPLOYED (no authorisation); no human playtest;
 no real iPhone; no GPU.
