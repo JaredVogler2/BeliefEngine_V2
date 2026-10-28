@@ -241,6 +241,24 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('the social lens is drawn in the 3D world: the Social button lays trust ties over the village and takes them away again', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
+    test.setTimeout(240_000);
+    const errors = watchConsole(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    // the lens's standing ribbons are counted with the world's other effects
+    const effects = () => page.evaluate(() => (window as unknown as { __beRenderer: R3D }).__beRenderer.stats().effects);
+    const base = await effects();
+    const social = page.getByRole('button', { name: 'Toggle social lens: trust ties' });
+    await social.click();
+    await expect(social).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(effects, { message: 'the strongest ties are drawn' }).toBeGreaterThan(base);
+    await social.click();
+    await expect.poll(effects, { message: 'and taken away again' }).toBe(base);
+    expect(errors).toEqual([]);
+  });
+
   test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
     test.setTimeout(300_000);
