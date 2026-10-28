@@ -25,6 +25,12 @@ export interface Eligible {
 }
 
 const LOSS = new Set(['lost_kin', 'lost_home', 'lost_herd', 'lost_crop', 'trapped']);
+/**
+ * How much a deliberate retelling (on top of the night's gossip) and a witness's account (instead of it) weigh against one
+ * exposure of V1 gossip. Measured against Classic win rates with the strategy bots: see docs/PROGRESS.md (phase 08).
+ */
+const SPREAD_MULT = 0.6;
+const STAGE_MULT = 0.8;
 const WORKED = new Set(['REALITY_EFFECT', 'BRIDGE_HELD', 'HOME_SPARED', 'LIFE_SPARED', 'FIELD_SPARED', 'PEN_SPARED', 'EVIDENCE_STAGED', 'LAW_ACTIVATED']);
 const FAILED = new Set(['EVIDENCE_BACKFIRED', 'LAW_DISCREDITED', 'LAW_COLLAPSED']);
 
@@ -41,6 +47,17 @@ export function judged(s: RunState, vid: string, claim: string): number {
   let n = 0;
   for (const e of episodes(s, vid)) if (e.claim === claim && e.judge && e.witnessed) n += e.kind === 'saw_proof_fail' ? -1 : 1;
   return Math.sign(n);
+}
+
+/**
+ * A reason to deny what one saw (phase 08): a villager whose household just lost something while a story's law held over them,
+ * and who puts family or property first, may argue against it anyway. The engine knows it is untrue (it holds their memories).
+ */
+export function motiveToDeny(s: RunState, v: Villager, claim: string): boolean {
+  const m = s.v2?.minds?.agents[v.id];
+  if (!m || !m.goals.some((g) => g === 'feed_family' || g === 'protect_home' || g === 'protect_herd' || g === 'protect_fields')) return false;
+  if (!m.episodes.some((e) => LOSS.has(e.kind) && e.day >= s.day - 3 && e.kind !== 'trapped')) return false;
+  return s.laws.some((l) => l.claimId === claim && (l.status === 'active' || l.status === 'wavering') && (findClaimDef(s, claim)?.electorate?.[l.regionId] ?? [l.regionId]).includes(v.district));
 }
 
 /** The moves open to a villager right now, each with its legal targets and stories. `wait` is always open. */
@@ -62,7 +79,9 @@ export function eligibleIntents(s: RunState, vid: string): Eligible[] {
   const sure = held.filter((c) => conv(v, c) >= 40);
   const unsure = near.filter((n) => sure.some((c) => conv(n.v, c) < 30));
   if (sure.length && unsure.length) push('persuade', unsure.map((n) => n.id), sure);
-  const doubted = held.filter((c) => conv(v, c) <= -10 || judged(s, v.id, c) < 0);
+  // doubt: disbelief, a failed proof seen, a family reason to deny, or a skeptic's "nobody has shown me" (phase 08)
+  const skeptic = (s.v2?.minds?.agents[v.id]?.personality.skepticism ?? 0) >= 60;
+  const doubted = held.filter((c) => conv(v, c) <= -10 || judged(s, v.id, c) < 0 || motiveToDeny(s, v, c) || (skeptic && judged(s, v.id, c) === 0 && conv(v, c) < 20));
   const believers = near.filter((n) => doubted.some((c) => conv(n.v, c) >= 30));
   if (doubted.length && believers.length) push('challenge', believers.map((n) => n.id), doubted);
   const askable = [...new Set(near.flatMap((n) => Object.keys(n.v.beliefs).filter((c) => Math.abs(conv(n.v, c)) >= 30 && Math.abs(conv(v, c)) < 30 && !!findClaimDef(s, c))))].sort();
@@ -98,8 +117,29 @@ export function eligibleIntents(s: RunState, vid: string): Eligible[] {
       if (mineFirst.length) push('support_rescue', mineFirst.slice(0, 6).map((x) => x.id), []);
     }
   }
+  // an empiricist, or anyone skeptical enough, may ask to see an undecided story shown before they believe it
+  const m = s.v2?.minds;
+  const empiricist = s.factions.find((f) => f.id === v.faction)?.kind === 'scholars';
+  if (m && ((m.agents[v.id]?.personality.skepticism ?? 0) >= 55 || empiricist)) {
+    const open = new Set((m.tests ?? []).filter((t) => t.by === v.id).map((t) => t.claim));
+    const showable = held.filter((c) => Math.abs(conv(v, c)) < 50 && !open.has(c) && judged(s, v.id, c) === 0 && !!testPlace(s, v, c));
+    if (showable.length) push('request_test', [], showable);
+  }
   out.push({ intent: 'wait', targets: [], claims: [] });
   return out;
+}
+
+/** Where a story could be shown to this villager: its ritual's landmark, or a written belief's anchor, nearest them. */
+export function testPlace(s: RunState, v: Villager, claim: string): string | null {
+  const def = findClaimDef(s, claim);
+  if (!def) return null;
+  const ritual = def.ritual ? s.scn.rituals.find((r) => r.id === def.ritual) : undefined;
+  const ast = def.reality?.ast;
+  const anchor = ritual?.landmark ?? (ast ? ({ bell: 'belltower', lantern: 'beacon', smoke_fire: 'campfire', watchers: 'bridge' } as Record<string, string>)[JSON.stringify(ast.clauses[0]?.when ?? {}).match(/"event":"([a-z_]+)"/)?.[1] ?? ''] : undefined);
+  if (!anchor) return null;
+  const sites = s.world.landmarks.filter((l) => l.kind === anchor && l.hp > 0);
+  sites.sort((a, b) => Math.max(Math.abs(a.x - v.x), Math.abs(a.y - v.y)) - Math.max(Math.abs(b.x - v.x), Math.abs(b.y - v.y)) || (a.id < b.id ? -1 : 1));
+  return sites[0]?.id ?? null;
 }
 
 /** Text a villager says or thinks: cleaned and bounded, link-like text removed (it is shown, never followed). */
@@ -187,23 +227,35 @@ export function applyChoice(ctx: Ctx, c: Choice): void {
   const act = (text: string, target?: string, extra: { delta?: Record<string, [number, number]> } = {}) =>
     emit(ctx, { step: 'social', code: 'NPC_ACT', importance: 1, actor: v.id, ...(target ? { target } : {}), ...(c.claimId ? { claim: c.claimId } : {}), reason: c.intent, ...extra, text });
   const claim = c.claimId;
+  // arguing a story at dusk spends the day's social energy on it: they do not also broadcast it in tonight's gossip
+  if (claim && (c.intent === 'persuade' || c.intent === 'challenge' || c.intent === 'stage_evidence')) (minds.argued ??= {})[v.id] = claim;
   switch (c.intent) {
     case 'spread':
-      if (t && claim) shift(ctx, t, v, claim, gossip(s, v, t, claim, v.beliefs[claim]?.evidence ?? 0), 'FRIEND_TRUST', act(`${v.name} tells ${t.name} “${short(s, claim)}”${said(c)}`, t.id));
+      // one deliberate retelling on top of the night's ordinary gossip: worth a little more than idle talk, not a second night of it
+      if (t && claim) shift(ctx, t, v, claim, SPREAD_MULT * gossip(s, v, t, claim, v.beliefs[claim]?.evidence ?? 0), 'FRIEND_TRUST', act(`${v.name} tells ${t.name} “${short(s, claim)}”${said(c)}`, t.id));
       break;
     case 'persuade':
       if (t && claim) {
         const sawIt = cited.some((e) => e.witnessed && e.claim === claim) || judged(s, v.id, claim) > 0;
         const ev = Math.max(v.beliefs[claim]?.evidence ?? 0, sawIt ? 40 : 0);
-        shift(ctx, t, v, claim, 1.25 * gossip(s, v, t, claim, ev), sawIt ? 'WITNESS_ACCOUNT' : 'FRIEND_TRUST', act(`${v.name} tries to win ${t.name} over to “${short(s, claim)}”${said(c)}`, t.id));
+        shift(ctx, t, v, claim, (sawIt ? 1 : 0.7) * gossip(s, v, t, claim, ev), sawIt ? 'WITNESS_ACCOUNT' : 'FRIEND_TRUST', act(`${v.name} tries to win ${t.name} over to “${short(s, claim)}”${said(c)}`, t.id));
       }
       break;
     case 'challenge':
-      if (t && claim) {
+      if (t && claim && judged(s, v.id, claim) > 0) {
+        // they saw it work and argue against it anyway: a lie, which the engine knows; a listener who saw it too is not fooled
+        const id = emit(ctx, { step: 'social', code: 'LIE_TOLD', importance: 1, actor: v.id, target: t.id, claim, reason: 'challenge', text: `${v.name} tells ${t.name} that “${short(s, claim)}” failed, though they saw it work${said(c)}` });
+        if (judged(s, t.id, claim) > 0) {
+          nudgeTrust(s, t.id, v.id, -20);
+          emit(ctx, { step: 'social', code: 'LIE_DISCOVERED', importance: 2, actor: t.id, target: v.id, claim, cause: [id], text: `${t.name} saw “${short(s, claim)}” work with their own eyes and knows ${v.name} is lying; they trust ${v.name} far less now.` });
+        } else shift(ctx, t, v, claim, -6 * (0.5 + Math.max(0, trustOf(s, t.id, v.id)) / 200), 'NEIGHBOUR_CHALLENGE', id);
+      } else if (t && claim) {
         const sawFail = cited.some((e) => e.kind === 'saw_proof_fail' && e.claim === claim) || judged(s, v.id, claim) < 0;
         const trust = Math.max(0, trustOf(s, t.id, v.id));
         const theirs = t.beliefs[claim]?.evidence ?? 0;
-        const cut = 10 * (0.5 + trust / 200) * (1 + (sawFail ? 0.5 : 0) + Math.max(0, -(v.beliefs[claim]?.conv ?? 0)) / 200) * (1 - t.traits.stubbornness / 200) * (theirs >= 40 ? 0.5 : 1);
+        // "nobody has shown me" weighs less than "I saw it fail"
+        const unshown = !sawFail && (v.beliefs[claim]?.conv ?? 0) > -10;
+        const cut = 10 * (0.5 + trust / 200) * (1 + (sawFail ? 0.5 : 0) + Math.max(0, -(v.beliefs[claim]?.conv ?? 0)) / 200) * (1 - t.traits.stubbornness / 200) * (theirs >= 40 ? 0.5 : 1) * (unshown ? 0.6 : 1);
         shift(ctx, t, v, claim, -cut, 'NEIGHBOUR_CHALLENGE', act(`${v.name} argues with ${t.name} against “${short(s, claim)}”${said(c)}`, t.id));
         nudgeTrust(s, t.id, v.id, -1);
       }
@@ -260,8 +312,8 @@ export function applyChoice(ctx: Ctx, c: Choice): void {
         const crowd = s.villagers
           .filter((x) => alive(x) && x.id !== v.id && x.district === v.district)
           .sort((a, b) => Number(b.place === v.place) - Number(a.place === v.place) || (a.id < b.id ? -1 : 1))
-          .slice(0, 4);
-        for (const x of crowd) shift(ctx, x, v, claim, 0.8 * gossip(s, v, x, claim, ev), 'WITNESS_ACCOUNT', id);
+          .slice(0, 3);
+        for (const x of crowd) shift(ctx, x, v, claim, STAGE_MULT * gossip(s, v, x, claim, ev), 'WITNESS_ACCOUNT', id);
       }
       break;
     case 'support_rescue':
@@ -273,9 +325,59 @@ export function applyChoice(ctx: Ctx, c: Choice): void {
         }
       }
       break;
+    case 'request_test':
+      if (claim) {
+        const place = testPlace(s, v, claim);
+        (minds.tests ??= []).push({ by: v.id, claim, day: s.day, until: s.day + 2, place });
+        const where = place ? findLandmark(s, place)?.name : null;
+        emit(ctx, {
+          step: 'social', code: 'TEST_REQUESTED', importance: 2, actor: v.id, claim, reason: 'request_test',
+          text: `${v.name} will believe “${short(s, claim)}” only if they see it: show it${where ? ` at ${where}` : ''} by day ${s.day + 2}${said(c)}`,
+        });
+      }
+      break;
     case 'wait':
       break;
   }
+}
+
+/**
+ * Open demands for proof, at the start of each dusk (after the day's memories are made): a demonstration the asker saw answers
+ * it (they believe hard, and will carry it), one they saw fail settles it the other way, and a demand nobody answered in time
+ * costs the story a little and the Keeper a little trust.
+ */
+export function resolveTests(ctx: Ctx, fresh: Map<string, Episode[]>): void {
+  const s = ctx.s;
+  const minds = s.v2?.minds;
+  if (!minds?.tests?.length) return;
+  const keep: typeof minds.tests = [];
+  for (const t of minds.tests) {
+    const v = findVillager(s, t.by);
+    if (!alive(v)) continue;
+    const seen = (fresh.get(t.by) ?? []).filter((e) => e.claim === t.claim && e.witnessed && e.judge);
+    const met = seen.some((e) => e.kind !== 'saw_proof_fail');
+    const failed = !met && seen.some((e) => e.kind === 'saw_proof_fail');
+    const b = ensureBelief(v, t.claim);
+    const before = b.conv;
+    if (met) {
+      b.evidence = clamp(b.evidence + 30, 0, 100);
+      b.conv = round1(b.conv + 1.5 * evidenceGain(v, b, 20));
+      emit(ctx, { step: 'social', code: 'TEST_MET', importance: 2, actor: v.id, claim: t.claim, reason: 'PUBLIC_DEMONSTRATION', delta: { conviction: [Math.round(before), Math.round(b.conv)] }, text: `${v.name} saw “${short(s, t.claim)}” shown, as they asked: ${Math.round(before)} → ${Math.round(b.conv)}. They will tell people what they saw.` });
+    } else if (failed) {
+      b.conv = round1(b.conv + 1.5 * evidenceGain(v, b, -20));
+      emit(ctx, { step: 'social', code: 'TEST_FAILED', importance: 2, actor: v.id, claim: t.claim, reason: 'CONTRADICTORY_WITNESS', delta: { conviction: [Math.round(before), Math.round(b.conv)] }, text: `${v.name} watched the proof of “${short(s, t.claim)}” fail, as they suspected: ${Math.round(before)} → ${Math.round(b.conv)}.` });
+    } else if (s.day > t.until) {
+      b.conv = round1(b.conv - 5);
+      v.keeperTrust = clamp(v.keeperTrust - 3, 0, 100);
+      emit(ctx, { step: 'social', code: 'TEST_LAPSED', importance: 1, actor: v.id, claim: t.claim, delta: { conviction: [Math.round(before), Math.round(b.conv)] }, text: `Nobody showed ${v.name} “${short(s, t.claim)}”. They take that as an answer.` });
+    } else {
+      keep.push(t);
+      continue;
+    }
+    b.lastDay = s.day;
+    b.stale = 0;
+  }
+  minds.tests = keep;
 }
 
 /** What moment a new memory makes, if any. */
@@ -316,6 +418,8 @@ export function planMinds(s: RunState, fresh: Map<string, Episode[]>, events: { 
     }
   }
   for (const e of events) {
+    if ((e.code === 'TEST_MET' || e.code === 'TEST_FAILED') && e.actor && minds.agents[e.actor] && alive(findVillager(s, e.actor))) add({ id: e.actor, why: 'proof_seen', claim: e.claim ?? null, event: e.id }, 45);
+    if (e.code === 'LIE_DISCOVERED' && e.actor && minds.agents[e.actor] && alive(findVillager(s, e.actor))) add({ id: e.actor, why: 'argument', claim: e.claim ?? null, event: e.id }, 40);
     if (e.code !== 'FACTION_ENDORSES' || !e.actor) continue;
     const leader = findVillager(s, e.actor);
     if (!leader) continue;

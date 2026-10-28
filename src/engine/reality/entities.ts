@@ -229,12 +229,23 @@ export function realityDawn(ctx: Ctx, plan: RealityPlan): void {
     c.y = ok ? ny : coop.y;
   }
   if (home) emit(ctx, { step: 'dawn', code: 'STRAYS_HOME', importance: 1, text: `${home} stray chicken${home === 1 ? '' : 's'} walked home over the bridge.` });
+  // eggs feed the household that keeps the coop, never the granary: a flock saved is a family less hungry, while a chapter whose
+  // story is the grain running out (Harvest) keeps that story. Every third dawn, from each coop still keeping five hens.
   let eggs = 0;
-  for (const coop of v2.coops) eggs += Math.floor(v2.chickens.filter((c) => c.alive && !c.stray && c.coop === coop.id).length / 5);
+  let fed = 0;
+  if (s.day % 3 === 0)
+    for (const coop of v2.coops) {
+      if (v2.chickens.filter((c) => c.alive && !c.stray && c.coop === coop.id).length < 5) continue;
+      eggs += 1;
+      for (const v of s.villagers)
+        if (v.status !== 'dead' && v.homeId === coop.home) {
+          v.hunger = Math.max(0, v.hunger - 15);
+          fed++;
+        }
+    }
   if (eggs) {
-    w.stocks.food = (w.stocks.food ?? 0) + eggs;
     v2.eggs += eggs;
-    emit(ctx, { step: 'dawn', code: 'EGGS_LAID', importance: 0, text: `The hens laid: +${eggs} food.` });
+    emit(ctx, { step: 'dawn', code: 'EGGS_LAID', importance: 0, text: `The hens laid: ${fed} villager${fed === 1 ? '' : 's'} in ${eggs} household${eggs === 1 ? '' : 's'} with a coop ate eggs this morning (less hungry).` });
   }
 }
 

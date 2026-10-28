@@ -13,6 +13,7 @@ import { realityDawn, realityDusk, realityNight } from '../reality/entities.ts';
 import { captureMemories } from '../mind/memory.ts';
 import { planMinds } from '../mind/decide.ts';
 import { runMinds } from '../mind/run.ts';
+import { considerNpcClaims } from '../mind/claims.ts';
 import { cloneState } from './clone.ts';
 import { emit, type Ctx } from './events.ts';
 import { claimDef, findLandmark, modActive } from './lookup.ts';
@@ -45,8 +46,8 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   s.history.push({ day, actions: s.today.map((a) => a.action), summary: emptySummary(day) });
   emit(ctx, { step: 'action', code: 'DAY_COMMITTED', importance: 1, text: `Day ${day}: night falls.` });
   // villager minds remember the day where they spent it, and those due to think act at dusk (V2 runs only)
-  captureMemories(s);
-  runMinds(ctx);
+  const dayMemories = captureMemories(s);
+  runMinds(ctx, dayMemories);
 
   if (s.scn.features.smoke) updateSmoke(s);
   runRivalExecute(ctx); // A  queued / announced moves land
@@ -85,7 +86,10 @@ export function resolveDay(state: RunState, opts: ResolveOptions = {}): ResolveR
   }
   runBeats(ctx);
   // …and the night, where they spent it; the strongest moments decide who thinks tomorrow
-  planMinds(s, captureMemories(s), ctx.events);
+  const nightMemories = captureMemories(s);
+  for (const [vid, eps] of dayMemories) nightMemories.set(vid, [...eps, ...(nightMemories.get(vid) ?? [])]);
+  planMinds(s, nightMemories, ctx.events);
+  considerNpcClaims(ctx, nightMemories);
   const summary = buildSummary(ctx.events, day);
   s.history[s.history.length - 1].summary = summary;
 

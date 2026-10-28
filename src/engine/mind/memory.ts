@@ -177,6 +177,13 @@ function episodesOf(s: RunState, e: GameEvent): [string, Draft][] {
       if (e.actor && e.target && e.actor !== e.target && findVillager(s, e.target))
         out.push([e.target, { ...base, kind: 'npc_spoke', witnessed: true, source: e.actor, credibility: trust01(s, e.target, e.actor), salience: e.reason === 'challenge' || e.reason === 'support_rescue' ? 2 : 1, valence: e.reason === 'comfort' || e.reason === 'support_rescue' ? 1 : e.reason === 'challenge' ? -1 : 0, text: cut(e.text) }]);
       break;
+    case 'LIE_DISCOVERED':
+      if (e.actor && e.target) out.push([e.actor, { ...base, kind: 'npc_spoke', witnessed: true, source: e.target, credibility: 0, salience: 2, valence: -2, text: cut(e.text) }]);
+      break;
+    case 'LIE_TOLD':
+      // the listener remembers what they were told, as told (they may not know it is a lie)
+      if (e.actor && e.target) out.push([e.target, { ...base, kind: 'npc_spoke', witnessed: true, source: e.actor, credibility: trust01(s, e.target, e.actor), salience: 1, valence: -1, text: cut(`${nameOf(s, e.actor)} told me “${short(s, e.claim)}” failed.`) }]);
+      break;
     case 'NPC_INVESTIGATED':
       if (e.actor && e.reason !== 'nothing')
         out.push([e.actor, { ...base, kind: e.reason === 'worked' ? 'saw_law_work' : 'saw_proof_fail', witnessed: true, source: null, credibility: 100, salience: 2, valence: e.reason === 'worked' ? 1 : -1, judge: true, text: cut(e.text) }]);

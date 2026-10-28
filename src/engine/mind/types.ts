@@ -1,3 +1,5 @@
+import type { RealityAst } from '../reality/ast.ts';
+
 /**
  * Villager minds (phase 07): a personality, goals and episodic memories for every villager of a V2 run, under `s.v2.minds`.
  * Classic runs never have it. Everything here is plain JSON (cloned, hashed and saved with the run).
@@ -84,14 +86,14 @@ export interface Mind {
   summary: SummaryLine[];
 }
 
-export const INTENTS = ['spread', 'ask', 'investigate', 'challenge', 'comfort', 'persuade', 'move', 'stage_evidence', 'support_rescue', 'wait'] as const;
+export const INTENTS = ['spread', 'ask', 'investigate', 'challenge', 'comfort', 'persuade', 'move', 'stage_evidence', 'support_rescue', 'request_test', 'wait'] as const;
 export type Intent = (typeof INTENTS)[number];
 export const TONES = ['calm', 'warm', 'wary', 'angry', 'fearful', 'hopeful', 'amused', 'grieving'] as const;
 export type Tone = (typeof TONES)[number];
 export const APPROACHES = ['evidence', 'testimony', 'emotion', 'authority', 'humor', 'silence'] as const;
 export type Approach = (typeof APPROACHES)[number];
 /** why a villager stops to think: the salient moments of phase 07 */
-export const MOMENTS = ['novel_claim', 'argument', 'contradiction', 'loss', 'law_change', 'faction_move', 'conversation', 'crisis'] as const;
+export const MOMENTS = ['novel_claim', 'argument', 'contradiction', 'loss', 'law_change', 'faction_move', 'conversation', 'crisis', 'proof_seen'] as const;
 export type Moment = (typeof MOMENTS)[number];
 
 /** A decision, whoever proposed it (a model or the game's own policy). The engine decides what it does. */
@@ -112,6 +114,29 @@ export interface Choice {
   /** one plain sentence for the audit trail */
   thought: string;
   source: 'model' | 'policy';
+}
+
+/** A skeptic's demand to see a story shown before they will believe it (phase 08). */
+export interface TruthTest {
+  by: string;
+  claim: string;
+  /** asked on this day; answered by a demonstration they see on or before `until` */
+  day: number;
+  until: number;
+  /** where it could be shown (a landmark id), or null */
+  place: string | null;
+}
+
+/** A competing claim a villager announced (a day ahead) or made, in the reality language (phase 08). */
+export interface NpcClaim {
+  by: string;
+  /** the Keeper story it answers */
+  against: string;
+  text: string;
+  ast: RealityAst;
+  day: number;
+  state: 'announced' | 'made' | 'withdrawn';
+  claim: string | null;
 }
 
 /** A villager due to think today, and why. */
@@ -142,6 +167,14 @@ export interface MindsState {
   /** model decisions accepted in this run, and the most it may use */
   modelUsed: number;
   modelCap: number;
+  /** open demands for proof (phase 08); absent in runs made before them */
+  tests?: TruthTest[];
+  /** competing claims villagers announced or made (phase 08) */
+  npcClaims?: NpcClaim[];
+  /** Keeper story id → villager claims that contest it (they crowd each other out both ways) */
+  contested?: Record<string, string[]>;
+  /** tonight only: villager id → the story they argued at dusk (they do not also gossip it that night: one day's social energy) */
+  argued?: Record<string, string>;
 }
 
 export const THINKERS_PER_DAY = 4;

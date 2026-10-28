@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { findClaimDef } from '../../engine/core/lookup.ts';
 import type { RunState } from '../../engine/index.ts';
-import { MOMENT, getMindView } from '../../engine/mind/view.ts';
+import { MOMENT, getMindView, knowsOf } from '../../engine/mind/view.ts';
+import { chainOf, journalLine, journalOf } from '../../engine/mind/journal.ts';
 import { talkCost, type TalkMode } from '../../engine/mind/talk.ts';
 import { aiClient } from '../../ai/client.ts';
 import { store, useStore } from '../store.ts';
@@ -77,6 +78,22 @@ export default function MindPanel({ id }: { id: string }) {
         </ul>
       )}
       {view.summary.length > 0 && <ul className="small muted" data-testid="mind-summary">{view.summary.map((t, i) => <li key={i}>{t}</li>)}</ul>}
+
+      {(() => {
+        const knows = knowsOf(state, id);
+        return knows.length ? (
+          <>
+            <h3>What they believe, and how they know</h3>
+            <ul className="small" data-testid="mind-knows">
+              {knows.map((k) => (
+                <li key={k.claimId}>
+                  <b>{k.short}</b> <span className="muted">({k.conv >= 0 ? '+' : ''}{k.conv})</span> — <span className={k.saw ? 'good-text' : 'muted'}>{k.how}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null;
+      })()}
 
       <h3>Talk with {first}</h3>
       {v.status === 'dead' ? (
@@ -163,6 +180,36 @@ export function VillageMinds() {
         </>
       )}
       {note && <p className="small" data-testid="minds-note">{note}</p>}
+      {(minds.tests ?? []).length > 0 && (
+        <>
+          <h3>Asking for proof</h3>
+          <ul className="small" data-testid="minds-tests">
+            {(minds.tests ?? []).map((t) => {
+              const place = t.place ? state.world.landmarks.find((l) => l.id === t.place) : undefined;
+              return (
+                <li key={`${t.by}|${t.claim}`}>
+                  <b>{name(t.by)}</b> will believe “{findClaimDef(state, t.claim)?.short ?? t.claim}” only if they see it{place ? ` at ${place.name}` : ''} by day {t.until}.{' '}
+                  {place && <button type="button" className="btn small" onClick={() => store.select({ kind: 'landmark', id: place.id })} data-testid="test-go">Go to {place.name}</button>}{' '}
+                  <button type="button" className="btn small" onClick={() => store.select({ kind: 'villager', id: t.by })}>Talk with {name(t.by).split(' ')[0]}</button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+      {(minds.npcClaims ?? []).some((c) => c.state === 'announced') && (
+        <>
+          <h3>Announced for tomorrow</h3>
+          <ul className="small" data-testid="minds-announced">
+            {(minds.npcClaims ?? []).filter((c) => c.state === 'announced').map((c) => (
+              <li key={`${c.by}|${c.against}`}>
+                <b>{name(c.by)}</b> will say: {c.text}{' '}
+                <button type="button" className="btn small" onClick={() => store.select({ kind: 'villager', id: c.by })}>Change their mind</button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       {minds.last.length > 0 && (
         <>
           <h3>At the last dusk</h3>
@@ -174,6 +221,45 @@ export function VillageMinds() {
             ))}
           </ul>
         </>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Who influenced whom (phase 08), from the engine's own log: today's (or yesterday's) shifts, conversations, villagers' acts,
+ * proofs and laws, with the reason the rules gave; and for a law or a belief at work, how it happened, step by step.
+ */
+export function InfluenceJournal() {
+  const state = useStore((s) => s.state);
+  const [open, setOpen] = useState<number | null>(null);
+  if (!state?.v2?.minds) return null;
+  const day = state.log.some((e) => e.day === state.day && journalOf(state, { day: state.day, limit: 1 }).length) ? state.day : state.day - 1;
+  const entries = journalOf(state, { day, limit: 14 });
+  return (
+    <section data-testid="influence-journal" aria-label="Who influenced whom">
+      <h3>Who influenced whom (day {day})</h3>
+      {entries.length === 0 ? (
+        <p className="small muted">Nothing yet. Tell someone a story, and watch it travel.</p>
+      ) : (
+        <ul className="small journal">
+          {entries.map((j) => (
+            <li key={j.event}>
+              {journalLine(state, j)}
+              {(j.kind === 'law' || j.kind === 'reality' || j.kind === 'test') && j.causes.length > 0 && (
+                <>
+                  {' '}
+                  <button type="button" className="linkish" onClick={() => setOpen(open === j.event ? null : j.event)} data-testid="journal-how">{open === j.event ? 'hide' : 'how it happened'}</button>
+                  {open === j.event && (
+                    <ol className="muted" data-testid="journal-chain">
+                      {chainOf(state, j.event).map((c) => <li key={c.event}>Day {c.day}: {journalLine(state, c)}</li>)}
+                    </ol>
+                  )}
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

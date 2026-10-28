@@ -49,7 +49,7 @@ export default function RealityCompose() {
   useEffect(() => () => void (seq.current = -1), []);
   if (!state?.v2) return null;
   const close = () => store.set({ composing: false });
-  const made = state.claims.filter((c) => c.def?.reality).length;
+  const made = state.claims.filter((c) => c.def?.reality && !c.def.rival).length;
   const max = MAX_REALITY_CLAIMS + (state.v2.lab ? 2 : 0);
 
   const run = (sentence: string) => {

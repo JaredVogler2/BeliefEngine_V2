@@ -1,7 +1,7 @@
 import { edgeBetween, findClaimDef, findLandmark, findVillager, trustOf } from '../core/lookup.ts';
 import { rand } from '../core/rng.ts';
 import type { RunState, Villager } from '../core/types.ts';
-import { eligibleIntents, judged } from './decide.ts';
+import { eligibleIntents, judged, motiveToDeny } from './decide.ts';
 import { recall } from './memory.ts';
 import type { Approach, Choice, Episode, Intent, Mind, Queued, Tone } from './types.ts';
 
@@ -23,7 +23,20 @@ const LINES: Record<Intent, (o: { claim: string; place: string; saw: boolean }) 
   move: (o) => `We sleep at ${o.place} tonight. I won't wait for the water.`,
   stage_evidence: (o) => `Listen: I saw it happen. ${o.claim}.`,
   support_rescue: (o) => `Bring your family to ${o.place} tonight. It stays dry.`,
+  request_test: (o) => `Show me. If ${o.claim.toLowerCase()}, let me see it with my own eyes.`,
   wait: () => null,
+};
+
+/**
+ * What each kind of faction leans toward (phase 08): empiricists (V1's "scholars" factions) want evidence before belief, mystics
+ * (storykeepers) carry stories, the council weighs order and property, hearths put families first. Leanings, not rules: they add
+ * to a villager's own scores.
+ */
+const LEAN: Record<string, Partial<Record<Intent, number>>> = {
+  scholars: { request_test: 10, investigate: 8, challenge: 5, spread: -4, stage_evidence: 2 },
+  storykeepers: { spread: 6, stage_evidence: 6, persuade: 3, challenge: -4, investigate: -4, request_test: -6 },
+  council: { ask: 3, challenge: 2, comfort: 2, spread: 2 },
+  hearth: { comfort: 6, support_rescue: 6, move: 4, persuade: 2 },
 };
 
 interface Option {
@@ -34,6 +47,10 @@ interface Option {
 }
 
 function scoreOf(s: RunState, v: Villager, m: Mind, q: Queued, intent: Intent, target: string | null, claim: string | null): number {
+  return baseScore(s, v, m, q, intent, target, claim) + (LEAN[s.factions.find((f) => f.id === v.faction)?.kind ?? '']?.[intent] ?? 0);
+}
+
+function baseScore(s: RunState, v: Villager, m: Mind, q: Queued, intent: Intent, target: string | null, claim: string | null): number {
   const p = m.personality;
   const goals = new Set(m.goals);
   const t = target ? findVillager(s, target) : undefined;
@@ -51,6 +68,8 @@ function scoreOf(s: RunState, v: Villager, m: Mind, q: Queued, intent: Intent, t
     case 'persuade':
       return 16 + (v.beliefs[claim!]?.evidence ?? 0) / 5 + (seen > 0 ? 12 : 0) + p.altruism / 20 + trust / 12 + about - (theirs < 0 ? 4 : 0) - p.fear / 20;
     case 'challenge':
+      // arguing against what one saw work is a lie: only a family or property under threat makes a villager consider it
+      if (seen > 0) return claim && motiveToDeny(s, v, claim) ? 14 + p.ambition / 10 - p.altruism / 10 + (q.why === 'loss' ? 6 : 0) : -50;
       return 10 + p.skepticism / 5 + (seen < 0 ? 18 : 0) + (goals.has('oppose_rumours') ? 8 : 0) + p.courage / 10 + Math.max(0, -mine) / 10 + about + (q.why === 'contradiction' || q.why === 'argument' ? 6 : 0) - Math.max(0, trust) / 25;
     case 'ask':
       return 9 + p.curiosity / 5 - p.skepticism / 25 + trust / 12 + about + (q.why === 'novel_claim' ? 6 : 0) + (q.why === 'law_change' ? 3 : 0);
@@ -65,9 +84,11 @@ function scoreOf(s: RunState, v: Villager, m: Mind, q: Queued, intent: Intent, t
       return 10 + p.fear / 3 + (goals.has('keep_safe') ? 10 : 0) + (kids ? 6 : 0) - p.courage / 8 + (q.why === 'crisis' ? 6 : 0);
     }
     case 'stage_evidence':
-      return 13 + (seen > 0 ? 14 : 0) + p.courage / 10 + p.ambition / 12 + (goals.has('gain_standing') ? 4 : 0) + about - p.fear / 25;
+      return 13 + (seen > 0 ? 14 : 0) + p.courage / 10 + p.ambition / 12 + (goals.has('gain_standing') ? 4 : 0) + about - p.fear / 25 + (q.why === 'proof_seen' && seen > 0 ? 10 : 0);
     case 'support_rescue':
       return 12 + p.courage / 5 + p.altruism / 5 + (close ? 12 : edgeBetween(s, v.id, target ?? '') ? 4 : 0) + (q.why === 'crisis' ? 4 : 0);
+    case 'request_test':
+      return 8 + p.skepticism / 4 + (goals.has('find_proof') ? 8 : 0) + about + (q.why === 'novel_claim' || q.why === 'law_change' ? 6 : 0) - Math.abs(mine) / 10;
   }
 }
 

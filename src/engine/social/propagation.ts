@@ -81,6 +81,8 @@ export function runSocialStep(ctx: Ctx): void {
         }
       }
       if (!topic) continue;
+      // V2 minds: a villager who argued this story at dusk already spent today's word on it
+      if (s.v2?.minds?.argued?.[speaker.id] === topic) continue;
       const def = claimDef(s, topic);
       const lb = listener.beliefs[topic];
       const lsnap = snap.get(listener.id)!.get(topic);
@@ -119,6 +121,7 @@ export function runSocialStep(ctx: Ctx): void {
 
   s.flags.cutContactsToday = cutContacts;
   s.flags.contactsToday = contacts;
+  if (s.v2?.minds?.argued) s.v2.minds.argued = {};
   applyAccumulated(ctx, acc);
   decayBeliefs(ctx);
   enforceAttention(s);
@@ -172,7 +175,8 @@ function applyAccumulated(ctx: Ctx, acc: Map<string, Acc>): void {
     const v = findVillager(s, vid)!;
     for (const [cid, gained] of [...m.entries()].sort((x, y) => (x[0] < y[0] ? -1 : 1))) {
       const def = claimDef(s, cid);
-      for (const other of def.contradicts) {
+      // a villager's competing claim and the story it answers crowd each other out both ways (V2 runs only)
+      for (const other of [...def.contradicts, ...(s.v2?.minds?.contested?.[cid] ?? [])]) {
         const ob = v.beliefs[other];
         if (!ob || ob.conv <= 0) continue;
         const reduce = Math.min(ob.conv, K.CONTRADICT * gained);

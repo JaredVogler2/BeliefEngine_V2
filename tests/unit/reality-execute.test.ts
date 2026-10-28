@@ -26,8 +26,9 @@ describe('the three proof beliefs change the world, each differently', () => {
     expect(w.chickens.filter((x) => x.alive).length).toBeGreaterThan(c.chickens.filter((x) => x.alive).length);
     expect(count(chickens.g.state, 'CHICKENS_ROSE')).toBeGreaterThan(0);
     expect(count(control.g.state, 'CHICKENS_ROSE')).toBe(0);
-    // eggs are food: the surviving flock keeps feeding the village
-    expect(chickens.g.state.world.stocks.food).toBeGreaterThan(control.g.state.world.stocks.food);
+    // eggs feed the households that keep the coops (never the granary): only a surviving flock lays
+    expect(count(chickens.g.state, 'EGGS_LAID')).toBeGreaterThan(count(control.g.state, 'EGGS_LAID'));
+    expect(chickens.g.state.log.find((e) => e.code === 'EGGS_LAID')!.text).toMatch(/household.*ate eggs/);
     const fx = chickens.g.state.log.filter((e) => e.code === 'REALITY_EFFECT');
     expect(fx.length).toBeGreaterThan(0);
     expect(fx.every((e) => e.law && e.claim === chickens.claimId)).toBe(true);

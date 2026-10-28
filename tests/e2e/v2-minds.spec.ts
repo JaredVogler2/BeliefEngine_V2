@@ -128,3 +128,25 @@ test.describe('Who is thinking today', () => {
     await expect(page.getByTestId('minds-last').locator('li').first()).toBeVisible();
   });
 });
+
+test.describe('Social dynamics (phase 08)', () => {
+  test('a skeptic asks for proof; the player shows it where they can see; they say how they know; the journal explains it', async ({ page }) => {
+    await startReality(page);
+    await tell(page, 'Wren Fisher');
+    await endDay(page);
+    await endDay(page);
+    await openSheet(page, 'village');
+    const tests = page.getByTestId('minds-tests');
+    await expect(tests).toContainText('Wren Fisher will believe');
+    await tests.getByTestId('test-go').first().click();
+    await openSheet(page, 'selected');
+    await expect(page.getByTestId('landmark-card')).toBeVisible();
+    await page.locator('.act').filter({ hasText: /as proof of/ }).first().click();
+    await endDay(page);
+    await selectVillager(page, 'Wren Fisher');
+    await expect(page.getByTestId('mind-knows')).toContainText('River fears fire');
+    await openSheet(page, 'log');
+    await expect(page.getByTestId('influence-journal')).toBeVisible();
+    await expect(page.getByTestId('influence-journal').locator('li').first()).toBeVisible();
+  });
+});

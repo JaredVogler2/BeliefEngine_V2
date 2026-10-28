@@ -430,7 +430,7 @@ function doComposeReality(ctx: Ctx, a: Extract<Action, { type: 'COMPOSE' }>): Fa
   const s = ctx.s;
   const r = a.claim.reality!;
   if (!s.v2) return fail('NOT_AVAILABLE', 'Beliefs in the reality language are written in Generative Reality runs.');
-  const made = s.claims.filter((c) => c.def?.reality).length;
+  const made = s.claims.filter((c) => c.def?.reality && !c.def.rival).length;
   if (made >= MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)) return fail('TOO_MANY', `You can write at most ${MAX_REALITY_CLAIMS + (s.v2.lab ? 2 : 0)} beliefs in one run.`);
   if (r.rev !== s.nextEventId) return fail('STALE_REVISION', 'The village has changed since this belief was read. Read it again (reading is free).');
   const built = buildRealityClaim(s, r.ast, { title: a.claim.short, rev: r.rev });

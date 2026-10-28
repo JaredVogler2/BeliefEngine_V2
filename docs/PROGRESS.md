@@ -12,12 +12,65 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 05 Interpreter and compiler | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider configured: model accuracy, latency and token cost not measured). On sentences neither reader was tuned on, the offline reader v2 reads 13/30 supported sentences faithfully against V1's 3/30 (labels 51/80 against 34/80); it refuses rather than invents (1 invented effect in 32 impossible sentences, 0/7 injections obeyed); written beliefs become executable rules that change the world (integration test, two villages) | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
 | 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
 | 07 Agent cognition and memory | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider: no model-backed decision has been made). Every villager of a V2 run has a personality, goals and memories with provenance; a few a day decide at moments that matter (legal moves only, V1 rules decide the effect); the player can talk with any of them; a model may propose decisions and voice answers, checked twice and recorded so replays need no model | [`MINDS.md`](MINDS.md), entry below, [`screenshots/v2-phase07/`](screenshots/v2-phase07/) |
-| 08-17 | NOT STARTED | |
+| 08 Multi-agent social dynamics | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** Influence journal with cause chains; faction leanings; skeptics demanding proof (answered, failed, ignored); competing claims villagers write in the same language (announced, withdrawable, capped, contestable); lies the engine flags and witnesses discover; social energy so decisions redirect rather than add influence. Measured: the social layer moves the outcome of knife-edge chapters (table in the entry) | [`MINDS.md`](MINDS.md) §6, entry below, [`screenshots/v2-phase08/`](screenshots/v2-phase08/) |
+| 09-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 08: social dynamics that change outcomes (VERIFIED offline and with mocks; LIVE UNVERIFIED)
+
+**What was done** (reference: [`MINDS.md`](MINDS.md) §6)
+
+- Influence journal (`src/engine/mind/journal.ts`) and cause chains; Log tab "who influenced whom" with "how it happened".
+- Faction leanings in the policy (empiricists, storykeepers, council, hearth).
+- `request_test`: skeptics and empiricists demand to see a story shown; met, failed or lapsed, each with its consequence; open
+  demands shown with a button to the place.
+- Competing claims villagers write (`claims.ts`): the opposite of a story a leader doubts, in the reality language, through
+  `buildRealityClaim`; announced a day ahead, withdrawn if the author changes their mind, one per faction per run, three days apart,
+  not counted against the player's allowance; both stories crowd each other out (V2 only).
+- Lies with a family motive, flagged by the engine, discovered by witnesses (trust −20, rebuttal).
+- Social energy: deliberate arguing replaces that villager's broadcast in the night's gossip; small extra for a retelling.
+- Player inspection: beliefs beside how they are known; a law's firm believers who saw it themselves.
+- Fixes the measurements found: (1) moments from daytime events (the Keeper's words, demonstrations) never queued anyone: day and
+  night memories now both feed the next day's queue; (2) **hens' eggs made Harvest unlosable** (one food per five hens every dawn
+  cancelled the chapter's grain deficit; doing nothing won 10/10): eggs now feed the household that keeps the coop (less hunger),
+  every third dawn, never the granary; (3) villagers' moves were almost all pro-story and nobody challenged: skeptics may now
+  challenge unshown stories, and arguing spends the night's gossip.
+
+**Win rates, strategy bots, seeds 1-10** (`runPolicy`, same seeds, Classic vs V2 Generative Reality runs with minds):
+
+| Chapter | Strategy | Classic | V2 |
+|---|---|---|---|
+| Redbank | do nothing | 0/10 | 0/10 |
+| Redbank | Fire Wall | 9/10 | 9/10 |
+| Redbank | Witness Bridge | 10/10 | 10/10 |
+| Harvest | do nothing | 0/10 | 0/10 |
+| Harvest | Moonlight | 4/10 | 9/10 |
+| Harvest | Caravans | 10/10 | 10/10 |
+| Ashwood | do nothing | 0/10 | 0/10 |
+| Ashwood | Smoke Ring | 8/10 | 6/10 |
+| Ashwood | Decoy | 4/10 | 8/10 |
+
+With minds removed, V2 matches Classic exactly on these strategies (ablation). The social layer brings some laws a day earlier in
+chapters that turn on a single day (Harvest: Moonlight forming on day 5 instead of 6 means one more harvest), and costs Smoke Ring
+some of its edge. This is the phase's intended effect (social dynamics change results), but it is a balance change to the V2
+chapters; phase 11 (generative gameplay and balance) owns re-tuning them. Classic is unchanged.
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `BE_REQUIRE_REDIS=1 npm test` | 46 files, **541 passed** |
+| `npx vitest run tests/unit/social-dynamics.test.ts` | 17 passed: journal and chains; paired proof demand (same seed and story, shown vs ignored: different, explainable outcomes); faction leanings; competing claims made, withdrawn, capped, contestable, not counted against the player; lies only with a motive, discovered by witnesses; a fallen bridge cuts who can be reached; requests never carry others' memories; bounded thinkers per day; 100 villagers and 30 laws within budget; chapters still winnable and losable; exact replay |
+| `npx playwright test tests/e2e/v2-minds.spec.ts --project=desktop --project=phone` | **8 passed, 2 skipped** (online tests on desktop only) |
+| `npm run build`, `npm run size` | entry 276 KB gzip (budget 300), mind panel 4 KB (20) |
+
+**Mock vs LIVE:** no model has been called. The gate's "one real provider run makes faction behaviour observably different from
+the deterministic fallback" is **LIVE UNVERIFIED**.
 
 ## 2026-10-28 — Phase 07: villager minds, decisions and conversation (VERIFIED offline and with mocks; LIVE UNVERIFIED)
 

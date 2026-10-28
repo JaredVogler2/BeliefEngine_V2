@@ -42,6 +42,7 @@ const MOMENT_TEXT: Record<Moment, string> = {
   faction_move: 'was told by their faction to take a story seriously',
   conversation: 'is talking with the Keeper',
   crisis: 'saw danger close to home',
+  proof_seen: 'saw with their own eyes the proof they asked for (or saw it fail)',
 };
 
 const ID = /^[A-Za-z0-9_.:-]{1,40}$/;

@@ -3,6 +3,7 @@ import { councilBanDays, getAvailableActions, getCallouts, getForecast, getInten
 import type { Action, ClaimDef, Landmark, Preview, RunState } from '../../engine/index.ts';
 import { findClaimDef, neighborsOf } from '../../engine/core/lookup.ts';
 import { firstName } from '../../engine/core/names.ts';
+import { lawWitnesses } from '../../engine/mind/view.ts';
 import { Avatar, Bar, ClaimGlyph, Icon, evIcon } from '../components.tsx';
 import { store, useStore, type SideTab } from '../store.ts';
 import { getRenderer } from './MapView.tsx';
@@ -10,6 +11,7 @@ import { getRenderer } from './MapView.tsx';
 // a villager's mind and a conversation with them (V2 runs only): its own chunk, loaded when a V2 villager is opened
 const MindPanel = lazy(() => import('./MindPanel.tsx'));
 const VillageMinds = lazy(() => import('./MindPanel.tsx').then((m) => ({ default: m.VillageMinds })));
+const InfluenceJournal = lazy(() => import('./MindPanel.tsx').then((m) => ({ default: m.InfluenceJournal })));
 
 // ------------------------------------------------------------------ shared action row
 
@@ -365,6 +367,10 @@ export function LawsPanel() {
           <div className="kv"><span>Support</span><Bar value={l.pressure * 100} kind="gold" marks={[l.on * 100, l.off * 100]} label={`Support for ${l.short} in ${l.regionName}`} /><b>{Math.round(l.pressure * 100)}%</b></div>
           <div className="kv"><span>Awakening</span><Bar value={l.progress} kind="blue" label="Awakening progress" /><b>{l.progress}%</b></div>
           <div className="small">Firm believers: <b>{l.supporters.length}</b> / {l.minSupporters} needed{l.supporters.length ? ` (${l.supporters.map((x) => firstName(x.name)).join(', ')})` : ''}.</div>
+          {(() => {
+            const w = state.v2?.minds && l.supporters.length ? lawWitnesses(state, l.id) : null;
+            return w ? <div className="small" data-testid="law-witnesses">{w.saw} of {w.supporters} saw it work themselves{w.saw === 0 ? ': support built on hearsay alone is easily shaken' : ''}.</div> : null;
+          })()}
           <div className="small muted">{l.note}</div>
           <ul>
             <li>{l.benefit}</li>
@@ -542,6 +548,11 @@ export function LogPanel() {
   const events = state.log.filter((e) => e.importance >= 1).slice(-120).reverse();
   return (
     <div data-testid="log-panel">
+      {state.v2?.minds && (
+        <Suspense fallback={null}>
+          <InfluenceJournal />
+        </Suspense>
+      )}
       <h3>What has happened</h3>
       {events.map((e) => (
         <button

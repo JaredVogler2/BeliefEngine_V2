@@ -176,7 +176,8 @@ Then `entities.ts` runs at dusk (light stones within 4 tiles of a worker are hau
 bank tile and its two nearest neighbours to at most 2), at night (lifted chickens ride out floods and packs; wind ≥ 2 strands
 some across the river; grounded chickens drown in water or are taken by packs; light stones in floodwater are carried against the
 bridge, -6 damage) and at dawn (fear changes, hatching costs food, tended fields bring in their extra food, strays come home over
-a standing bridge, every 5 hens lay one food). Witnesses of a belief's effect gain evidence for it.
+a standing bridge, and every third dawn each coop still keeping five hens feeds its own household: less hunger for them, never
+food for the granary, so a chapter whose story is the grain running out keeps that story). Witnesses of a belief's effect gain evidence for it.
 
 **Persistence.** Modifiers are rebuilt from nothing every night: temporary effects end the night the law stops acting. What was
 done stays done: raised bank tiles, placed or lost stones, drowned or hatched chickens, damage. When belief drains away the law

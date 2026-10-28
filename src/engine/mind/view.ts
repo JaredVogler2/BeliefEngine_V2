@@ -27,6 +27,7 @@ export const MOMENT: Record<Moment, string> = {
   faction_move: 'their faction\'s call',
   conversation: 'a talk with you',
   crisis: 'danger close to home',
+  proof_seen: 'seeing the proof they asked for',
 };
 
 const DOING: Record<Intent, string> = {
@@ -39,6 +40,7 @@ const DOING: Record<Intent, string> = {
   move: 'left early for a shelter',
   stage_evidence: 'told everyone nearby what they saw',
   support_rescue: 'took in a neighbour for the night',
+  request_test: 'asked to see it proven before believing',
   wait: 'kept their own counsel',
 };
 
@@ -80,4 +82,42 @@ export function getMindView(s: RunState, vid: string): MindView | null {
     thinking: q ? `Thinking today, after ${MOMENT[q.why]}${q.claim ? ` (${claim(q.claim)})` : ''}.` : null,
     last: last ? `Last dusk they ${DOING[last.intent]}${last.claimId && last.intent !== 'comfort' ? ` (${claim(last.claimId)})` : ''}${last.dialogue ? `: “${last.dialogue}”` : '.'}${last.source === 'model' ? ' (a model chose this)' : ''}` : null,
   };
+}
+
+export interface Knowing {
+  claimId: string;
+  short: string;
+  conv: number;
+  /** how they know: what they saw, who told them, or nothing first-hand */
+  how: string;
+  saw: boolean;
+}
+
+/** What a villager believes beside how they know it (phase 08): belief is a number; knowing is what they saw or were told. */
+export function knowsOf(s: RunState, vid: string): Knowing[] {
+  const v = findVillager(s, vid);
+  const m = s.v2?.minds?.agents[vid];
+  if (!v || !m) return [];
+  const name = (id: string | null) => (id === 'keeper' ? 'you' : id ? (findVillager(s, id)?.name.split(' ')[0] ?? id) : 'people');
+  return Object.entries(v.beliefs)
+    .filter(([c]) => !!findClaimDef(s, c))
+    .sort((a, b) => Math.abs(b[1].conv) - Math.abs(a[1].conv) || (a[0] < b[0] ? -1 : 1))
+    .slice(0, 6)
+    .map(([c, b]) => {
+      const mine = m.episodes.filter((e) => e.claim === c);
+      const saw = mine.filter((e) => e.witnessed && e.judge).sort((x, y) => y.day - x.day)[0];
+      const told = mine.filter((e) => !e.witnessed || e.source === 'keeper').sort((x, y) => y.day - x.day)[0];
+      const how = saw ? `saw it ${saw.kind === 'saw_proof_fail' ? 'fail' : 'work'} (day ${saw.day})` : told ? `${told.source === 'keeper' ? 'told by you' : `heard from ${name(told.source)}`} (day ${told.day})` : 'nothing first-hand';
+      return { claimId: c, short: findClaimDef(s, c)!.short, conv: Math.round(b.conv), how, saw: !!saw };
+    });
+}
+
+/** How independent a law's support is (phase 08): of its firm believers, how many saw it work themselves. */
+export function lawWitnesses(s: RunState, lawId: string): { supporters: number; saw: number } | null {
+  const law = s.laws.find((l) => l.id === lawId);
+  const minds = s.v2?.minds;
+  if (!law || !minds) return null;
+  let saw = 0;
+  for (const id of law.supporters) if ((minds.agents[id]?.episodes ?? []).some((e) => e.claim === law.claimId && e.witnessed && e.judge && e.kind !== 'saw_proof_fail')) saw++;
+  return { supporters: law.supporters.length, saw };
 }

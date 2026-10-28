@@ -81,7 +81,38 @@ who told them. Asking never plants a story. Arguing is V1's seeding, ×1.2 if th
 challenging weighs their trust in the Keeper and stubbornness against what they saw. With consent, a model may voice the answer
 from their memories; its line is cleaned and must cite only their memories, and it changes nothing the offline answer would not.
 
-## 6. Status
+## 6. Social dynamics that change outcomes (phase 08)
+
+- **The influence journal** (`journal.ts`): who influenced whom, why (the reason V1's rules gave), and what changed, read from the
+  log; `chainOf` follows any event (a law taking hold, a belief at work, a proof) back along its cause links, step by step. Shown in
+  the Log tab ("who influenced whom", "how it happened"). Nothing is stored or decided there.
+- **Factions lean**: empiricists (V1's "scholars" factions) favour asking for proof, investigating and challenging; storykeepers
+  favour retelling and witness accounts; the council asks and weighs order; hearths comfort and shelter. Leanings add to a
+  villager's own scores; they are not rules.
+- **Asking for proof** (`request_test`): a skeptic or empiricist may demand to see an undecided story shown, at the place where it
+  can be (the story's ritual landmark, or a written belief's anchor), within two days. Seen working: they believe hard (+30
+  evidence) and carry it to their neighbours; seen failing: they turn against it; ignored: the story and the Keeper lose a
+  little. Shown in "Asking for proof" with a button to the place.
+- **Competing claims villagers write** (`claims.ts`): a council or empiricist leader who doubts a story the village now lives by,
+  after a loss, a failed proof, or news that it took hold over them, may answer it with its opposite, in the same reality language,
+  built, grounded and priced by the same engine as the player's (`buildRealityClaim`). Announced a day ahead ("Announced for
+  tomorrow", with a button to change the author's mind: a changed mind withdraws it), one per faction per run, none within three
+  days of another, never for a story the chapter already answers with a rival, and never counted against the player's own written
+  beliefs. Once made it is a rival story: it and the story it answers crowd each other out both ways, the Keeper can challenge it,
+  and if both become law the executor resolves their opposite effects by support.
+- **Lies** (`motiveToDeny`): only a villager whose household just lost something while a story's law held over them, and who puts
+  family or property first, may argue against what they saw work. The engine flags it (`LIE_TOLD`); a listener who saw it too
+  sees through it (`LIE_DISCOVERED`: trust in the liar −20, the listener rebuts the next day); otherwise it works like a weak
+  challenge.
+- **Social energy**: arguing a story at dusk (persuading, challenging, a witness account) replaces that villager's broadcast of it in
+  the night's gossip; a deliberate retelling is a small extra (×0.6 of one gossip exposure); a witness account reaches three people
+  (×0.8, with their evidence). Skeptics may challenge stories nobody has shown them ("nobody has shown me", ×0.6).
+- **What people can know**: a villager talks only to people they can physically reach today (a fallen bridge cuts the banks), and a
+  model request carries only that villager's own memories, never another's, private or not.
+- **For the player to inspect**: each villager's beliefs beside how they know them ("saw it work (day 3)", "heard from Mara",
+  "told by you", "nothing first-hand"), and for each law how many of its firm believers saw it work themselves.
+
+## 7. Status
 
 Offline and with a scripted provider: **VERIFIED** (tests above). With a real model: **LIVE UNVERIFIED** (no provider is
 configured here); latency, tokens and cost of model decisions are not measured, and nothing yet compares model-driven and

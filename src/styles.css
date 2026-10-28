@@ -392,3 +392,4 @@ textarea[data-testid='compose-text'] { background: #0b1220; border: 1px solid va
 /* a name that selects a villager, inside running text (village minds) */
 .linkish { background: none; border: 0; padding: 0; color: var(--gold); text-decoration: underline; cursor: pointer; font: inherit; }
 .memories li { margin-bottom: 0.25rem; }
+.journal li { margin-bottom: 0.25rem; }
