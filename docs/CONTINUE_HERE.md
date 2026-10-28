@@ -29,7 +29,9 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **12 Desktop and iPhone UX: VERIFIED in Chromium** (desktop 1366×768, the phone profile and four iPhone sizes); WebKit, the
   iPhone 14 profile and Firefox run the new Generative Reality smoke in CI only; **real iPhone Safari UNVERIFIED**; the dialog
   staying above the iOS keyboard UNVERIFIED (no device). Reference: [`UX_V2.md`](UX_V2.md).
-- **13 MCP and tool play: IN PROGRESS. It is the next task (below).**
+- **13 MCP and tool play: VERIFIED locally** (stdio, the official SDK client, on the browser's hash); online reading through MCP
+  **TESTED MOCK ONLY**; a model-powered V2 agent session NOT RUN; remote Streamable HTTP **NOT BUILT**. Reference: [`MCP_V2.md`](MCP_V2.md).
+- **14 Replay, persistence and evals: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
@@ -39,7 +41,15 @@ without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`;
 `802dbe2` … `d842cc6`; phase 08: `e48a7ca`; V1 merge: `08877e7`, `1b7086b`; phase 09: `07e06f7` (engine) and the commit after it
 (browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
 matrix, docs, `39ab15b`); phase 11: `e9d6847` (rules 2, modes, tournament, docs); phase 12: the commit after `e9d6847` (menu,
-composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs).
+composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs: `49beb00`);
+phase 13: the commit after `49beb00` (MCP V2 tools, error kinds, online reader, stdio proof, docs).
+
+## Working files changed in phase 13
+
+New: `mcp/v2.ts` (variants, error kinds, reading/region/object/graph/rule views), `mcp/online.ts` (the inference service in-process,
+off by default), `tests/unit/mcp-v2.test.ts`, `tests/unit/mcp-v2-stdio.test.ts`, `scripts/mcp-v2-session.ts`, `docs/MCP_V2.md`,
+`docs/data/mcp/v2-hens-session.md`. Changed: `mcp/service.ts` (the tools), `mcp/server.ts` (registrations, async runner, the online
+reader from the environment), `mcp/guide.ts` (rules and tool guide for V2), `docs/MCP.md` (pointer).
 
 ## Working files changed in phase 12
 
@@ -65,7 +75,8 @@ invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging ome
 
 ## Commands run and exact results
 
-In [`PROGRESS.md`](PROGRESS.md) (phase 12 entry): typecheck and lint pass; `npm test` 50 files, 608 passed; `v2-ux.spec.ts` and
+Phase 13 (entry in [`PROGRESS.md`](PROGRESS.md)): the MCP tests 62 passed (V1's 45 unchanged); the stdio proof ends on the
+browser's state hash; `npm test` 52 files, 625 passed. In [`PROGRESS.md`](PROGRESS.md) (phase 12 entry): typecheck and lint pass; `npm test` 50 files, 608 passed; `v2-ux.spec.ts` and
 `smoke.spec.ts` 21 passed (7 skipped by design); the whole Chromium suite 189 passed, 71 skipped, 0 failed; size: entry 292 KB gzip
 of 300; V1 golden hashes unchanged (Classic engine untouched).
 
@@ -104,27 +115,23 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 13: MCP stays a real game interface)
+## Next exact code changes (phase 14: replay, persistence and evals)
 
-[`../prompts/13_MCP_AND_TOOL_PLAY.md`](../prompts/13_MCP_AND_TOOL_PLAY.md). Keep every V1 tool name and behaviour; add, in
-`mcp/service.ts` and `mcp/server.ts`:
+[`../prompts/14_REPLAY_PERSISTENCE_AND_EVALS.md`](../prompts/14_REPLAY_PERSISTENCE_AND_EVALS.md). Much of the ledger already
+exists implicitly: every accepted model output is inside the action that used it (COMPOSE carries the AST with `source`, NPC_DECIDE
+carries the decisions and `rev`, TALK carries the checked line), and `replayRun` never calls a model. The phase makes that explicit:
 
-1. `create_game { variant: classic | generative | living | lab }` (Inventor stays Classic); the variant in every state view and kept
-   by `retry_or_new_game` and `import_game`.
-2. `get_interpreter_status` (offline reader always; online only when the person starting the server sets `BE_AI_ENABLED=1`, which
-   runs the game's own inference service in-process with its consent, quotas and validation: `mcp/online.ts`; no tool argument can
-   switch it on or carry a credential).
-3. `propose_belief` (the reality reader; free; tokens bound to the revision; `online: off | prefer | require`) and `confirm_belief`
-   for those tokens (STALE_REVISION if the village changed; UNSUPPORTED_EFFECT without `acknowledge: true` when the reading leaves
-   part of the sentence out, as the browser's checkbox).
-4. `speak_to_villager` (TALK; the engine decides the effect; a model line only under quota, recorded), `stage_evidence` (RITUAL with
-   the claim and tonight's omen), `inspect_object`, `inspect_region`, `get_social_graph` (no convictions), `get_rule_explanation`.
-5. Versioned error kinds on every failure (`kind`, `errorsVersion: 2`): INVALID_CLAIM, STALE_REVISION, OUT_OF_BUDGET, LLM_UNAVAILABLE,
-   UNSUPPORTED_EFFECT, NOT_AUTHORIZED, ...; `code` stays the detail.
-6. Proof: the official SDK client over stdio replays the recorded `hens` chain (tests/fixtures/v2-bridge-traces.json) with
-   propose/confirm in place of COMPOSE and ends on the browser's state hash; unauthorized, duplicate and stale calls change nothing;
-   the online path tested against the scripted provider only (TESTED MOCK ONLY). Remote Streamable HTTP stays NOT BUILT (no
-   durable shared store). Then `docs/MCP_V2.md`.
+1. **External-decision ledger** derived from the action log (`src/engine/save/ledger.ts`): one entry per model-sourced input with a
+   stable id, revision, target (claim or villager), canonical hash, provider/model/prompt/ontology/validator versions, inference
+   metadata when known, and parent links; a ledger check on load that names exact incompatibilities (missing, reordered, edited).
+2. **Replay guard**: replaying a run whose ledger does not match its actions fails with a precise error and a recovery option, never a
+   new reading; a reordered NPC_DECIDE is detected (its `rev` no longer matches).
+3. **Persistence**: the save carries the ledger (schema version bump with a migration that derives it from older saves); size bounds.
+4. **Eval corpus**: 200+ labelled beliefs (start from `tests/fixtures/reality-corpus-*.json`), 100+ NPC decision cases, injection and
+   hallucination regressions, conflict cascades, V1 AST migration; metrics by reader (offline vs mock vs LIVE, labelled with sample
+   sizes); `npm run eval` writes a report under `docs/data/evals/`.
+5. Tests: a full Generative win and loss replayed offline to their hashes with the network disabled; a reordered or missing ledger
+   entry refused; no memory leaking between runs; V1 goldens unchanged.
 
 ## Parallel track: the 3D world
 

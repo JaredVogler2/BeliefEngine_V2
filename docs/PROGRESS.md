@@ -17,12 +17,41 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 10 3D visual effects | **IN PROGRESS: the effect registry and three physical laws in 3D VERIFIED (they match canonical state, tested over the recorded chains and in the browser); the gate's "looks like premium real-time gameplay" NOT MET by my own reading (the art stages of the 3D plan remain); frame times on a GPU or phone UNVERIFIED** | [`3D_EFFECTS.md`](3D_EFFECTS.md), `tests/unit/render3d-reality.test.ts`, `tests/e2e/v2-world3d.spec.ts`, [`screenshots/v2-phase10/`](screenshots/v2-phase10/) |
 | 11 Generative gameplay and balance | **VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds strategic variety" needs a provider). Under the old rules no written-belief policy won a single seed of 30 in any chapter; under rules 2 (recorded per run; older runs replay exactly) written beliefs win in all three (Redbank 27/30, Harvest 28/30, Ashwood 21/30), a decoy belief backfires on 11 of 30, the dominant cheap win (a written copy of the unpicked opening story, 20/20) is closed (0/30); four modes with separate records; leaders stand against magic that harms livelihoods | [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md), [`data/tournament-v2/`](data/tournament-v2/), `tests/unit/gameplay-v2.test.ts`, `tests/e2e/v2-modes.spec.ts`, [`screenshots/v2-phase11/`](screenshots/v2-phase11/) |
 | 12 Desktop and iPhone UX | **VERIFIED in Chromium (desktop and phone profile, four iPhone sizes); WebKit and the iPhone 14 profile run in CI's cross-browser smoke; real iPhone Safari UNVERIFIED; LIVE UNVERIFIED.** A main menu that names every mode; the composer keeps an unsent belief and its reading, can stop an online reading, falls back on an outage with nothing spent; "who tells it first" after writing; a villager card that answers what they think, why, whether they would listen and what they will do, with a "Why?" link to the event; the debrief says what a written law cost; a new seed keeps the V2 mode (it used to start a Classic run) | [`UX_V2.md`](UX_V2.md), entry below, `tests/e2e/v2-ux.spec.ts`, [`screenshots/v2-phase12/`](screenshots/v2-phase12/) |
-| 13-17 | NOT STARTED | |
+| 13 MCP and tool play | **VERIFIED locally (stdio, the official SDK client): an agent plays a whole Generative Reality run through tools on the browser's own state hash; online reading through MCP TESTED MOCK ONLY; LIVE UNVERIFIED; a model-powered V2 agent session NOT RUN; remote Streamable HTTP NOT BUILT** (no durable shared store). V1 tools unchanged | [`MCP_V2.md`](MCP_V2.md), entry below, `tests/unit/mcp-v2*.test.ts`, [`data/mcp/v2-hens-session.md`](data/mcp/v2-hens-session.md) |
+| 14-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 13: the MCP server plays V2 (VERIFIED locally; online TESTED MOCK ONLY; remote NOT BUILT)
+
+**What was done** (reference: [`MCP_V2.md`](MCP_V2.md))
+
+- `create_game { variant: classic | generative | living | lab }`; the variant in every state view, kept by retry and import.
+- `get_interpreter_status`; `propose_belief` (the reality reader: what it does beside the words, support, upkeep, side effects, what
+  it leaves out, cost, a token per buildable interpretation; free) and `confirm_belief` for those tokens (the browser's `COMPOSE`;
+  `STALE_REVISION` for an older village, `UNSUPPORTED_EFFECT` without `acknowledge: true` for a partial or substitute reading).
+- `speak_to_villager` (the browser's TALK), `stage_evidence` (RITUAL with the claim and tonight's omen), `inspect_object`,
+  `inspect_region`, `get_social_graph` (no convictions), `get_rule_explanation`; `inspect_villager` adds the mind the browser shows.
+- Versioned error kinds (`kind`, `errorsVersion: 2`) on every failure; `code` unchanged.
+- Online reading is off unless the person starting the server sets `BE_AI_ENABLED=1`: then the game's own inference service runs
+  in-process (`mcp/online.ts`) under its consent, quotas and validation; `online: prefer | require` only asks.
+- `export_replay` counts the accepted model proposals inside the action log (`modelProposals`).
+- The agents' rules and tool guide resources teach the V2 tools; `scripts/mcp-v2-session.ts` writes a scripted session transcript.
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint`, `npm test` | pass; 52 files, **625 passed** |
+| `npx vitest run tests/unit/mcp-*.test.ts` | **62 passed**: V1's 45 unchanged, `mcp-v2.test.ts` 14, `mcp-v2-stdio.test.ts` 3 |
+| `mcp-v2-stdio.test.ts`, the proof | the real server over stdio replays the recorded `hens` chain with propose/confirm in place of the composer: law on day 6, 22 hens lifted on each of the last two nights, defeat, **state hash `0ce7238943cc8d`, identical to the browser's**; a stale revision, an unknown villager and a duplicated call change nothing; a coach-mode run refuses every write |
+| `npx tsx scripts/mcp-v2-session.ts` | [`data/mcp/v2-hens-session.md`](data/mcp/v2-hens-session.md): the same run as a readable transcript (a script, not a model) |
+
+**Mock vs LIVE:** the online path is tested against the scripted stand-in only (TESTED MOCK ONLY). No model-powered agent played V2
+through MCP in this phase.
 
 ## 2026-10-28 — Phase 12: generative play made legible on desktop and iPhone (VERIFIED in Chromium; real iPhone UNVERIFIED)
 

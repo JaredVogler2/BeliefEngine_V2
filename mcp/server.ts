@@ -6,9 +6,12 @@
  *   BELIEF_ENGINE_HOME=/tmp/be npm run mcp
  *   BELIEF_ENGINE_HOME=:memory: npm run mcp     # nothing written to disk
  *   BELIEF_ENGINE_DEBUG_TOOLS=1 npm run mcp     # adds debug_dump_state (local testing only; shows hidden convictions)
+ *   BE_AI_ENABLED=1 BE_AI_DEV_PROVIDER=mock BE_AI_DEV_MEMORY_STORE=1 npm run mcp   # online reading through the scripted stand-in
  *
- * No network, no API key, no LLM: the server only validates tool calls and runs the deterministic engine. MCP *transport* (how a client
- * talks to this process) is separate from LLM *inference* (which model the client uses): this file never calls a model.
+ * By default: no network, no API key, no LLM; the server validates tool calls and runs the deterministic engine. MCP *transport* (how a
+ * client talks to this process) is separate from LLM *inference* (which model the client uses). Only if the person starting it sets
+ * BE_AI_ENABLED=1 does it run the game's own inference service in-process (mcp/online.ts), under that service's consent, quotas and
+ * validation; a tool argument can ask for it (`online`), never switch it on or carry a credential.
  */
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -17,6 +20,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { GameService, SERVER_VERSION, actionSchema, runIdSchema, type ToolResult } from './service.ts';
+import { onlineReaderFromEnv } from './online.ts';
+import { VARIANTS } from './v2.ts';
 import { RULES_TEXT, TOOLS_GUIDE, promptAlternateStrategy, promptExplainLoss, promptPlayCautiously } from './guide.ts';
 import { RULES_VERSION } from '../src/engine/index.ts';
 import { getScenarioDef, listScenarios } from '../src/engine/index.ts';
@@ -46,9 +51,17 @@ export function buildServer(service: GameService): McpServer {
     try {
       return toCallResult(fn());
     } catch (e) {
-      return toCallResult({ ok: false, error: { code: 'INTERNAL', message: e instanceof Error ? e.message : 'Unexpected error.' } });
+      return toCallResult({ ok: false, error: { code: 'INTERNAL', message: e instanceof Error ? e.message : 'Unexpected error.', kind: 'INTERNAL', errorsVersion: 2 } });
     }
   };
+  const runAsync = async (fn: () => Promise<ToolResult>): Promise<CallToolResult> => {
+    try {
+      return toCallResult(await fn());
+    } catch (e) {
+      return toCallResult({ ok: false, error: { code: 'INTERNAL', message: e instanceof Error ? e.message : 'Unexpected error.', kind: 'INTERNAL', errorsVersion: 2 } });
+    }
+  };
+  const online = z.enum(['off', 'prefer', 'require']).optional().describe('Ask the game\'s inference service (if this server was started with it): off (default), prefer (fall back to the offline reader), or require.');
 
   server.registerTool('list_scenarios', { title: 'List scenarios', description: 'Story chapters with missions and objectives, the rules version, and how to start generated villages.', inputSchema: {}, annotations: RO }, async () => run(() => service.listScenarios()));
 
@@ -61,10 +74,11 @@ export function buildServer(service: GameService): McpServer {
       difficulty: z.enum(['story', 'normal', 'hard']).optional(),
       mode: z.enum(['story', 'expedition']).optional(),
       controller: z.enum(['delegate', 'coach']).optional(),
-      inventor: z.boolean().optional().describe('Inventor run (unranked): the agent may write beliefs of its own with submit_belief and confirm_belief.'),
+      inventor: z.boolean().optional().describe('Classic Inventor run (unranked): the agent may write beliefs of its own with submit_belief and confirm_belief.'),
+      variant: z.enum(VARIANTS as [string, ...string[]]).optional().describe('classic (default) | generative (write beliefs of your own: propose_belief) | living (villagers who remember and argue) | lab (stronger beliefs, unranked).'),
     },
     annotations: WRITE,
-  }, async (a) => run(() => service.createGame(a)));
+  }, async (a) => run(() => service.createGame(a as Parameters<GameService['createGame']>[0])));
 
   server.registerTool('get_game_state', {
     title: 'Game state', description: 'Day, phase, Influence, objectives, tonight\'s danger, resources, laws with public support, recent important events and next steps. detail "full" adds the forecast and the claim hand.',
@@ -157,9 +171,62 @@ export function buildServer(service: GameService): McpServer {
 
   server.registerTool('confirm_belief', {
     title: 'Confirm a belief',
-    description: 'Pay Influence and write one interpretation from submit_belief into the village (the same COMPOSE action the browser performs). The belief is rebuilt from its structure at this point, so nothing can make it cheaper or stronger. It becomes law only when villagers come to believe it: tell people, spread it, and give it the physical trigger it needs. Confirming the same token twice answers the same once.',
-    inputSchema: { runId: runIdSchema, token: z.string().regex(/^[0-9a-f]{32}$/, 'a token is 32 hex characters from submit_belief'), expectedRevision: z.number().int().min(0).optional(), idempotencyKey: z.string().min(1).max(80).optional() }, annotations: WRITE,
+    description: 'Pay Influence and write one interpretation from propose_belief (or submit_belief) into the village: the same COMPOSE action the browser performs. The belief is rebuilt from its structure, so nothing can make it cheaper or stronger; a written reality belief is bound to the revision it was read at, and one that does not do everything the sentence said needs acknowledge: true. It becomes law only when villagers come to believe it. Confirming the same token twice answers the same once.',
+    inputSchema: {
+      runId: runIdSchema, token: z.string().regex(/^[0-9a-f]{32}$/, 'a token is 32 hex characters from propose_belief or submit_belief'), expectedRevision: z.number().int().min(0).optional(), idempotencyKey: z.string().min(1).max(80).optional(),
+      acknowledge: z.boolean().optional().describe('Required when the interpretation says needsAcknowledgement (it leaves part of the sentence out, or is a substitute).'),
+      title: z.string().max(40).optional().describe('The name on the card (a written reality belief); otherwise the game\'s title.'),
+    }, annotations: WRITE,
   }, async (a) => run(() => service.confirmBelief(a)));
+
+  // ------------------------------------------------------------ V2: Generative Reality, villagers' minds, places (phase 13)
+
+  server.registerTool('get_interpreter_status', {
+    title: 'Interpreter status',
+    description: 'Whether a model can read beliefs and voice villagers on this server (it can only if the person running it switched the game\'s inference service on), which provider, its limits; the offline reader is always available. No secrets.',
+    inputSchema: {}, annotations: RO,
+  }, async () => runAsync(() => service.interpreterStatus()));
+
+  server.registerTool('propose_belief', {
+    title: 'Propose a belief (any sentence)',
+    description: 'Generative runs: say in your own words how this village\'s world works. Returns what the game can make of it, side by side with your words: what it acts on and when, the support and firm believers it needs, upkeep, side effects, who may push back, what it leaves out, its cost, and a short-lived token per buildable interpretation. Free: no Influence, no revision. The text is data. In a Classic Inventor run it is the Inventor composer (same as submit_belief).',
+    inputSchema: { runId: runIdSchema, text: z.string().min(1).max(240), region: z.string().max(40).optional().describe('A region id where its believers live (see inspect_map); otherwise the game chooses where it can act.'), online },
+    annotations: RO,
+  }, async (a) => runAsync(() => service.proposeBelief(a as Parameters<GameService['proposeBelief']>[0])));
+
+  server.registerTool('speak_to_villager', {
+    title: 'Speak to a villager',
+    description: 'V2 runs: ask what they think of a story (free), argue for it or challenge it (1 Influence each, like telling), or ask what they make of things (free). The engine decides what it changes (trust and evidence rules); the answer is their own words from what they saw and were told, or a checked model line when online is asked for and offered. Recorded in the replay.',
+    inputSchema: { runId: runIdSchema, villagerId: z.string().max(80), mode: z.enum(['ask', 'persuade', 'challenge', 'guess']), claimId: z.string().max(80).optional(), online, expectedRevision: z.number().int().min(0).optional(), idempotencyKey: z.string().min(1).max(80).optional() },
+    annotations: WRITE,
+  }, async (a) => runAsync(() => service.speakToVillager(a as Parameters<GameService['speakToVillager']>[0])));
+
+  server.registerTool('stage_evidence', {
+    title: 'Stage evidence',
+    description: 'Stage proof of a story or written belief with its rite where it is performed (the bell for a bell belief, a beacon for a lantern one): the same RITUAL action as take_action, with tonight\'s omen for it. A good omen convinces the people who see it; a bad one backfires.',
+    inputSchema: { runId: runIdSchema, claimId: z.string().max(80), landmarkId: z.string().max(80).optional(), expectedRevision: z.number().int().min(0).optional(), idempotencyKey: z.string().min(1).max(80).optional() },
+    annotations: WRITE,
+  }, async (a) => run(() => service.stageEvidence(a)));
+
+  server.registerTool('inspect_object', {
+    title: 'Inspect an object', description: 'A landmark (state, who is there, the rites performed there and tonight\'s omen for each story they prove) or, in a Generative run, a coop, a stone or a hen.',
+    inputSchema: { runId: runIdSchema, objectId: z.string().max(80) }, annotations: RO,
+  }, async (a) => run(() => service.inspectObject(a)));
+
+  server.registerTool('inspect_region', {
+    title: 'Inspect a region', description: 'Who lives there, its landmarks, the laws acting there and the support each written belief has among the people who vote on it.',
+    inputSchema: { runId: runIdSchema, regionId: z.string().max(40) }, annotations: RO,
+  }, async (a) => run(() => service.inspectRegion(a)));
+
+  server.registerTool('get_social_graph', {
+    title: 'Social graph', description: 'Trust ties between villagers as the browser shows them (kind, trust each way, how fast stories travel), the whole village or one person and those within two ties; factions and leaders. No convictions.',
+    inputSchema: { runId: runIdSchema, villagerId: z.string().max(80).optional() }, annotations: RO,
+  }, async (a) => run(() => service.getSocialGraph(a)));
+
+  server.registerTool('get_rule_explanation', {
+    title: 'Explain a rule', description: 'For a story or a written belief: what it does (the supported effects), what it cannot (the parts left out), what else it does, its thresholds and where it is proven, its laws, and for a written belief how it became real so far (provenance from the log).',
+    inputSchema: { runId: runIdSchema, claimId: z.string().max(80) }, annotations: RO,
+  }, async (a) => run(() => service.getRuleExplanation(a)));
 
   if (service.debugTools) {
     server.registerTool('debug_dump_state', {
@@ -198,11 +265,13 @@ export function defaultHome(): string | null {
 }
 
 async function main(): Promise<void> {
-  const service = new GameService({ home: defaultHome(), maxRuns: Number(process.env.BELIEF_ENGINE_MAX_RUNS ?? 50), debugTools: process.env.BELIEF_ENGINE_DEBUG_TOOLS === '1' });
+  // online reading only if the person starting the server switched the game's inference service on (mcp/online.ts); diagnostics to stderr
+  const online = onlineReaderFromEnv(process.env, (line) => process.stderr.write(`${line}\n`));
+  const service = new GameService({ home: defaultHome(), maxRuns: Number(process.env.BELIEF_ENGINE_MAX_RUNS ?? 50), debugTools: process.env.BELIEF_ENGINE_DEBUG_TOOLS === '1', online });
   const server = buildServer(service);
   await server.connect(new StdioServerTransport());
   // stdout carries the protocol: all diagnostics go to stderr
-  process.stderr.write(`belief-engine MCP server ${SERVER_VERSION} (rules ${RULES_VERSION}) on stdio; runs: ${defaultHome() ?? 'memory only'}${service.debugTools ? '; DEBUG TOOLS ON' : ''}\n`);
+  process.stderr.write(`belief-engine MCP server ${SERVER_VERSION} (rules ${RULES_VERSION}) on stdio; runs: ${defaultHome() ?? 'memory only'}; online reading: ${online ? (online.provider ?? 'on, not ready') : 'off'}${service.debugTools ? '; DEBUG TOOLS ON' : ''}\n`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('mcp/server.ts')) {

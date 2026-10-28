@@ -1,5 +1,8 @@
 # Playing Belief Engine through MCP
 
+> V2 adds Generative Reality to this server (variants, `propose_belief`, conversations, staged proof, places, the trust graph, rule
+> explanations, versioned error kinds, optional online reading): see [`MCP_V2.md`](MCP_V2.md). Everything below still holds.
+
 The browser game is the main way to play. This is a second *controller* for the same game: a local [Model Context Protocol](https://modelcontextprotocol.io) server that lets an AI client (Claude Code, or any client that speaks MCP over stdio) play real runs with tools. It is not a second simulation: every action goes through the same `GameSession` and the same engine functions the browser uses, so the same seed and the same actions give the same state hashes in both.
 
 ## Browser, MCP, and where the model lives

@@ -44,10 +44,27 @@ result. A belief that is too strong is not refused: it is narrowed (reach first,
 (SEED, MESSENGER, proof), and a stronger belief needs more believers. A sentence the village cannot model is refused with the reason and the nearest
 beliefs it can. Tokens last ten minutes and belong to one run; at confirm time the game rebuilds the belief and checks it again against the village as it is then.
 
+## Generative runs (V2): any sentence, made real only by belief
+create_game { variant: "generative" } (or "lab": stronger beliefs, unranked; "living": the chapter's own stories with villagers who remember,
+argue and demand proof, no writing). Then propose_belief { runId, text } with any sentence about how this world works. It is free: you get
+what the game can make of it beside your words (what it acts on and when, the support and firm believers it needs, its upkeep, side
+effects, who may push back, what it leaves out, its cost, where it is proven) and a token per buildable interpretation. confirm_belief
+{ runId, token } writes it with the same action the browser uses; a token from an older revision is refused (read again, it is free), and
+one marked needsAcknowledgement (it leaves part of the sentence out, or is a substitute) needs acknowledge: true. Then make people believe
+it: take_action SEED / MESSENGER / GATHER, speak_to_villager (ask is free; persuade or challenge cost 1), and stage_evidence at its rite
+(the omen is read from what the belief does). A belief that harms the people who live with it costs their trust. Read get_rule_explanation
+and inspect_region to see where it stands. Villagers' minds (inspect_villager: memories and how they know) are what the browser card shows;
+their private convictions stay hidden unless scouted or just spoken to.
+
+A model reads sentences or voices villagers only if the person running this server switched the game's inference service on
+(get_interpreter_status); ask for it with online: "prefer" or "require". It only proposes: the engine rebuilds and checks everything.
+
 ## Reliability
 Every mutating call returns a \`revision\`. Pass \`expectedRevision\` so a stale plan is rejected rather than applied, and an
 \`idempotencyKey\` so a retried call never acts twice (end_day never advances two days because a request was repeated).
-Errors are structured: { code, message, alternatives }. An invalid call changes nothing.
+Errors are structured: { code, message, alternatives, kind, errorsVersion }. Branch on \`kind\` (INVALID_CLAIM, STALE_REVISION,
+OUT_OF_BUDGET, LLM_UNAVAILABLE, UNSUPPORTED_EFFECT, NOT_AUTHORIZED, NOT_FOUND, INVALID_ARGUMENT, INVALID_STATE, ACTION_REFUSED, INTERNAL);
+\`code\` is the detail. An invalid call changes nothing.
 `;
 
 export const TOOLS_GUIDE = `# Tool cheat sheet (examples)
@@ -71,6 +88,13 @@ export const TOOLS_GUIDE = `# Tool cheat sheet (examples)
 - list_belief_examples { runId } -> the beliefs this village understands, as sentences, with which are already built-in stories.
 - submit_belief { runId, text: "The river slows beside lit beacons." } -> interpretations with tokens (free, changes nothing).
 - confirm_belief { runId, token, expectedRevision, idempotencyKey } -> pays and writes it; then take_action SEED with the new claim id.
+- create_game { scenarioId: "redbank", seed: 2, variant: "generative" } -> a Generative Chronicle.
+- propose_belief { runId, text: "Chickens fly when the bell rings." } -> interpretations (willDo, support, upkeep, sideEffects, leftOut, cost, token).
+- confirm_belief { runId, token, expectedRevision, idempotencyKey, acknowledge?, title? } -> writes it; claim.id is the new story.
+- speak_to_villager { runId, villagerId: "ivo", mode: "ask" | "persuade" | "challenge" | "guess", claimId? }
+- stage_evidence { runId, claimId } -> the rite at its place, with tonight's omen for it.
+- inspect_object { runId, objectId: "bell" }, inspect_region { runId, regionId: "east" }, get_social_graph { runId, villagerId? },
+  get_rule_explanation { runId, claimId }, get_interpreter_status {}.
 - Coach mode: import_game { saveJson } (the browser's save) then compare_possible_actions and recommend; the human clicks.
   grant_control { runId } only when the human says so.
 `;
