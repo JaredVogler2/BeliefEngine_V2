@@ -316,6 +316,27 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('high contrast reaches the 3D world: the haze thins and shapes are inked at full strength, and both come back', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const info = () => page.evaluate(() => (window as unknown as { __beRenderer: { contrastInfo: () => { high: boolean; fogDensity: number; ink: number | null } } }).__beRenderer.contrastInfo());
+    const setHigh = (on: boolean) => page.evaluate((v) => (window as unknown as { __belief: { store: { setSettings: (s: { highContrast: boolean }) => void } } }).__belief.store.setSettings({ highContrast: v }), on);
+    const before = await info();
+    expect(before.high).toBe(false);
+    await setHigh(true);
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');
+    await expect.poll(async () => (await info()).high).toBe(true);
+    await expect.poll(async () => (await info()).fogDensity, { message: 'the haze thins', timeout: 30_000 }).toBeLessThan(before.fogDensity * 0.5);
+    if (before.ink !== null) expect((await info()).ink).toBe(1);
+    await setHigh(false);
+    await expect.poll(async () => (await info()).fogDensity, { message: 'and comes back', timeout: 30_000 }).toBeGreaterThan(before.fogDensity * 0.8);
+    if (before.ink !== null) expect((await info()).ink).toBe(before.ink);
+    expect(errors).toEqual([]);
+  });
+
   test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
     test.setTimeout(300_000);

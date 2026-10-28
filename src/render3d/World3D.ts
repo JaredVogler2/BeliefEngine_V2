@@ -17,7 +17,7 @@ import { PeopleLayer } from './people.ts';
 import { createLayers } from './layers.ts';
 import { EffectsLayer } from './effects.ts';
 import { MagicField, attachMagicToStandard } from './magic.ts';
-import { PostChain, displayUniforms, preCompensate, type PostLook, type PostProfile } from './post.ts';
+import { DEFAULT_LOOK, PostChain, displayUniforms, preCompensate, type PostLook, type PostProfile } from './post.ts';
 import { makeEnvironment } from './env.ts';
 import { RealityLayer, type RealityDrawn } from './reality.ts';
 
@@ -37,6 +37,9 @@ function floatBuffersLikely(): boolean {
     return false;
   }
 }
+
+/** how much of the haze high contrast keeps */
+const CONTRAST_FOG = 0.3;
 
 /** which quality tier to start in: an explicit ?quality=, else the setting, with software-rendered and phone-sized windows stepped down */
 export function chooseQuality(setting: 'high' | 'low', w: number): Quality {
@@ -297,6 +300,7 @@ export class World3D implements WorldRenderer {
 
   setOptions(o: Partial<RenderOpts>): void {
     const prevQuality = this.opts.quality;
+    const prevContrast = this.opts.highContrast;
     this.opts = { ...this.opts, ...o };
     this.cam.reduced = this.opts.reducedMotion;
     if (this.ctx) this.ctx.reducedMotion = this.opts.reducedMotion;
@@ -304,6 +308,21 @@ export class World3D implements WorldRenderer {
     if (o.forecast !== undefined && this.snap) this.applyForecast(this.snap, this.opts.reducedMotion);
     if (o.forecast !== undefined || o.showFlood !== undefined) this.syncForecastOverlay();
     for (const l of this.layers) (l as Layer & { setOptions?: (o: RenderOpts) => void }).setOptions?.(this.opts);
+    if (this.opts.highContrast !== prevContrast) this.applyContrast();
+  }
+
+  /** high contrast: shapes inked at full strength and darker, less glow (the haze is thinned as each frame is drawn) */
+  private applyContrast(): void {
+    if (!this.post) return;
+    const high = this.opts.highContrast;
+    this.post.look.ink = high ? 1 : DEFAULT_LOOK.ink;
+    this.post.look.inkColor = high ? 0x0e0a06 : DEFAULT_LOOK.inkColor;
+    this.post.look.bloomStrength = high ? DEFAULT_LOOK.bloomStrength * 0.5 : DEFAULT_LOOK.bloomStrength;
+  }
+
+  /** what high contrast is doing to the frame now: read by tests, never by the game */
+  contrastInfo(): { high: boolean; fogDensity: number; ink: number | null } {
+    return { high: this.opts.highContrast, fogDensity: this.fog.density, ink: this.post ? this.post.look.ink : null };
   }
 
   /** let the view drift slowly round the village (the end-of-run tour); the player's own movement pauses it */
@@ -605,8 +624,9 @@ export class World3D implements WorldRenderer {
 
   private draw(): void {
     if (this.contextLost) return;
-    // haze is for depth, not for washing the village out: a camera that has to stand far back (a tall phone screen) gets less of it
-    this.fog.density = this.atmo.current.fogDensity * Math.min(1, Math.max(0.3, 40 / this.cam.distance));
+    // haze is for depth, not for washing the village out: a camera that has to stand far back (a tall phone screen) gets less of it, and
+    // high contrast keeps only a trace of it
+    this.fog.density = this.atmo.current.fogDensity * Math.min(1, Math.max(0.3, 40 / this.cam.distance)) * (this.opts.highContrast ? CONTRAST_FOG : 1);
     try {
       const t0 = performance.now();
       this.renderer.info.reset();
