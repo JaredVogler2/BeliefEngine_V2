@@ -216,6 +216,32 @@ export function SelectionPopover() {
     };
   }, [hidden, sel]);
 
+  // On a phone the card docks over the village and can cover the very person (or place) just picked, with their ring and name: once a
+  // pick, slide the view so they stand in the clear band between the card and the bars (as if the player had dragged it there).
+  const cleared = useRef<string | null>(null);
+  useEffect(() => {
+    if (hidden || !sel || !pos?.dock) return;
+    const key = `${sel.kind}:${sel.id}`;
+    if (cleared.current === key) return;
+    const id = requestAnimationFrame(() => {
+      const r = getRenderer();
+      const stage = document.querySelector('.stage')?.getBoundingClientRect();
+      const card = ref.current?.getBoundingClientRect();
+      const at = r?.entityScreen(sel.kind, sel.id);
+      if (!r || !stage || !card || !at) return;
+      cleared.current = key;
+      const y = stage.top + at.y;
+      const bar = (q: string): DOMRect | null => document.querySelector(q)?.getBoundingClientRect() ?? null;
+      const cardBelow = card.top > stage.top + stage.height / 2;
+      const top = Math.max(bar('.topbar')?.bottom ?? stage.top, cardBelow ? stage.top : card.bottom);
+      const bottom = Math.min(bar('.tray')?.top ?? stage.bottom, cardBelow ? card.top : stage.bottom);
+      // room above the person for their name, a little below for their feet
+      if (bottom - top < 90 || (y > top + 56 && y < bottom - 16)) return;
+      r.panBy(0, (top + bottom) / 2 + 20 - y);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [hidden, sel, pos]);
+
   if (hidden || !sel) return null;
   const style = pos && !pos.dock ? { left: pos.left, top: pos.top } : undefined;
   const claimId = ui.activeClaim;

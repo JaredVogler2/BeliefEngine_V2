@@ -25,6 +25,8 @@ export interface WorldRenderer {
   villagerScreen(id: string): { x: number; y: number } | null;
   /** where a person or a place is on screen now (for the selection card and tooltips that follow the world) */
   entityScreen(kind: 'villager' | 'landmark', id: string): { x: number; y: number } | null;
+  /** where a person's name tag goes on screen now, or null when they are not drawn or not in view (the 3D world: the classic map paints its own names) */
+  nameAnchor?(id: string): { x: number; y: number } | null;
   /** the part of the canvas the interface covers, so the view can keep its subject clear of it (the 3D world shifts its centre) */
   setInsets?(i: { left: number; right: number; top: number; bottom: number }): void;
   hitTest(sx: number, sy: number): HitResult | null;

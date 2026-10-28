@@ -252,6 +252,10 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .pop-more { margin-top: 0.4rem; width: 100%; }
 .hover-tip { position: absolute; z-index: 9; pointer-events: none; padding: 0.2rem 0.55rem; border-radius: 8px; background: rgba(10, 17, 30, 0.88); border: 1px solid var(--glass-line); font-size: 0.78rem; font-weight: 700; white-space: nowrap; transform: translate(-50%, -140%); }
 .hover-tip small { display: block; font-weight: 500; color: var(--muted); }
+/* names over people in the 3D world: they follow their person and never take a tap from the world under them */
+.name-tags { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+.name-tag { position: absolute; left: 0; top: 0; padding: 0.05rem 0.45rem; border-radius: 999px; background: rgba(14, 22, 38, 0.82); border: 1px solid rgba(255, 255, 255, 0.12); color: #f4ecd8; font-size: 0.72rem; font-weight: 600; line-height: 1.35; white-space: nowrap; will-change: transform; }
+.name-tag.sel { color: var(--gold); border-color: var(--gold); }
 
 /* the side sheet: full detail, closed until asked for */
 .side { position: absolute; z-index: 20; top: 0; right: 0; bottom: 0; width: min(var(--sheet-w), 100%); display: flex; flex-direction: column; min-height: 0; background: linear-gradient(180deg, rgba(20, 33, 58, 0.98), rgba(11, 18, 32, 0.99)); border-left: 1px solid var(--glass-line); box-shadow: -14px 0 40px rgba(0, 0, 0, 0.45); transform: translateX(104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }

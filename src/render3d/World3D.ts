@@ -13,6 +13,7 @@ import { CloudSea } from './clouds.ts';
 import { Water } from './water.ts';
 import { MaterialLib } from './materials.ts';
 import { HazardsLayer } from './hazards.ts';
+import { PeopleLayer } from './people.ts';
 import { createLayers } from './layers.ts';
 import { EffectsLayer } from './effects.ts';
 import { MagicField, attachMagicToStandard } from './magic.ts';
@@ -655,6 +656,16 @@ export class World3D implements WorldRenderer {
   focusVillager(id: string): void {
     const p = this.locate('villager', id);
     if (p) this.cam.focus(p.x, p.z, this.cam.closeDist());
+  }
+
+  /** where a person's name tag goes on screen now (above them), or null when they are not drawn or not in view */
+  nameAnchor(id: string): { x: number; y: number } | null {
+    const people = this.layers.find((l) => l instanceof PeopleLayer) as PeopleLayer | undefined;
+    const p = people?.labelPoint(id);
+    if (!p) return null;
+    const v = p.project(this.cam.camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02) return null;
+    return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
   }
 
   /** test and screenshot hook */

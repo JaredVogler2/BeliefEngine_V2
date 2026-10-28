@@ -272,6 +272,50 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('people are named in the 3D world as on the classic map: everyone in view close up, and the selected person on a phone', async ({ page }, testInfo) => {
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const tags = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[data-testid="name-tags"] .name-tag')].map((el) => {
+          const b = el.getBoundingClientRect();
+          return { id: (el as HTMLElement).dataset.id ?? '', text: el.textContent ?? '', sel: el.classList.contains('sel'), cx: b.x + b.width / 2, cy: b.y + b.height / 2, bottom: b.bottom };
+        }),
+      );
+    if (testInfo.project.name.startsWith('phone')) {
+      // on a phone the card docks at the bottom, away from the person: the person carries their name instead
+      const at = await villagerOnPage(page, 'ivo');
+      await page.touchscreen.tap(at.x, at.y - 4);
+      await expect(page.getByTestId('selection-pop')).toContainText('Ivo Thatcher');
+      await expect.poll(async () => (await tags()).find((t) => t.id === 'ivo'), { timeout: 30_000 }).toMatchObject({ text: 'Ivo', sel: true });
+      // and the view slides so the card does not cover him: what is at his point (and his name's) is the world, not the card
+      const clear = async () => {
+        const p = await villagerOnPage(page, 'ivo');
+        const t = (await tags()).find((x) => x.id === 'ivo');
+        return page.evaluate((pts) => pts.every(([x, y]) => document.elementFromPoint(x, y)?.tagName === 'CANVAS'), [[p.x, p.y], ...(t ? [[t.cx, t.cy]] : [])]);
+      };
+      await expect.poll(clear, { message: 'Ivo and his name are clear of the card', timeout: 30_000 }).toBe(true);
+      if (process.env.BE_SHOTS === '1') await page.screenshot({ path: 'docs/screenshots/v2-phase17/world3d-names-selected-phone.jpg', type: 'jpeg', quality: 85 });
+    } else {
+      const home = (await tags()).length;
+      await page.evaluate(() => (window as unknown as { __beRenderer: { focusVillager: (id: string) => void } }).__beRenderer.focusVillager('ivo'));
+      await expect.poll(async () => (await tags()).length, { message: 'close up, everyone in view is named', timeout: 30_000 }).toBeGreaterThan(home);
+      await expect.poll(async () => (await tags()).find((t) => t.id === 'ivo')?.text, { timeout: 30_000 }).toBe('Ivo');
+      // the tag sits over Ivo, and takes no tap from the world under it
+      const ivo = (await tags()).find((t) => t.id === 'ivo')!;
+      const p = await villagerOnPage(page, 'ivo');
+      expect(Math.abs(ivo.cx - p.x), 'centred over him').toBeLessThan(40);
+      expect(ivo.bottom, 'above him').toBeLessThan(p.y + 4);
+      expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName ?? '', [ivo.cx, ivo.cy])).toBe('CANVAS');
+      if (process.env.BE_SHOTS === '1') await page.screenshot({ path: 'docs/screenshots/v2-phase17/world3d-names-close-desktop.jpg', type: 'jpeg', quality: 85 });
+      await page.evaluate(() => (window as unknown as { __beRenderer: { fit: () => void } }).__beRenderer.fit());
+      await expect.poll(async () => (await tags()).length, { message: 'back at the overview, only those the game points at', timeout: 30_000 }).toBe(home);
+    }
+    expect(errors).toEqual([]);
+  });
+
   test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
     test.setTimeout(300_000);
