@@ -170,6 +170,7 @@ const md = [
   `\`npx tsx scripts/sim-v2.ts --seeds ${seeds} --villages ${villages}\`, ${new Date().toISOString().slice(0, 10)}. **MOCK ONLY**: every "model" output is the scripted stand-in's`,
   '(no model was called; `fetch` throws). What this measures: that model-shaped inputs pass the server\'s and the engine\'s checks at scale,',
   'and that a run whose action log stores them replays exactly with no provider. It says nothing about a real model\'s judgement.',
+  'Win rates here are not comparable with the policy-only tournament (`docs/data/tournament-v2/`): the stand-in replaces the thinking villagers\' own policy each morning with a fixed rule (believers spread, skeptics investigate or challenge, the rest ask or wait).',
   '',
   '| Measure | Count |',
   '|---|---|',

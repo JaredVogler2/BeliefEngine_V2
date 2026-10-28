@@ -34,7 +34,9 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **14 Replay, persistence and evals: VERIFIED offline (gate met)**; LIVE evals not run. Reference: [`REPLAY_V2.md`](REPLAY_V2.md).
 - **15 Security, privacy, cost and failure: VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.**
   References: [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md).
-- **16 Integration and release testing: NOT STARTED. It is the next task (below).**
+- **16 Integration and release testing: integrated but not live-tested** (journeys A-F PASS offline and with scripted providers;
+  LIVE UNVERIFIED; NOT DEPLOYED). References: [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md).
+- **17 Adversarial fun review: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
@@ -46,8 +48,18 @@ without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`;
 matrix, docs, `39ab15b`); phase 11: `e9d6847` (rules 2, modes, tournament, docs); phase 12: the commit after `e9d6847` (menu,
 composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs: `49beb00`);
 phase 13: `6ba4996` (MCP V2 tools, error kinds, online reader, stdio proof, docs); phase 14: `c656869` (ledger, saves, replay
-check, privacy controls, evals); phase 15: the commit after `c656869` (chaos suite, physics limits, secret scan in CI, privacy
-routing, cost monitor, SECURITY/PRIVACY/COST_AND_QUOTAS).
+check, privacy controls, evals); phase 15: `bd223ed` (chaos suite, physics limits, secret scan in CI, privacy routing, cost
+monitor, SECURITY/PRIVACY/COST_AND_QUOTAS). JaredVogler2/BeliefEngine_V2#3 was merged into `main` at phase 14 (`dc56db9`); phase 15
+onwards is in JaredVogler2/BeliefEngine_V2#4 (`main` merged into the branch at `877a3a2`, no file changes; history never rewritten).
+Phase 16: the commit after `877a3a2` (journey tests, sim-v2, FINAL_ACCEPTANCE, RELEASE).
+
+## Working files changed in phase 16
+
+New: `tests/unit/journeys-v2.test.ts`, `tests/e2e/v2-journeys.spec.ts`, `scripts/sim-v2.ts`, `docs/FINAL_ACCEPTANCE.md` (V2),
+`docs/RELEASE.md`, `docs/data/sim-v2/REPORT.md`, `docs/screenshots/v2-phase16/`. Moved: V1's `docs/FINAL_ACCEPTANCE.md` to
+`docs/v1/FINAL_ACCEPTANCE.md` (references repointed, including three engine comments). Changed: `tests/unit/mcp-v2-stdio.test.ts`
+(journey E), `playwright.config.ts` and `package.json` (WebKit iPhone SE and 14 Pro Max in the cross-browser smoke;
+`test:sim:v2`), `scripts/verify-hosting.ts` (a Generative Reality run under the production CSP), `README.md`, `docs/README.md`.
 
 ## Working files changed in phase 15
 
@@ -145,27 +157,21 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 16: integration and release testing)
+## Next exact code changes (phase 17: adversarial fun review)
 
-[`../prompts/16_INTEGRATION_RELEASE_TESTING.md`](../prompts/16_INTEGRATION_RELEASE_TESTING.md). No credential and no deployment
-exist, so the live parts stay LIVE UNVERIFIED / NOT DEPLOYED; everything else is a test to run or add:
+[`../prompts/17_ADVERSARIAL_FUN_REVIEW.md`](../prompts/17_ADVERSARIAL_FUN_REVIEW.md). A skeptical review of the running game and its
+evidence, not a build phase:
 
-1. **Journeys as browser and headless tests**, each recorded with its command and seed: A Classic (inference disabled, offline: win,
-   loss, save, replay, Harvest/Ashwood, an expedition, the V1 MCP smoke; goldens unchanged); B novel laws (the hens, a material
-   change, the compound rain/fire belief, each with distinct world deltas and its 3D effect; a time-reversal sentence refused with
-   the exact clause; a full win and a full loss); C living society (six named villagers' different reactions to one statement and to
-   contradicting evidence, trust changes, a faction response; offline policy, plus the scripted provider path); D replay (a complete
-   V2 run with recorded proposals reloaded and replayed offline to the same hashes; a changed prompt/model version does not
-   reinterpret a stored AST; corrupted-save recovery); E MCP (the SDK client: propose/confirm, talk, advance, inspect, finish, replay;
-   unauthorized, stale and duplicate actions denied); F phone (WebKit 320/390/430, Chrome and Firefox smoke, keyboard viewport,
-   consent/timeout/error, focus, reduced motion, save/resume).
-2. **Test targets with real counts**: `npm run test:sim` over hundreds to thousands of seeds; 150+ interpretation fixtures (332
-   exist), 100+ cognitive cases (211 exist), 1,000+ generated simulation states without a provider; console/network checks, CSP
-   (`npm run verify:hosting`), WebGL2, bundle report, secret scan.
-3. **Docs**: `docs/FINAL_ACCEPTANCE.md` (V2 table: PASS / FAIL / UNVERIFIED per capability with command, seed, versions, screenshot
-   path) replacing V1's inherited one; `docs/RELEASE.md` (install, build, Vercel configuration, keys/OIDC by name, cost caps); the
-   README separating Classic offline from Generative Reality live, without asking anyone to paste a secret.
-4. The UI must not say "LLM enabled live" anywhere while LIVE is unverified (check every label).
+1. **Ten or more real failure and edge cases**, each with a reproduction seed, the run's ledger and the code path (headless
+   simulations, the evaluation corpus and the browser; no live tokens: none exist). Candidates already seen: a villager policy
+   choosing "spread" for a story they now disbelieve (it spreads doubt: the persona judge would flag it), written laws that take 6-9
+   days to wake, the reader's coverage of unfamiliar phrasings (13/30 untuned), the 3D look (phase 10's bar NOT MET), finite
+   attention capping how many written laws a village can hold.
+2. **The seven questions** answered with evidence, and FUN marked subjective/unverified (no human playtest exists).
+3. **Rank P0/P1/P2; fix every P0 and the top five P1**; re-run the impacted browser, sim, security and provider tests.
+4. `docs/FUN_REVIEW_V2.md` (rubric: 3D art, cause and effect, social emergence, agency, rule variety, replayability, speed and cost,
+   security, mobile UX), PROGRESS and README current, the verified fixes committed with their SHA. Do not call V2 complete: LIVE,
+   deployment, a human playtest and the premium 3D look are unverified or not met.
 
 ## Parallel track: the 3D world
 

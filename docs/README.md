@@ -7,6 +7,9 @@ the date and provenance before trusting a number: **only the V2 records were pro
 
 | Document | What it is |
 |---|---|
+| [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md) | phase 16: each journey and capability PASS / FAIL / UNVERIFIED with its command, seed, versions and screenshot; the live checklist (not run) and deployment (not done) |
+| [`RELEASE.md`](RELEASE.md) | phase 16: install, build, verify, the Vercel configuration by name, credentials (OIDC), cost caps, rollback |
+| [`data/sim-v2/`](data/sim-v2/) | phase 16: Generative Reality runs at scale with stored (scripted) model outputs, replayed with no provider |
 | [`PROGRESS.md`](PROGRESS.md) | phase-by-phase log: what was built, the commands run and their exact results |
 | [`CONTINUE_HERE.md`](CONTINUE_HERE.md) | where to pick up: last good commit, blockers, the next exact task |
 | [`V1_AUDIT.md`](V1_AUDIT.md) | phase 01: the audited code map of V1 as imported, limitations, gap matrix, design decisions |
@@ -43,7 +46,7 @@ the date and provenance before trusting a number: **only the V2 records were pro
 
 ## Inherited V1 evidence (records of runs made in V1's environment before the import)
 
-[`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`TEST_RESULTS.md`](TEST_RESULTS.md), [`FUN_REVIEW.md`](FUN_REVIEW.md),
+[`v1/FINAL_ACCEPTANCE.md`](v1/FINAL_ACCEPTANCE.md), [`TEST_RESULTS.md`](TEST_RESULTS.md), [`FUN_REVIEW.md`](FUN_REVIEW.md),
 [`BALANCE_REPORT.md`](BALANCE_REPORT.md), [`PLAYTHROUGH_NOTES.md`](PLAYTHROUGH_NOTES.md), [`data/`](data/), [`screens/`](screens/) (the 2D
 map), [`3d-rebuild/STATUS.md`](3d-rebuild/STATUS.md), [`v1/PROGRESS.md`](v1/PROGRESS.md) and [`v1/README.md`](v1/README.md). They are
 kept for traceability. A result in them counts as V2 evidence only where [`BASELINE.md`](BASELINE.md) shows it was re-run here.

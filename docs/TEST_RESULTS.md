@@ -72,7 +72,7 @@ Run after the last code change, every row the command beside it, in this environ
 | `npm run test:e2e` | **140 passed, 0 failed, 52 skipped** (project-specific skips), 6.2 min; includes Journey A (phone) and Journey C (both viewports) |
 | `npm run acceptance:mcp` | **28 of 28 checks** (Journey B over the real stdio server) |
 | `npm run acceptance:fun -- --seeds 8` / `--seeds 40` follow-ups | 38 exploit-hunt cells, 0 beat the built-in best route; follow-ups at 40 seeds: `docs/data/acceptance/fun-evaluation.json`, `fun-followup-40-*.json` |
-| `npm run acceptance:novice` | 24 runs, all reached a debrief, 0 console errors, 0 won (see `docs/FINAL_ACCEPTANCE.md`) |
+| `npm run acceptance:novice` | 24 runs, all reached a debrief, 0 console errors, 0 won (see `docs/v1/FINAL_ACCEPTANCE.md`) |
 | `npm run monkey` (12 sessions, 160 steps) | no crash, no blank screen, every state replayed, every game finished; 115 composer dialogs opened, 81 sentences previewed, 6 beliefs written |
 | `npm run replay:example`; `npm run mcp:verify -- <run>` for the four recorded Claude Code sessions 3 to 6 | IDENTICAL to the recorded hashes |
 | `npx tsx scripts/verify-expeditions.ts --from 1 --to 1000` (to a scratch file) | 853 villages verified, the same winning planners for every seed as the committed catalog |

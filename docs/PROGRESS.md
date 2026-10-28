@@ -20,10 +20,41 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 13 MCP and tool play | **VERIFIED locally (stdio, the official SDK client): an agent plays a whole Generative Reality run through tools on the browser's own state hash; online reading through MCP TESTED MOCK ONLY; LIVE UNVERIFIED; a model-powered V2 agent session NOT RUN; remote Streamable HTTP NOT BUILT** (no durable shared store). V1 tools unchanged | [`MCP_V2.md`](MCP_V2.md), entry below, `tests/unit/mcp-v2*.test.ts`, [`data/mcp/v2-hens-session.md`](data/mcp/v2-hens-session.md) |
 | 14 Replay, persistence and evals | **VERIFIED offline (gate met): a Generative run replays like a Classic one once its inputs are recorded; a complete browser win and four losses replay offline with no provider call; evaluations measured offline and with MOCK stand-ins, LIVE not run** | [`REPLAY_V2.md`](REPLAY_V2.md), entry below, [`data/evals/REPORT.md`](data/evals/REPORT.md), `tests/unit/ledger*.test.ts`, `tests/unit/evals.test.ts` |
 | 15 Security, privacy, cost and failure | **VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.** Threat model with every attack mapped to a control and a test; a chaos suite (hostile text, hostile structures, a heavier compute load than play can reach, physics limits, double taps, stale confirmations, session scopes, CORS and caching headers, a cold start); the secret scan runs in CI over every tracked file, every commit and the built site; gateway privacy routing (no training always, zero retention by setting); an operator cost monitor. Found and fixed four defects (entry) | [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), entry below, `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts` |
-| 16-17 | NOT STARTED | |
+| 16 Integration and release testing | **Integrated but not live-tested: the six journeys PASS offline and with scripted providers (A Classic offline, B novel laws, C living society, D replay, E MCP over stdio, F phone sizes in Chromium and CI WebKit); V2 runs at scale replay exactly from stored model outputs; LIVE UNVERIFIED; NOT DEPLOYED** | [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md), [`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md), entry below |
+| 17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-28 — Phase 16: integration and release testing (integrated but not live-tested; NOT DEPLOYED)
+
+**What was done** (references: [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md))
+
+- **Journeys as tests.** A: `tests/e2e/v2-journeys.spec.ts` plays V1's recorded Classic win by clicks and a loss with every request
+  watched (0 to `/api`, 0 off-origin), both on V1's hashes and both confirmed by the debrief's on-device replay. B: the same spec types
+  "chickens rise into the air when bells sound" (read as the hens' lift on the bell, previewed, nothing spent) and a sentence whose
+  "time runs backwards" clause is named and left out; `tests/unit/journeys-v2.test.ts` checks the readings and preview headless.
+  C: six named villagers with different goals hear one new belief at a gathering; their intentions differ (proof-seekers look for
+  proof); staging it before it is law backfires, all six lose conviction and some change plans; over the recorded "rain" chain trust
+  moves on 5+ edges and a faction endorses; the scripted stand-in's decisions pass the server's and the engine's checks, change
+  nothing until dusk, and replay with no model. D: a belief read by "a model" (the stand-in) replays from its recorded structure while
+  a newer model id that reads the words as a stronger lift changes nothing; truncated, future, edited saves and an edited ledger are
+  refused by name. E: the real stdio test gained stale and repeated confirmations, a villager's answer and inspection. F: the
+  cross-browser smoke now runs on WebKit at iPhone SE (320), iPhone 14 (390) and iPhone 14 Pro Max (430).
+- **At scale with stored model outputs.** `scripts/sim-v2.ts` (`npm run test:sim:v2`): V2 policies over three chapters, the Lab, the
+  Living Village and generated villages; every morning the stand-in decides for the villagers due to think (through the server's
+  task code) and every written belief is read again by it; each run then replays from options + actions alone to the same hashes
+  with an identical ledger. At 20 seeds and 40 generated villages ([`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md)): 620 runs, 4,942 game days, 8,356 stand-in decisions accepted (0 refused), 500 beliefs written with the stand-in's reading, 3,171 ledger entries, and **620 of 620 replayed exactly** (636 s, sharing the machine with the browser suite). MOCK ONLY.
+- **Release documents.** `docs/FINAL_ACCEPTANCE.md` (V2's table; V1's moved to `docs/v1/`), `docs/RELEASE.md` (install, build,
+  verify, Vercel settings by name, OIDC, cost caps, rollback), the README's Classic-offline / Generative table (and no "LLM-enabled"
+  claim while LIVE is unverified). The hosting check now also plays a Generative Reality run under the production CSP.
+
+**Commands and results**: the new journey tests pass (`journeys-v2.test.ts` 7, `mcp-v2-stdio.test.ts` 4, `v2-journeys.spec.ts` 3 passed and 1 skipped by design); `npm run verify:hosting` verified with the Generative Reality flow; `npm run test:sim:smoke` 256/256, SMOKE OK; `npm run typecheck` and lint clean. The full unit suite, the whole Chromium suite and `test:sim:v2` at 20 seeds: (being measured at this commit; recorded in the next commit).
+
+**Not verified:** LIVE (no credential): the live checklist is listed and not run; NOT DEPLOYED (no authorisation); no human playtest;
+no real iPhone; no GPU.
 
 ---
 

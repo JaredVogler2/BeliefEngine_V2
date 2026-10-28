@@ -70,7 +70,7 @@ function clauseSpec(c: BeliefClause, id: string): RuleSpec {
  * The strongest a belief about the whole of something (the rain, a field, a bridge, a region's sickness) may be: the strongest
  * built-in belief of the same kind (subject and effect), or 2 when the game has none. A belief with no reach to price (radius 0)
  * acts everywhere it is believed, so its strength is capped rather than only priced: found by an exploit hunt, where a written
- * full-strength rain belief won Redbank 40 times in 40 against 36 for the best built-in route (docs/FINAL_ACCEPTANCE.md).
+ * full-strength rain belief won Redbank 40 times in 40 against 36 for the best built-in route (docs/v1/FINAL_ACCEPTANCE.md).
  */
 let strongest: Map<string, number> | null = null;
 export function maxIntensityFor(subject: string, effect: string): 1 | 2 | 3 {

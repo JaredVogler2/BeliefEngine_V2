@@ -31,7 +31,7 @@ text ──▶ offline reader ──▶ structure (BeliefAST) ──▶ balance 
    | Influence to write | 1 below power 10, 2 below 30, 3 above; plus 1 per telling like any story |
    | downsides | 1 from power 12, 2 from power 28: thematic ones first (lit beacons risk fire; smoke fires cause smoke sickness; bell-turned rain falls somewhere else; night work and vigils drain labour), then generic ones |
 
-   Two more rules came from an exploit hunt over written beliefs (Phase 18, [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md)), where a written *rain turns aside when the bells ring* beat the best built-in route in Redbank (40 wins in 40 seeds against 36 in 40):
+   Two more rules came from an exploit hunt over written beliefs (Phase 18, [`v1/FINAL_ACCEPTANCE.md`](v1/FINAL_ACCEPTANCE.md)), where a written *rain turns aside when the bells ring* beat the best built-in route in Redbank (40 wins in 40 seeds against 36 in 40):
 
    | rule | why |
    |---|---|

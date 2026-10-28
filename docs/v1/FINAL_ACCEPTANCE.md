@@ -1,5 +1,7 @@
 # Final acceptance: browser, MCP and natural-language beliefs
 
+> Inherited V1 record, moved here from `docs/FINAL_ACCEPTANCE.md` in V2 phase 16 (V2's own acceptance is [`../FINAL_ACCEPTANCE.md`](../FINAL_ACCEPTANCE.md)). Unchanged below.
+
 This is the phase 18 record. It says, track by track, what was run, what it showed and what it did not, and it does not call anything finished that is not. Everything in the tables below was executed in this repository's environment on **2026-10-27**; the commands are beside the results so any of it can be re-run.
 
 * **Evidence tree:** phase 16 (`ee033aa`) plus the phase 17 commit `2615eff`, which holds all of the engine, composer, UI and MCP code, plus the phase 18 commit that adds this document, the acceptance scripts and the browser journeys (it changes no engine, UI or MCP code; `git diff 2615eff --stat -- src mcp server` is empty). Every result below was taken on that code. Engine/rules version `1.0.0` (unchanged: see "What phase 17 changed in the existing game", below), save schema 1, generator 1, belief language 1.

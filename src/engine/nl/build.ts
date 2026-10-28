@@ -85,7 +85,7 @@ export function defaultRegions(s: RunState, subject: BeliefClause['subject']): s
  * The day a belief of this kind can first be told. A built-in answer the chapter holds back (it unlocks on a set day: the game paces
  * its strongest answers on purpose) must not be skipped by writing a copy, or the copy would be the cheapest way past the pacing:
  * an exploit hunt found a written bell-and-rain belief winning Redbank 40 times in 40 because the built-in one, unlocked on day 4,
- * was available from day 1 in written form (docs/FINAL_ACCEPTANCE.md). The opening choices (starters) are not held back, so a copy
+ * was available from day 1 in written form (docs/v1/FINAL_ACCEPTANCE.md). The opening choices (starters) are not held back, so a copy
  * of one is told at once and pays its writing cost instead. Derived from the structure and the chapter's built-in beliefs only.
  */
 export function unlockDayFor(claimDefs: ClaimDef[], clauses: BeliefClause[], starters: string[] = []): number | undefined {

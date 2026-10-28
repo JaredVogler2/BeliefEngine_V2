@@ -328,7 +328,7 @@ function v1SubjectOf(c: Clause): string | null {
 /**
  * V1's pacing rule, kept for reality beliefs: an answer the chapter deliberately holds back (it unlocks on a set day) cannot be
  * skipped by writing a belief that does the same kind of thing. V1's exploit hunt found a written rain belief winning Redbank 40
- * times in 40 when it could be told before the chapter's own (docs/FINAL_ACCEPTANCE.md). Opening stories are not held back.
+ * times in 40 when it could be told before the chapter's own (docs/v1/FINAL_ACCEPTANCE.md). Opening stories are not held back.
  */
 export function realityUnlockDay(s: RunState, ast: RealityAst): number | undefined {
   let day = 0;
