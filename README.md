@@ -2,8 +2,19 @@
 
 **Tell the village anything. Convince them. Watch reality respond.**
 
-The LLM-enabled successor to [BeliefEngine V1](https://github.com/JaredVogler2/BeliefEngine): a browser strategy game where you change
-what a village believes, and enough shared belief becomes physical law.
+The successor to [BeliefEngine V1](https://github.com/JaredVogler2/BeliefEngine): a browser strategy game where you change what a
+village believes, and enough shared belief becomes physical law. It is built so a language model can read your beliefs and voice
+your villagers, but **no model has been called yet** (LIVE UNVERIFIED): everything below runs offline.
+
+## Two ways to play
+
+| | Classic | Generative Reality |
+|---|---|---|
+| What you do | pick and spread the chapter's own stories; V1's game, hash for hash | write any belief in your own words; it is read into a closed rule language, previewed, and becomes law only if enough villagers come to believe it |
+| Network | **none, ever** | **none by default**: the offline reader and the villagers' own rules do everything. Online reading (a model reads sentences, proposes villager moves) is opt-in behind a notice, needs a server the owner configured, and has **not been run live** |
+| If the server is down | nothing changes | nothing changes: the game reads offline and says so |
+
+Release, settings and costs: [`docs/RELEASE.md`](docs/RELEASE.md). What is verified and what is not: [`docs/FINAL_ACCEPTANCE.md`](docs/FINAL_ACCEPTANCE.md).
 
 ## Status, honestly
 
@@ -42,6 +53,21 @@ what a village believes, and enough shared belief becomes physical law.
   ([`docs/MCP_V2.md`](docs/MCP_V2.md)); every input that did not come from the rules (a belief read, a model's proposals) is recorded
   in an external-decision ledger, so a run replays offline exactly, and the debrief checks it; readers and villager decisions are
   measured on labelled corpora (`npm run eval`, [`docs/REPLAY_V2.md`](docs/REPLAY_V2.md)), offline and MOCK only.
+- **Phase 15: security, privacy and cost, with evidence.** A threat model mapping every attack to a control and a test, a chaos suite,
+  physics and compute limits no mode relaxes, a secret scan CI runs over every file and commit, gateway calls that never go to a
+  provider that trains on them (zero data retention by setting), and an operator cost monitor (`npm run ai:monitor`)
+  ([`docs/SECURITY.md`](docs/SECURITY.md), [`docs/PRIVACY.md`](docs/PRIVACY.md), [`docs/COST_AND_QUOTAS.md`](docs/COST_AND_QUOTAS.md)).
+  Verified with scripted providers only.
+- **Phase 16: integration and release testing.** The six acceptance journeys run as browser and headless tests (Classic offline with
+  every request watched; novel laws; a living society; replay that a newer model cannot reinterpret; MCP over stdio; phone sizes in
+  CI's WebKit), V2 runs at scale replay exactly from their stored model outputs (`npm run test:sim:v2`), and the release guide
+  names every setting ([`docs/FINAL_ACCEPTANCE.md`](docs/FINAL_ACCEPTANCE.md): **integrated but not live-tested**).
+- **Phase 17: attacked by eight reviewers.** Two promises found broken and fixed: a model's reading could swap what a sentence says
+  will happen (now held to the words: 289 of 292 swapped readings were trusted, 11 are), and the composer's price was not always the
+  charge (now one number for the composer, MCP and the engine). Written-belief rules 3 price a ward around every home for the ground it
+  covers (the cheap universal answer is now the dearest), ideas are ones the village can make real, an impossible wish is offered a
+  helpful belief, flavour words are named as flavour. Measured honestly on sentences written blind: the offline reader understands
+  35 of 69 first attempts ([`docs/FUN_REVIEW_V2.md`](docs/FUN_REVIEW_V2.md)). Fun is unverified: no one has played it.
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
   dusk); the baseline report ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)) predates the V1 merge, and the work to reach
@@ -70,9 +96,12 @@ or `?renderer=2d` for the classic map. The V1 player guide (controls, a three-mi
 | `npm run test:e2e` | Playwright on the production build: V1's specs (2D map), `v2-world3d.spec.ts` (the Three.js world) and `v2-online.spec.ts` (online reading against the local simulator) |
 | `npm run dev:api` | the inference service locally on :8787 (Vite forwards `/api`); `BE_AI_ENABLED=1 BE_AI_DEV_PROVIDER=mock BE_AI_DEV_MEMORY_STORE=1` runs it with scripted answers and no key |
 | `npm run ai:smoke` | the LIVE provider smoke test; only runs with a privately configured credential ([`docs/AI_SETUP.md`](docs/AI_SETUP.md)) |
+| `npm run ai:monitor` | the operator's cost panel from `/api/ai-metrics` (`BE_ADMIN_TOKEN` from your environment; `-- --demo` needs no server or key) |
+| `npm run scan:secrets` | the secret scan CI runs (`-- --history` for every commit, `-- --dist` for the built site); prints rules and lines, never values |
 | `BE_SLOW_3D=1 npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop` | also replays two days of a recorded route by clicks in 3D (slow on a software rasteriser) |
 | `npm run test:e2e:browsers` | smoke tests in Chromium, Firefox, WebKit and an iPhone 14 profile |
 | `npm run test:sim:smoke` | 256 bot runs: balance, determinism, exploit search |
+| `npm run test:sim:v2` | Generative Reality runs with the scripted model stand-in's outputs stored in each run, replayed with no provider ([`docs/data/sim-v2/REPORT.md`](docs/data/sim-v2/REPORT.md)) |
 | `npm run replay:example` | rebuild a recorded victory from nothing and compare its hashes |
 | `npm run mcp` / `npm run mcp:demo` / `npm run acceptance:mcp` | the local MCP server / a scripted agent plays a chapter / Journey B, 28 checks |
 | `npx tsx scripts/capture-3d.ts --url http://127.0.0.1:4173 --size 1440x900 --day 1 --out shot.png` | photograph the real 3D world |

@@ -28,13 +28,14 @@ function write(g: GameSession, sentence: string, region?: string): string {
 const def = (s: RunState, id: string) => s.claims.find((c) => c.id === id)!.def!;
 
 describe('the rules a run is balanced under are recorded with it', () => {
-  it('a run made now is under rules 2; rules 1 is recorded by its absence, exactly the state older saves hold', () => {
-    expect(REALITY_RULES).toBe(2);
-    expect(run().state.v2!.rules).toBe(2);
+  it('a run made now is under rules 3 (phase 17); rules 1 is recorded by its absence, exactly the state older saves hold', () => {
+    expect(REALITY_RULES).toBe(3);
+    expect(run().state.v2!.rules).toBe(3);
     const old = run({ realityRules: 1 }).state;
     expect('rules' in old.v2!).toBe(false);
-    // and a rules-1 run is recreated under rules 1 (retry, share, replay)
+    // and a rules-1 or rules-2 run is recreated under its own rules (retry, share, replay)
     expect(optionsFromState(old).realityRules).toBe(1);
+    expect(optionsFromState(run({ realityRules: 2 }).state).realityRules).toBe(2);
     expect(optionsFromState(run().state).realityRules).toBeUndefined();
   });
 

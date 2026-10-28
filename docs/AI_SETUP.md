@@ -70,6 +70,8 @@ readings ◄──── validated twice (server: schema + game vocabulary; brow
 | Validated-only cache keyed by prompt version, vocabulary version, model id, normalised text and village context; re-validated on read | `app.ts` | repeat costs; a poisoned cache entry |
 | Logs hold route, outcome, tier, model, token counts, ms, micro-dollars only | `server/ai/meter.ts` | leaking sentences, memories, sessions, addresses or keys |
 | Addresses only as HMACs; sessions name no person | `app.ts` | storing personal data |
+| Gateway privacy routing: never a provider that trains on requests; zero data retention with `BE_AI_ZERO_RETENTION=1` (phase 15) | `gatewayRouting` in `server/ai/sdk-provider.ts` | prompts used for training or kept; see [`PRIVACY.md`](PRIVACY.md) |
+| Secret scan over every tracked file, every commit and the built site, in CI (phase 15) | `scripts/scan-secrets.ts` | a credential committed by mistake; see [`SECURITY.md`](SECURITY.md) |
 
 Known limits, stated plainly: anonymous sessions can be opened by anyone who can load the page (20 per network per hour); a caller
 who rotates addresses can open more, which is why the **project-wide** daily call cap (3,000) and spend cap (default $1) bound
@@ -90,7 +92,7 @@ first.
   spend only), API-key and user budgets; daily/weekly/monthly; a **soft** cap; rejection is HTTP 402 `quota_for_entity_exceeded`,
   which the SDK may surface as `GatewayInternalServerError` (classified here as `budget`).
 - Model ids and prices: the public catalog `https://ai-gateway.vercel.sh/v1/models` (496 models on 2026-10-27); see
-  [`AI_COSTS.md`](AI_COSTS.md).
+  [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md).
 - Vercel Functions (https://vercel.com/docs/functions/functions-api-reference): files in `api/` export `{ fetch(request) }` and an
   optional `config = { runtime: 'nodejs', maxDuration }`.
 - **A packaging defect found and fixed before any deployment:** Vercel's builder transpiles each function file with the project's

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createAiApp } from '../../server/ai/app.ts';
 import { loadAiConfig } from '../../server/ai/config.ts';
 import { MockProvider } from '../../server/ai/mock-provider.ts';
+import type { InferenceProvider } from '../../server/ai/provider.ts';
 import { MemoryStore, RedisRestStore } from '../../server/ai/store.ts';
 import { NL_VERSION } from '../../src/engine/nl/ontology.ts';
 import { parseLlmReply } from '../../src/engine/nl/llm.ts';
@@ -62,6 +63,19 @@ describe('GET /api/ai-status', () => {
     const text = JSON.stringify(r.body);
     for (const secret of [GATEWAY_KEY, SECRET, STORE_TOKEN, 'AI_GATEWAY_API_KEY', 'UPSTASH', 'BE_SESSION_SECRET']) expect(text).not.toContain(secret);
     expect(String(r.body.privacy)).toMatch(/operator pays/);
+    expect(String(r.body.privacy)).toMatch(/do not train on what they are sent; whether a provider keeps a copy/);
+    // the scripted stand-in routes nowhere, so it claims no routing
+    expect(r.body.routing).toBeNull();
+  });
+
+  it('states the gateway routing it asks for: never a provider that trains on the data, and zero retention when configured', async () => {
+    const gateway = { name: 'gateway', call: async () => { throw new Error('not called'); } } as unknown as InferenceProvider;
+    for (const zdr of ['', '1']) {
+      const app = createAiApp({ config: loadAiConfig({ ...FULL_ENV, BE_AI_ZERO_RETENTION: zdr }), store: new MemoryStore(), provider: gateway });
+      const body = (await (await app('ai-status', new Request('https://game.example/api/ai-status'))).json()) as Record<string, unknown>;
+      expect(body.routing).toEqual({ noPromptTraining: true, zeroDataRetention: zdr === '1' });
+      expect(String(body.privacy)).toMatch(zdr === '1' ? /keep nothing once they answer \(zero data retention\)/ : /has not asked for zero data retention/);
+    }
   });
 
   it('says "not_configured" (not available) when switched on without a key, and the paid routes refuse without calling anything', async () => {

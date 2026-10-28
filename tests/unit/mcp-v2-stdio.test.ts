@@ -127,6 +127,41 @@ describe('MCP V2 over stdio with the official SDK client', () => {
     }
   }, 180_000);
 
+  it('over stdio: a stale confirmation is refused, a repeated one pays nothing, a villager answers, and objects the law moves can be inspected', async () => {
+    const { client, close } = await connect();
+    try {
+      const g = await ok(client, 'create_game', { scenarioId: 'redbank', seed: 1, variant: 'generative' });
+      const runId = g.runId as string;
+      await ok(client, 'take_action', { runId, action: { type: 'PICK_STARTER', claim: 'river_fears_fire' } });
+      const stale = await ok(client, 'propose_belief', { runId, text: 'Chickens fly when the bell rings.' });
+      await ok(client, 'take_action', { runId, action: { type: 'SEED', claim: 'river_fears_fire', target: 'ivo' } });
+      const before = await ok(client, 'get_game_state', { runId });
+      const refused = await call(client, 'confirm_belief', { runId, token: stale.interpretations[0].token });
+      expect(refused.isError).toBe(true);
+      expect(refused.data.error).toMatchObject({ code: 'STALE_REVISION', kind: 'STALE_REVISION' });
+      expect((await ok(client, 'get_game_state', { runId })).revision).toBe(before.revision);
+      const fresh = await ok(client, 'propose_belief', { runId, text: 'Chickens fly when the bell rings.' });
+      const done = await ok(client, 'confirm_belief', { runId, token: fresh.interpretations[0].token });
+      const again = await ok(client, 'confirm_belief', { runId, token: fresh.interpretations[0].token });
+      expect(again.replayedFromToken).toBe(true);
+      expect(again.remainingInfluence).toBe(done.remainingInfluence);
+      // talking: asking is free, and the answer is the villager's own (offline: the game's words, not a model's)
+      const ask = await ok(client, 'speak_to_villager', { runId, villagerId: 'tilly', mode: 'ask', claimId: done.claim.id });
+      expect(ask.reply.length).toBeGreaterThan(0);
+      expect(ask.remainingInfluence).toBe(done.remainingInfluence);
+      // what the written law will move: a coop of hens, and the bell that sets it off
+      const state = await ok(client, 'inspect_region', { runId, regionId: 'east' });
+      expect(state.region.writtenBeliefs.map((w: { claim: string }) => w.claim)).toContain(done.claim.id);
+      const bell = await ok(client, 'inspect_object', { runId, objectId: 'bell' });
+      expect(bell.object.rituals.find((r: { ritual: string }) => r.ritual === 'ring_bells').stagesProofOf.map((x: { claim: string }) => x.claim)).toContain(done.claim.id);
+      const nothing = await call(client, 'inspect_object', { runId, objectId: 'no-such-thing' });
+      expect(nothing.isError).toBe(true);
+      expect(nothing.data.error.kind).toBe('NOT_FOUND');
+    } finally {
+      await close();
+    }
+  }, 120_000);
+
   it('a coach-mode run refuses every write (NOT_AUTHORIZED), and online reading through the scripted stand-in is labelled "mock"', async () => {
     const { client, close } = await connect({ BE_AI_ENABLED: '1', BE_AI_DEV_PROVIDER: 'mock', BE_AI_DEV_MEMORY_STORE: '1' });
     try {

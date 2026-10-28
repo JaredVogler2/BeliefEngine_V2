@@ -152,6 +152,42 @@ describe('what the reader promises', () => {
     expect(picked.c.ast.regions).toEqual(['west']);
   });
 
+  it('reads the plain ways a first-time player says the chapters\' answers (phase 17)', () => {
+    // a sentence-initial noun that is also a verb, "every", "the animal pens", a verb whose object is the place, a typed "cant"
+    expect(facts(readBelief(red(), 'Floods turn away from the village.'))).toMatchObject({ kinds: ['water'], ops: ['REDIRECT_FLOW'] });
+    const ash = stateFor('ashwood');
+    for (const text of ['Wolves always keep away from every pen.', 'Wolves avoid the animal pens at night.', 'Wolves avoid the pens.']) {
+      const f = facts(readBelief(ash, text))!;
+      expect(f, text).toMatchObject({ kinds: ['wolf'], ops: ['MOVE_AWAY'] });
+      expect(f.c.ast.clauses[0].target.near?.anchor, text).toBe('pen');
+    }
+    expect(facts(readBelief(ash, 'the wolves cant see the houses in the mist'))).toMatchObject({ kinds: ['home'], ops: ['MODIFY_VISIBILITY'] });
+    // "the walls of every house" are the houses, not a place near them
+    expect(facts(readBelief(ash, 'The walls of every house grow strong.'))).toMatchObject({ kinds: ['home'], ops: ['MODIFY_DURABILITY'] });
+    // the same change said again with its reason is one clause, set off by the power the sentence names (not a sentence refused whole)
+    const smoke = readBelief(ash, 'Wolves fear smoke, so they stay away from any hamlet with a fire burning.');
+    expect(smoke.kind).toBe('supported');
+    expect(facts(smoke)).toMatchObject({ kinds: ['wolf'], ops: ['MOVE_AWAY'], events: ['smoke_fire'] });
+    expect(readBelief(stateFor('harvest'), 'The light of the moon makes grain ripen, so every clear night the wheat grows a little more.').kind).toBe('supported');
+    expect(facts(readBelief(stateFor('harvest'), 'The rain answers the bells.'))).toMatchObject({ kinds: ['rain'], ops: ['WEATHER_MODIFIER'], events: ['bell'] });
+  });
+
+  it('keeps words that only colour a sentence, and says so; offers a belief that helps, never one that harms (phase 17)', () => {
+    const night = readBelief(red(), 'Chickens fly into the night when the bell rings.');
+    expect(night.kind).toBe('supported');
+    const c = candidatesOf(night)[0];
+    expect(c.ast.narrative).toBe('into the night');
+    expect(c.build.ok && c.build.draft.narrative).toBe('into the night');
+    // homes that cannot be damaged: the offer is homes that hold stronger, not homes that burn more readily
+    const homes = readBelief(red(), 'Homes cannot be damaged.');
+    expect(homes.kind).toBe('unsupported');
+    const offers = (homes.kind === 'unsupported' ? homes.alternatives : []).flatMap((x) => x.ast.clauses.map((k) => k.effect));
+    expect(offers.length).toBeGreaterThan(0);
+    for (const e of offers) expect(e.op === 'SET_MATERIAL_PROPERTY' && (e as { delta: number }).delta > 0).toBe(false);
+    expect(offers[0]).toMatchObject({ op: 'MODIFY_DURABILITY' });
+    expect((offers[0] as { delta: number }).delta).toBeGreaterThan(0);
+  });
+
   it('is deterministic and never throws, whatever it is given', () => {
     const text = 'At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.';
     expect(JSON.stringify(readBelief(red(), text))).toBe(JSON.stringify(readBelief(red(), text)));

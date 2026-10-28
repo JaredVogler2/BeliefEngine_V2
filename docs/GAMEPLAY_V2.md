@@ -21,16 +21,17 @@ Each V2 run says which it is in the debrief (`seed-info`), the hand shows a Livi
 the same mode for a retry. Before phase 11 a Generative Reality run was recorded exactly like a Classic one (same bests, unlocks and
 chapter completion); that is fixed, and an import keeps the mode (and an Inventor run's `custom` mark, which the importer used to drop).
 
-## 2. What a written belief costs (rules 2)
+## 2. What a written belief costs (rules 2, and rules 3 from phase 17)
 
-A run records the written-belief rules it was created under (`s.v2.rules`, `REALITY_RULES = 2`); a run made before phase 11 has no
-field and plays under rules 1 exactly as it did (the phase 09 chains recorded under rules 1 still replay to their hashes:
-`tests/fixtures/v2-bridge-traces-rules1.json`). Under rules 2 a new belief carries every cost the prompt lists, from its mechanics
-alone:
+A run records the written-belief rules it was created under (`s.v2.rules`, `REALITY_RULES = 3` since phase 17); a run made before
+phase 11 has no field and plays under rules 1 exactly as it did, and one made in phases 11-16 plays under rules 2 (the phase 09
+chains recorded under each still replay to their hashes: `tests/fixtures/v2-bridge-traces-rules1.json`, `…-rules2.json`). A Living
+Village writes no beliefs and is always created under rules 2. Under rules 2 a new belief carries every cost the prompt lists, from
+its mechanics alone:
 
 | Cost | How |
 |---|---|
-| Influence to write | 1, 2 or 3 by power (unchanged) |
+| Influence to write | 1, 2 or 3 by power (under rules 1 and 2 read from the rules-1 power, so a belief held in several regions could cost less than its rating said; rules 3 charge the whole power, and the composer's price is always the charge) |
 | Social proof | support `0.5 + p/200` (55-85%) and `3 + p/15` firm believers (3-7), `p` = power per region it is held in |
 | Independent witnesses | V1's diversity rule (a law with three or more supporters cannot wake while one voice carries more than 45% of the support), and demonstrations (below) give firsthand witnesses |
 | Physical catalyst | the trigger of its clauses (the bell, a lit lantern, a smoke fire, watchers on the deck); supplied each night it is to act |
@@ -43,6 +44,14 @@ alone:
 Breadth is priced honestly: "in every hamlet" holds a belief in each region that has what it acts on (one law per region, each
 decided by its own people); its whole power sets the Influence price, each region's share sets that region's threshold, and a radius
 is paid once per region. Under rules 1 the reader ignored the words and held it in one region.
+
+**Rules 3 (phase 17, [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md) P1-1).** A belief measured from every landmark of a kind ("floodwater
+always flows away from every home") acts around each of them, so its reach is the ground they cover together: in each region the
+square root of that ground in circles of its radius, never less than one circle (reality/cost.ts `coverageOf`). Measured from what
+powers it tonight (the lit lanterns, the ringing bell), a belief keeps one circle a region. Redbank's village-wide flood ward went from
+power 22 (65% support, 4 believers, the lantern ward's price with no lantern to light) to 48.9 (75%, 6 believers, 3 Influence): the
+spamming bot that won 20 of 30 seeds with it wins none; a focused one still wins 22 of 30 (the lantern ward: 24). Previews say "Every
+night" and "any home", and the reach the effect acts with.
 
 ## 3. Demonstrations
 

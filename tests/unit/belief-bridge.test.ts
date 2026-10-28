@@ -39,18 +39,20 @@ function play(key: (typeof CHAINS)[number]): RunState {
 }
 const events = (s: RunState, code: string, claim?: string) => s.log.filter((e) => e.code === code && (claim === undefined || e.claim === claim));
 
-describe('older runs keep replaying exactly (written-belief rules 1)', () => {
-  // the same chains as recorded before phase 11 changed the balance: their run options carry realityRules 1, and each must still end
-  // on the very hash it was recorded with
-  const old = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces-rules1.json', import.meta.url), 'utf8')) as Record<string, Trace>;
-  it.each(CHAINS)('%s, as recorded under rules 1, replays to its recorded hash', (key) => {
-    const t = old[key];
-    expect(t.opts.realityRules).toBe(1);
-    const r = replayRun({ ...t.opts, actions: t.actions });
-    expect(r.rejected).toEqual([]);
-    expect(r.stateHash).toBe(t.stateHash);
-    expect(r.eventHash).toBe(t.eventHash);
-  });
+describe('older runs keep replaying exactly (written-belief rules 1 and 2)', () => {
+  // the same chains as recorded before phase 11 (rules 1) and phase 17 (rules 2) changed the balance: their run options carry the rules
+  // they were played under, and each must still end on the very hash it was recorded with
+  for (const rules of [1, 2]) {
+    const old = JSON.parse(readFileSync(new URL(`../fixtures/v2-bridge-traces-rules${rules}.json`, import.meta.url), 'utf8')) as Record<string, Trace>;
+    it.each(CHAINS)(`%s, as recorded under rules ${rules}, replays to its recorded hash`, (key) => {
+      const t = old[key];
+      expect(t.opts.realityRules).toBe(rules);
+      const r = replayRun({ ...t.opts, actions: t.actions });
+      expect(r.rejected).toEqual([]);
+      expect(r.stateHash).toBe(t.stateHash);
+      expect(r.eventHash).toBe(t.eventHash);
+    });
+  }
 });
 
 describe('each chain starts from the words and replays exactly', () => {

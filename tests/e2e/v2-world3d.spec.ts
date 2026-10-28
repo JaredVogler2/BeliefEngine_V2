@@ -12,7 +12,7 @@ import { browserState, chooseClaim, mapPainted, replayTraceViaUi, startRedbank, 
 const URL_3D = '/?debug=1&renderer=3d';
 
 interface Info3D { calls: number; triangles: number; tier: string; frames: number; software: boolean }
-type R3D = { kind: string; info: () => Info3D; entityScreen: (k: 'villager' | 'landmark', id: string) => { x: number; y: number } | null; stats: () => { effects: number } };
+type R3D = { kind: string; info: () => Info3D; entityScreen: (k: 'villager' | 'landmark', id: string) => { x: number; y: number } | null; hitTest: (x: number, y: number) => { kind: string; id: string } | null; stats: () => { effects: number } };
 
 async function world3d(page: Page): Promise<void> {
   await expect(page.locator('.stage')).toHaveAttribute('data-renderer', '3d');
@@ -64,7 +64,9 @@ test.describe('3D world (Three.js, forced on)', () => {
 
     // pick a person by pointing at them in the 3D scene: the raycast answers with an engine id, the store selects it. The person is
     // the one standing furthest on screen from everyone else, inside the open middle of the canvas, so no other body covers the point
-    // (people who share a tile can stand in front of each other, and how they stand depends on the frame the click lands on)
+    // (people who share a tile can stand in front of each other, and how they stand depends on the frame the click lands on), and
+    // whose point the raycast answers with them, not with a building they stand in front of (on the phone's framing a shelter can
+    // cover the point just above a figure: CI saw it once)
     const who = await page.evaluate(() => {
       const w = window as unknown as { __beRenderer: R3D; __belief: { state: { villagers: { id: string; name: string; status: string }[] } } };
       const c = (document.querySelector('.stage canvas') as HTMLCanvasElement).getBoundingClientRect();
@@ -73,12 +75,14 @@ test.describe('3D world (Three.js, forced on)', () => {
         .map((v) => ({ id: v.id, name: v.name, p: w.__beRenderer.entityScreen('villager', v.id) }))
         .filter((x): x is { id: string; name: string; p: { x: number; y: number } } => !!x.p);
       const inside = pts.filter((x) => x.p.x > c.width * 0.2 && x.p.x < c.width * 0.75 && x.p.y > c.height * 0.25 && x.p.y < c.height * 0.7);
-      let best: { id: string; name: string; d: number } | null = null;
-      for (const a of inside) {
-        const d = Math.min(...pts.filter((b) => b.id !== a.id).map((b) => Math.hypot(a.p.x - b.p.x, a.p.y - b.p.y)));
-        if (!best || d > best.d) best = { id: a.id, name: a.name, d };
-      }
-      return best;
+      const ranked = inside
+        .map((a) => ({ id: a.id, name: a.name, p: a.p, d: Math.min(...pts.filter((b) => b.id !== a.id).map((b) => Math.hypot(a.p.x - b.p.x, a.p.y - b.p.y))) }))
+        .sort((a, b) => b.d - a.d);
+      const clear = ranked.find((a) => {
+        const h = w.__beRenderer.hitTest(a.p.x, a.p.y - 4);
+        return h?.kind === 'villager' && h.id === a.id;
+      });
+      return clear ? { id: clear.id, name: clear.name, d: clear.d } : null;
     });
     expect(who, 'someone stands in the open middle of the view').not.toBeNull();
     const at = await villagerOnPage(page, who!.id);

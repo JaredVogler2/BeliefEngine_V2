@@ -9,7 +9,7 @@ import type { OpId } from './operators.ts';
  * is executed; `read.ts` decides what a sentence means from these lists, and `ast.ts` decides whether that meaning is allowed.
  */
 
-export const READER_VERSION = 2;
+export const READER_VERSION = 3;
 export const READER_ID = `offline-v2.${READER_VERSION}`;
 
 /** Names for each kind beyond KINDS[].words (which the reader also uses). */
@@ -19,7 +19,7 @@ export const KIND_WORDS: Partial<Record<TargetKind, string[]>> = {
   water: ['river', 'water', 'floodwater', 'flood', 'stream', 'current', 'tide', 'surge', 'creek', 'torrent', 'rapids', 'waters'],
   rain: ['rain', 'cloud', 'storm', 'drizzle', 'downpour', 'shower', 'raindrop', 'thunder', 'rainfall', 'thunderstorm', 'raincloud', 'rain cloud', 'squall'],
   bridge: ['bridge', 'crossing', 'span', 'footbridge', 'planks', 'timber', 'timbers', 'the span'],
-  home: ['home', 'house', 'cottage', 'cabin', 'roof', 'dwelling', 'hut', 'hovel', 'household', 'croft', 'homestead', 'lodge', 'longhouse', 'shack'],
+  home: ['home', 'house', 'cottage', 'cabin', 'roof', 'wall', 'dwelling', 'hut', 'hovel', 'household', 'croft', 'homestead', 'lodge', 'longhouse', 'shack'],
   field: ['field', 'crop', 'grain', 'wheat', 'barley', 'rye', 'oat', 'orchard', 'harvest', 'corn', 'garden', 'farm', 'sheaf', 'plant', 'terrace', 'row', 'crop row', 'acre', 'paddy'],
   fire: ['fire', 'flame', 'blaze', 'ember', 'inferno', 'wildfire', 'spark'],
   wolf: ['wolf', 'wolves', 'pack', 'hound', 'predator', 'beast', 'the pack'],
@@ -87,7 +87,7 @@ export const SENSES: Sense[] = [
   { id: 'harder', op: 'SET_MATERIAL_PROPERTY', kinds: ['bridge', 'home'], params: { property: 'hardness' }, mag: 'delta', dir: 1, phrases: ['harder', 'hard as stone', 'hard as iron'] },
   // hydrology
   { id: 'repel_water', op: 'REDIRECT_FLOW', kinds: ['water'], params: { mode: 'repel' }, mag: 'magnitude', dir: 1, neg: 'none',
-    phrases: ['turn away', 'turn aside', 'turn * aside', 'turn * away', 'flow away', 'shy away', 'steer clear', 'avoid', 'fear', 'keep away', 'stay away', 'recoil', 'retreat', 'bend away', 'veer away', 'part around', 'flee', 'hate', 'pull back', 'run from', 'flow around', 'pull * away', 'away from', 'keep * from', 'keep * out of', 'hold * back', 'hold back', 'give a wide berth', 'give * a wide berth', 'keep clear of', 'stay clear of', 'draw back', 'recede', 'stay back', 'ebb away'] },
+    phrases: ['run away', 'run away from', 'scared of', 'afraid of', 'frightened of', 'turn away', 'turn aside', 'turn * aside', 'turn * away', 'flow away', 'shy away', 'steer clear', 'avoid', 'fear', 'keep away', 'stay away', 'recoil', 'retreat', 'bend away', 'veer away', 'part around', 'flee', 'hate', 'pull back', 'run from', 'flow around', 'pull * away', 'away from', 'keep * from', 'keep * out of', 'hold * back', 'hold back', 'give a wide berth', 'give * a wide berth', 'keep clear of', 'stay clear of', 'draw back', 'recede', 'stay back', 'ebb away'] },
   { id: 'attract_water', op: 'REDIRECT_FLOW', kinds: ['water'], params: { mode: 'attract' }, mag: 'magnitude', dir: -1, neg: 'none',
     phrases: ['bend toward', 'bend towards', 'flow toward', 'flow towards', 'drawn to', 'draw toward', 'follow', 'rush to', 'seek', 'love', 'come to', 'gather at', 'run toward', 'run towards', 'call more water to', 'call more water'] },
   { id: 'slow_water', op: 'REDIRECT_FLOW', kinds: ['water'], params: { mode: 'slow' }, mag: 'magnitude', dir: 1, neg: 'none',
@@ -95,7 +95,7 @@ export const SENSES: Sense[] = [
   { id: 'flood_verb', op: 'REDIRECT_FLOW', kinds: ['water'], params: { mode: 'attract' }, mag: 'magnitude', dir: -1, neg: 'repel_water', phrases: ['flood', 'overflow', 'spill over'] },
   // weather
   { id: 'rain_to', op: 'WEATHER_MODIFIER', kinds: ['rain'], params: { mode: 'attract' }, mag: 'magnitude', dir: -1, neg: 'rain_away', toward: true,
-    phrases: ['fall on', 'fall onto', 'fall over', 'pour on', 'pour onto', 'come to', 'gather over', 'empty themselves over', 'empty over', 'bring * to', 'bring', 'pull * toward', 'pull toward', 'call * to', 'call', 'draw * to', 'draw', 'sing * onto', 'sing * to', 'drawn to', 'follow', 'onto', 'hunger for', 'long for', 'call * down onto', 'call * down on', 'bring * down on', 'steer * over', 'steer * onto', 'drift over', 'rain on', 'come down on', 'gather above'] },
+    phrases: ['answer', 'come over', 'come above', 'give water', 'give us water', 'bring water', 'fall on', 'fall onto', 'fall over', 'pour on', 'pour onto', 'come to', 'gather over', 'empty themselves over', 'empty over', 'bring * to', 'bring', 'pull * toward', 'pull toward', 'call * to', 'call', 'draw * to', 'draw', 'sing * onto', 'sing * to', 'drawn to', 'follow', 'onto', 'hunger for', 'long for', 'call * down onto', 'call * down on', 'bring * down on', 'steer * over', 'steer * onto', 'drift over', 'rain on', 'come down on', 'gather above'] },
   { id: 'rain_away', op: 'WEATHER_MODIFIER', kinds: ['rain'], params: { mode: 'redirect' }, mag: 'magnitude', dir: 1, neg: 'rain_to',
     phrases: ['pull away', 'pull * away', 'turn away', 'go elsewhere', 'divert', 'redirect', 'send away', 'send * away', 'push away', 'push * away', 'drive away', 'drive * away', 'keep away', 'keep * away', 'stay away', 'hold off', 'stop falling on', 'steer * off', 'steered off', 'blow * away', 'keep * off', 'stay off'] },
   { id: 'rain_stop', op: 'WEATHER_MODIFIER', kinds: ['rain'], params: { mode: 'repel' }, mag: 'magnitude', dir: 1, neg: 'none', phrases: ['stop', 'cease', 'dry up', 'end'] },
@@ -108,7 +108,7 @@ export const SENSES: Sense[] = [
     phrases: ['weaken', 'weak', 'weaker', 'crack', 'crumble', 'break', 'fall', 'collapse', 'sag', 'groan', 'give way'] },
   // growth
   { id: 'grow', op: 'GROW_ENTITY', kinds: ['field'], params: {}, mag: 'magnitude', dir: 1, neg: 'decay',
-    phrases: ['grow', 'grow faster', 'ripen', 'ripen faster', 'swell', 'swell faster', 'thrive', 'flourish', 'sprout', 'yield more', 'bloom', 'swell and ripen', 'ripen early', 'come up faster', 'shoot up', 'grow tall', 'ripen sooner', 'spring up'] },
+    phrases: ['become big', 'grow big', 'get big', 'grow bigger', 'get bigger', 'become bigger', 'growth speed', 'faster growth', 'grow more', 'grow', 'grow faster', 'ripen', 'ripen faster', 'swell', 'swell faster', 'thrive', 'flourish', 'sprout', 'yield more', 'bloom', 'swell and ripen', 'ripen early', 'come up faster', 'shoot up', 'grow tall', 'ripen sooner', 'spring up'] },
   { id: 'decay', op: 'DECAY_ENTITY', kinds: ['field'], params: {}, mag: 'magnitude', dir: 1, neg: 'grow',
     phrases: ['wither', 'rot', 'sour', 'spoil', 'grow slower', 'shrivel', 'die', 'blight', 'grow slowly', 'slower', 'wilt', 'droop', 'sicken', 'blacken', 'fail', 'go bad', 'turn brown'] },
   // thermal
@@ -117,29 +117,29 @@ export const SENSES: Sense[] = [
   { id: 'hotter', op: 'ALTER_TEMPERATURE', kinds: ['fire'], params: {}, mag: 'delta', dir: 1, neg: 'cooler', phrases: ['burn hotter', 'hotter', 'fiercer', 'rage', 'roar', 'burn fiercer', 'hungrier', 'burn hot', 'blaze up', 'flare up', 'burn fierce'] },
   // movement
   { id: 'slower', op: 'MODIFY_MOVEMENT', kinds: ['fire', 'wolf'], params: {}, mag: 'delta', dir: -1, neg: 'faster',
-    phrases: ['spread slowly', 'spread slower', 'crawl', 'slow', 'slow down', 'sluggish', 'tire', 'dawdle', 'creep', 'slow to a crawl', 'wading through mud', 'as though wading', 'drag their feet', 'move slowly', 'plod', 'lumber', 'move as though'] },
+    phrases: ['half speed', 'at half speed', 'move at half speed', 'spread slowly', 'spread slower', 'crawl', 'slow', 'slow down', 'sluggish', 'tire', 'dawdle', 'creep', 'slow to a crawl', 'wading through mud', 'as though wading', 'drag their feet', 'move slowly', 'plod', 'lumber', 'move as though'] },
   { id: 'spread', op: 'MODIFY_MOVEMENT', kinds: ['fire'], params: {}, mag: 'delta', dir: 1, neg: 'slower', phrases: ['spread', 'spread faster', 'race', 'leap', 'quicken'] },
   { id: 'faster', op: 'MODIFY_MOVEMENT', kinds: ['wolf'], params: {}, mag: 'delta', dir: 1, neg: 'slower', phrases: ['faster', 'quicker', 'run faster', 'speed up', 'move faster', 'run quicker'] },
   // light
   { id: 'brighter', op: 'CHANGE_LIGHT', kinds: ['lantern'], params: {}, mag: 'delta', dir: 1, neg: 'dimmer',
-    phrases: ['shine further', 'shine farther', 'shine twice as far', 'brighter', 'burn brighter', 'glow brighter', 'throw their glow further', 'reach further', 'double its light', 'double their light', 'light further', 'shine', 'cast * farther', 'cast * further', 'gleam farther', 'gleam further', 'reach farther', 'shine brighter', 'farther', 'further', 'glow farther', 'throw * farther'] },
+    phrases: ['carry far', 'carry farther', 'carry further', 'carry all the way', 'shine further', 'shine farther', 'shine twice as far', 'brighter', 'burn brighter', 'glow brighter', 'throw their glow further', 'reach further', 'double its light', 'double their light', 'light further', 'shine', 'cast * farther', 'cast * further', 'gleam farther', 'gleam further', 'reach farther', 'shine brighter', 'farther', 'further', 'glow farther', 'throw * farther'] },
   { id: 'dimmer', op: 'CHANGE_LIGHT', kinds: ['lantern'], params: {}, mag: 'delta', dir: -1, neg: 'brighter', phrases: ['dim', 'dimmer', 'fade'] },
   { id: 'hide', op: 'MODIFY_VISIBILITY', kinds: ['home', 'livestock'], params: {}, mag: 'delta', dir: -1, neg: 'reveal',
-    phrases: ['hide', 'hidden', 'conceal', 'veil', 'cloak', 'shroud', 'mask', 'invisible', 'unseen', 'hard to spot', 'hard to see', 'hard to find', 'hard for * to spot', 'hard for * to find', 'hard * to spot', 'out of sight', 'lost in the haze', 'slip from * notice', 'go unnoticed', 'unnoticed', 'have trouble finding', 'cannot find', 'struggle to find', 'vanish from sight'] },
+    phrases: ['cannot see', 'not see', 'unable to see', 'cannot smell', 'lose the scent', 'cannot scent', 'hide', 'hidden', 'conceal', 'veil', 'cloak', 'shroud', 'mask', 'invisible', 'unseen', 'hard to spot', 'hard to see', 'hard to find', 'hard for * to spot', 'hard for * to find', 'hard * to spot', 'out of sight', 'lost in the haze', 'slip from * notice', 'go unnoticed', 'unnoticed', 'have trouble finding', 'cannot find', 'struggle to find', 'vanish from sight'] },
   { id: 'reveal', op: 'MODIFY_VISIBILITY', kinds: ['home', 'livestock'], params: {}, mag: 'delta', dir: 1, neg: 'hide', phrases: ['reveal', 'expose', 'betray'] },
   // movement of wolves, chickens (and water, by the same stamp)
   { id: 'away', op: 'MOVE_AWAY', kinds: ['wolf', 'chicken'], params: {}, mag: 'magnitude', dir: 1, neg: 'ask',
-    phrases: ['keep away', 'keep * away', 'keep its distance', 'keep their distance', 'stay away', 'avoid', 'fear', 'flee', 'melt like mist', 'melt away', 'retreat', 'shun', 'back away', 'scatter', 'run from', 'stay clear', 'drive * away', 'away from', 'keep * from', 'keep * out of', 'give a wide berth', 'give * a wide berth', 'keep clear of', 'stay clear of', 'turn tail', 'stay back', 'keep back', 'keep off'] },
+    phrases: ['run away', 'run away from', 'scared of', 'afraid of', 'frightened of', 'keep * off', 'run back', 'go back', 'turn back', 'keep away', 'keep * away', 'keep its distance', 'keep their distance', 'stay away', 'avoid', 'fear', 'flee', 'melt like mist', 'melt away', 'retreat', 'shun', 'back away', 'scatter', 'run from', 'stay clear', 'drive * away', 'away from', 'keep * from', 'keep * out of', 'give a wide berth', 'give * a wide berth', 'keep clear of', 'stay clear of', 'turn tail', 'stay back', 'keep back', 'keep off'] },
   { id: 'toward', op: 'MOVE_TOWARD', kinds: ['wolf', 'chicken'], params: {}, mag: 'magnitude', dir: -1, neg: 'away',
     phrases: ['drawn to', 'draw', 'follow', 'come to', 'gather at', 'gather around', 'seek', 'flock to', 'love', 'hunt near', 'lure', 'come near', 'enter', 'cross', 'approach', 'lured toward', 'lured to', 'drawn toward', 'come toward', 'prowl toward', 'head for', 'close in on'] },
   // behaviour
   { id: 'courage', op: 'INFLUENCE_MOTIVATION', kinds: ['villager'], params: { motive: 'courage' }, mag: 'magnitude', dir: 1,
-    phrases: ['feel brave', 'brave', 'braver', 'bold', 'lose their fear', 'lose its fear', 'fearless', 'courage', 'courageous', 'fear leave', 'take heart', 'find their nerve', 'find * nerve', 'grow bolder', 'bolder', 'without fear', 'face * without fear', 'lose * fear', 'stand tall', 'braver than'] },
+    phrases: ['stop being afraid', 'stop being scared', 'no longer afraid', 'not afraid', 'unafraid', 'feel strong', 'hopeful', 'feel hopeful', 'take courage', 'feel brave', 'brave', 'braver', 'bold', 'lose their fear', 'lose its fear', 'fearless', 'courage', 'courageous', 'fear leave', 'take heart', 'find their nerve', 'find * nerve', 'grow bolder', 'bolder', 'without fear', 'face * without fear', 'lose * fear', 'stand tall', 'braver than'] },
   { id: 'calm', op: 'INFLUENCE_MOTIVATION', kinds: ['villager'], params: { motive: 'calm' }, mag: 'magnitude', dir: 1, phrases: ['feel calm', 'calm', 'calmer', 'at peace', 'peaceful', 'soothed', 'rest easy', 'calm down', 'settle', 'be at ease', 'at ease', 'sleep soundly'] },
   { id: 'diligence', op: 'INFLUENCE_MOTIVATION', kinds: ['villager'], params: { motive: 'diligence' }, mag: 'magnitude', dir: 1,
     phrases: ['work tirelessly', 'tireless', 'tirelessly', 'never tire', 'work harder', 'untiring', 'diligent', 'work without tiring', 'without tiring', 'never tiring', 'forget * weariness', 'forget their weariness', 'shake off * weariness', 'tireless hands', 'work through the night'] },
   // spawn
-  { id: 'hatch', op: 'SPAWN_BOUNDED_ENTITY', kinds: ['chicken'], params: { prefab: 'chicken' }, mag: 'count', dir: 1, phrases: ['hatch', 'be born', 'appear', 'breed', 'multiply', 'lay eggs', 'hatched', 'be hatched'] },
+  { id: 'hatch', op: 'SPAWN_BOUNDED_ENTITY', kinds: ['chicken'], params: { prefab: 'chicken' }, mag: 'count', dir: 1, phrases: ['have chicks', 'have baby chicks', 'more chicks', 'extra chicks', 'extra baby chicks', 'hatch', 'be born', 'appear', 'breed', 'multiply', 'lay eggs', 'hatched', 'be hatched'] },
   // two physical meanings: the player chooses
   { id: 'spared', op: 'MODIFY_DURABILITY', kinds: ['home', 'bridge'], params: {}, mag: 'delta', dir: 1, ask: ['stronger', 'fireproof'], phrases: ['spared', 'are spared', 'be spared', 'kept safe', 'come to no harm', 'unharmed', 'safe'] },
   { id: 'turn_field', op: 'GROW_ENTITY', kinds: ['field'], params: {}, mag: 'magnitude', dir: 1, ask: ['grow', 'decay'], phrases: ['turn', 'change colour', 'change color'] },
@@ -163,7 +163,7 @@ export const TRIGGERS: { event: TriggerEvent; phrases: string[]; min?: number }[
   { event: 'clear_night', phrases: ['clear night', 'night is clear', 'cloudless', 'not raining', 'no rain', 'dry night', 'does not rain', 'clear sky', 'without a cloud', 'without a single cloud', 'no cloud', 'no clouds', 'sky without a cloud', 'cloudless night', 'starry night'] },
   { event: 'night', phrases: ['at night', 'night', 'after dark', 'nightfall', 'after nightfall', 'every night', 'each night', 'tonight', 'dusk', 'night sky', 'moon', 'moonlight', 'beneath the moon', 'under the moon', 'star', 'starlight', 'midnight', 'under the stars', 'after sundown', 'once darkness falls', 'until dawn'] },
   { event: 'rain', phrases: ['when it rain', 'it rain', 'in the rain', 'raining', 'rainy', 'during rain', 'rain kiss', 'during the rain', 'when rain fall', 'in rainy weather', 'when it pours', 'when the rain come', 'rain come', 'showers fall'] },
-  { event: 'flood', phrases: ['river flood', 'the river floods', 'flood is high', 'high water', 'flood rise', 'water rise', 'in flood', 'when it floods', 'flood come', 'when the flood comes', 'break its banks', 'burst its banks', 'breaks its banks', 'river rise', 'waters rise'], min: 3 },
+  { event: 'flood', phrases: ['river flood', 'the river floods', 'flood is high', 'high water', 'flood rise', 'water rise', 'in flood', 'when it floods', 'flood come', 'when the flood comes', 'break its banks', 'burst its banks', 'breaks its banks', 'river rise', 'waters rise', 'water come', 'flood arrive', 'surge come', 'surge arrive', 'water reach'], min: 3 },
   { event: 'spoken', phrases: ['promise', 'story', 'tell a story', 'word', 'vow', 'oath', 'prayer', 'tale', 'spoken word', 'rhyme', 'chant', 'verse', 'words are spoken', 'word is spoken', 'said aloud', 'spoken aloud', 'aloud', 'blessing', 'charm', 'sermon', 'speech'] },
   { event: 'ritual', phrases: ['ritual', 'rite', 'ceremony', 'festival', 'procession', 'offering', 'rain dance', 'dance', 'rite is held', 'performed', 'perform', 'vigil'] },
   { event: 'always', phrases: ['always', 'at all times', 'every day', 'constantly', 'day and night'] },
@@ -195,6 +195,9 @@ export const STRENGTH: { phrase: string; value: number }[] = [
 
 export const NUMBERS: Record<string, number> = { one: 1, a: 1, single: 1, two: 2, pair: 2, couple: 2, three: 3, four: 4, five: 5, six: 6, ten: 10, dozen: 12, hundred: 100, thousand: 1000 };
 
+/** Units of measure after a number ("5000 metres", "minus five kilograms"): named and left out, never silently dropped. */
+export const MEASURE_UNITS = new Set(['metre', 'meter', 'm', 'centimetre', 'centimeter', 'cm', 'kilometre', 'kilometer', 'km', 'foot', 'feet', 'ft', 'inch', 'inche', 'yard', 'mile', 'league', 'kilogram', 'kilo', 'kg', 'gram', 'pound', 'lb', 'ton', 'tonne', 'degree', 'celsius', 'fahrenheit', 'litre', 'liter', 'gallon', 'mph']);
+
 export const NEGATORS = ['not', 'never', 'no', 'cannot', 'nobody', 'none', 'nothing', 'no longer', 'neither', 'nor', 'without'];
 
 /**
@@ -215,7 +218,7 @@ export const REASONS: ReasonDef[] = [
   { id: 'game', block: true, why: 'a belief is about the village, not about the game itself', phrases: ['infinite influence', 'influence', 'victory', 'declare victory', 'can never lose', 'cannot lose', 'win the game', 'game master', 'game', 'player', 'score', 'cheat', 'api key', 'developer mode', 'save file', 'delete save', 'call the tool', 'level up', 'mark this belief', 'fully supported', 'highest strength', 'maximum strength', 'max strength'] },
   { id: 'infinite_resource', block: true, why: 'nothing in the village is endless: lanterns burn fuel, food runs out', phrases: ['infinite', 'never go out', 'endless', 'unlimited', 'light themselves', 'light itself', 'never run out', 'never empty', 'refill itself', 'without using * fuel', 'without fuel', 'burn on forever', 'burn forever', 'never run dry', 'bottomless'] },
   { id: 'unbounded_spawn', block: true, why: 'no belief makes something from nothing without end: a coop holds twelve, and each chick costs food', phrases: ['without end', 'endlessly', 'infinitely', 'forever multiply'] },
-  { id: 'absolute', block: true, why: 'a belief acts on one village, night by night, and can be lost: it cannot reach everywhere or last forever', phrases: ['everywhere', 'forever', 'in the world', 'never again', 'eternally', 'for all time', 'nowhere', 'again'] },
+  { id: 'absolute', block: true, why: 'a belief acts on one village, night by night, and can be lost: it cannot reach everywhere or last forever', phrases: ['everywhere', 'forever', 'in the world', 'whole world', 'entire world', 'all the world', 'all over the world', 'across the world', 'the world over', 'never again', 'eternally', 'for all time', 'nowhere', 'again'] },
   { id: 'transform', block: true, why: 'turning one thing into another would make something from nothing; a belief can change how things behave, not what they are', phrases: ['turn into', 'turn to stone', 'transform into', 'change into', 'become a', 'turn to wine', 'turn into wine', 'turn to gold', 'turn into gold', 'turn to glass', 'turn to ice', 'turn to dust', 'turn to salt', 'turn to sand', 'turn to honey', 'turn to milk', 'turn to blood', 'turn into bread', 'turn to bread'] },
   { id: 'animals_not_modelled', block: true, why: 'this village has chickens, penned animals and wolves; no other animals are simulated', phrases: ['bee', 'cat', 'rat', 'mouse', 'mice', 'dog', 'horse', 'bird', 'crow', 'raven', 'owl', 'fish', 'frog', 'snake', 'fox', 'deer', 'pig', 'duck', 'goose', 'geese', 'insect', 'spider', 'moth', 'butterfly', 'swan', 'heron', 'cow bell'] },
   { id: 'incompatible', block: true, why: 'the village has nothing that could make that happen', phrases: ['freeze', 'frozen', 'ice', 'breathe', 'underwater', 'uphill', 'melt', 'boil', 'evaporate', 'explode', 'fly away with'] },
@@ -238,6 +241,7 @@ export const REASONS: ReasonDef[] = [
   { id: 'unknown_place', block: false, why: 'that place is not one a belief can be measured from: it can name a region or a landmark' },
   { id: 'third_clause', block: false, why: 'a balanced belief holds at most two clauses (three in Reality Lab)' },
   { id: 'too_many', block: false, why: 'numbers are bounded: the reading uses the largest the language allows' },
+  { id: 'measure', block: false, why: 'amounts are the game\'s own steps (a law lifts, lightens, warms or pulls by one to three), so a measure in metres, kilograms or degrees is left out' },
   { id: 'sky_bodies', block: false, why: 'the sun, moon and stars are not things the village can change; a clear night can still power a belief' },
   { id: 'not_here', block: false, why: 'this village does not have that, so that part cannot happen here' },
   { id: 'narrative', block: false, why: 'kept as flavour; it changes nothing in the simulation' },

@@ -1,0 +1,421 @@
+{
+ "name": "rules3-redbank",
+ "from": 1,
+ "seeds": 30,
+ "difficulty": "normal",
+ "scenarios": [
+  "redbank"
+ ],
+ "policies": [
+  "noop",
+  "spam-broad",
+  "evidence-first",
+  "bridge-persuasion",
+  "inventive-compound",
+  "careful-synergy",
+  "backfire-probe",
+  "ward-greedy",
+  "rival-antagonist"
+ ],
+ "cells": [
+  {
+   "scenario": "redbank",
+   "policy": "noop",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 7,
+   "wroteRate": 0,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 0,
+   "survival": 0.7142857142857142,
+   "homesLost": 8,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3,
+   "reach": 0,
+   "heard": 0,
+   "passDays": 7,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 41.400000000000006,
+   "msPerRun": 36.396277033333334,
+   "fails": {
+    "survivors": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": null,
+   "on": null,
+   "min": null
+  },
+  {
+   "scenario": "redbank",
+   "policy": "spam-broad",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 21,
+   "survival": 0.7142857142857142,
+   "homesLost": 8,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3,
+   "reach": 0.4133333333333335,
+   "heard": 1,
+   "passDays": 0,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0.06666666666666667
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 41.38,
+   "msPerRun": 915.2482898000001,
+   "fails": {
+    "survivors": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 48.90000000000001,
+   "on": 0.75,
+   "min": 6
+  },
+  {
+   "scenario": "redbank",
+   "policy": "evidence-first",
+   "n": 30,
+   "wins": 27,
+   "winRate": 0.9,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 6.066666666666666,
+   "nights": 1.9333333333333333,
+   "apSpent": 17.933333333333334,
+   "survival": 0.8738095238095239,
+   "homesLost": 4.4,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3.8,
+   "reach": 0.5256410256410258,
+   "heard": 1,
+   "passDays": 0.9333333333333333,
+   "effects": 1.9333333333333333,
+   "tests": {
+    "met": 0.6,
+    "failed": 0,
+    "lapsed": 0.16666666666666666
+   },
+   "demos": {
+    "ok": 2.2666666666666666,
+    "failed": 0
+   },
+   "keeperTrust": 41.389102564102565,
+   "msPerRun": 665.8436360999991,
+   "fails": {
+    "food": 3
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 26.899999999999984,
+   "on": 0.6499999999999999,
+   "min": 4
+  },
+  {
+   "scenario": "redbank",
+   "policy": "bridge-persuasion",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 6,
+   "nights": 2,
+   "apSpent": 18,
+   "survival": 0.7142857142857142,
+   "homesLost": 8,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3,
+   "reach": 0.8999999999999996,
+   "heard": 1,
+   "passDays": 1,
+   "effects": 0,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 2,
+    "failed": 0
+   },
+   "keeperTrust": 43.400000000000006,
+   "msPerRun": 751.0773685333317,
+   "fails": {
+    "survivors": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 8,
+   "on": 0.5500000000000003,
+   "min": 4
+  },
+  {
+   "scenario": "redbank",
+   "policy": "inventive-compound",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 6.566666666666666,
+   "nights": 1.4333333333333333,
+   "apSpent": 20.133333333333333,
+   "survival": 0.7142857142857142,
+   "homesLost": 8,
+   "hens": 11.3,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3,
+   "reach": 0.5433333333333333,
+   "heard": 1,
+   "passDays": 0,
+   "effects": 2.3,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0.03333333333333333
+   },
+   "demos": {
+    "ok": 0.9,
+    "failed": 0
+   },
+   "keeperTrust": 42.46999999999999,
+   "msPerRun": 970.3864731000018,
+   "fails": {
+    "survivors": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 21.700000000000003,
+   "on": 0.6499999999999999,
+   "min": 4
+  },
+  {
+   "scenario": "redbank",
+   "policy": "careful-synergy",
+   "n": 30,
+   "wins": 26,
+   "winRate": 0.8666666666666667,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 0,
+   "lawDay": null,
+   "nights": 0,
+   "apSpent": 18,
+   "survival": 0.8904761904761905,
+   "homesLost": 4.5,
+   "hens": 17.2,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3.8,
+   "reach": 0,
+   "heard": 0,
+   "passDays": 0.16666666666666666,
+   "effects": 0,
+   "tests": {
+    "met": 0.13333333333333333,
+    "failed": 0,
+    "lapsed": 0.16666666666666666
+   },
+   "demos": {
+    "ok": 0,
+    "failed": 0
+   },
+   "keeperTrust": 43.763222888222884,
+   "msPerRun": 1132.233204700001,
+   "fails": {
+    "survivors": 2,
+    "food": 2
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 4.8,
+   "on": 0.5500000000000003,
+   "min": 3
+  },
+  {
+   "scenario": "redbank",
+   "policy": "backfire-probe",
+   "n": 30,
+   "wins": 0,
+   "winRate": 0,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 6.3,
+   "nights": 1.7,
+   "apSpent": 18.6,
+   "survival": 0.7142857142857142,
+   "homesLost": 8,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3,
+   "reach": 0.4000000000000002,
+   "heard": 1,
+   "passDays": 0.7,
+   "effects": 1.4,
+   "tests": {
+    "met": 0.06666666666666667,
+    "failed": 0,
+    "lapsed": 0.06666666666666667
+   },
+   "demos": {
+    "ok": 0.7,
+    "failed": 0
+   },
+   "keeperTrust": 41.65999999999999,
+   "msPerRun": 947.2447627000006,
+   "fails": {
+    "survivors": 30
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 13.699999999999992,
+   "on": 0.6,
+   "min": 3
+  },
+  {
+   "scenario": "redbank",
+   "policy": "ward-greedy",
+   "n": 30,
+   "wins": 24,
+   "winRate": 0.8,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 5.8,
+   "nights": 2.2,
+   "apSpent": 17.433333333333334,
+   "survival": 0.8500000000000001,
+   "homesLost": 4.133333333333334,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3.7333333333333334,
+   "reach": 0.48559440559440564,
+   "heard": 1,
+   "passDays": 1.1666666666666667,
+   "effects": 2.2,
+   "tests": {
+    "met": 0.13333333333333333,
+    "failed": 0,
+    "lapsed": 0.13333333333333333
+   },
+   "demos": {
+    "ok": 2.1333333333333333,
+    "failed": 0
+   },
+   "keeperTrust": 41.33241647241646,
+   "msPerRun": 722.1040949999966,
+   "fails": {
+    "survivors": 6
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 26.899999999999984,
+   "on": 0.6499999999999999,
+   "min": 4
+  },
+  {
+   "scenario": "redbank",
+   "policy": "rival-antagonist",
+   "n": 30,
+   "wins": 23,
+   "winRate": 0.7666666666666667,
+   "endDay": 7,
+   "wroteRate": 1,
+   "lawRate": 1,
+   "lawDay": 5.8,
+   "nights": 2.2,
+   "apSpent": 17.366666666666667,
+   "survival": 0.8476190476190477,
+   "homesLost": 4.2,
+   "hens": 20.066666666666666,
+   "livestock": 0,
+   "fields": 3,
+   "pooled": 0,
+   "side": 3.7333333333333334,
+   "reach": 0.4840792540792541,
+   "heard": 1,
+   "passDays": 0.03333333333333333,
+   "effects": 2.2,
+   "tests": {
+    "met": 0,
+    "failed": 0,
+    "lapsed": 0
+   },
+   "demos": {
+    "ok": 2.1666666666666665,
+    "failed": 0
+   },
+   "keeperTrust": 41.35615384615384,
+   "msPerRun": 732.3662968000009,
+   "fails": {
+    "survivors": 7
+   },
+   "opposed": 0,
+   "harmed": 0,
+   "power": 26.899999999999984,
+   "on": 0.6499999999999999,
+   "min": 4
+  }
+ ],
+ "diversity": {
+  "redbank": {
+   "viable": [
+    "evidence-first",
+    "careful-synergy",
+    "ward-greedy",
+    "rival-antagonist"
+   ],
+   "entropy": 2
+  }
+ }
+}

@@ -2,6 +2,11 @@ import { RULES_VERSION, SCHEMA_VERSION, type ClaimDef, type RunState } from '../
 import { verifyCustomClaim } from '../nl/build.ts';
 import { verifyRealityClaim } from '../reality/build.ts';
 import { MAX_LEDGER_ENTRIES, type Ledger } from './ledger.ts';
+import { MAX_CHICKENS, MAX_STONES } from '../reality/state.ts';
+
+/** caps a real run never reaches (a 14-day chapter logs a few hundred events; coops are one per home) */
+const MAX_LOG_EVENTS = 50_000;
+const MAX_COOPS = 64;
 
 export const SAVE_FORMAT = 'belief-engine-save';
 
@@ -66,6 +71,18 @@ export function deserializeRun(json: string): LoadResult {
   const w = st.world as Record<string, unknown>;
   if (!isObj(w) || !Array.isArray(w.terrain) || !Array.isArray(w.elev) || typeof w.w !== 'number' || typeof w.h !== 'number' || w.terrain.length !== (w.w as number) * (w.h as number))
     return { ok: false, error: 'The save has a corrupt map.' };
+  // more of anything than a run can make is a crafted file, not a save: refuse it before anything iterates over it
+  if ((st.log as unknown[]).length > MAX_LOG_EVENTS || (Array.isArray(st.history) && (st.history as unknown[]).length > 400) || (st.villagers as unknown[]).length > 200)
+    return { ok: false, error: 'The save holds more than a run can make.' };
+  if (isObj(st.v2)) {
+    const v2 = st.v2 as Record<string, unknown>;
+    const over = (k: string, max: number) => Array.isArray(v2[k]) && (v2[k] as unknown[]).length > max;
+    // the dead stay on the list (their fate is part of the story), so it grows by at most one flock a dawn; the living never pass the cap
+    const hens = Array.isArray(v2.chickens) ? (v2.chickens as unknown[]) : [];
+    const living = hens.filter((c) => !isObj(c) || c.alive !== false).length;
+    if (living > MAX_CHICKENS || hens.length > MAX_CHICKENS * ((st.day as number) + 1) || over('stones', MAX_STONES) || over('coops', MAX_COOPS))
+      return { ok: false, error: 'The save holds more hens, stones or coops than a run can make.' };
+  }
   // a belief the player wrote is rebuilt from its structure; a save whose numbers were edited by hand is not accepted as one
   for (const c of st.claims as unknown[]) {
     const def = isObj(c) && isObj(c.def) ? (c.def as unknown as ClaimDef) : null;

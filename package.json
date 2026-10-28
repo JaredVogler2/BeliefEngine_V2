@@ -25,9 +25,10 @@
     "test:e2e": "playwright test",
     "test:e2e:classic": "playwright test --project=desktop --project=phone",
     "test:e2e:3d": "playwright test --project=desktop-3d --project=phone-3d",
-    "test:e2e:browsers": "BE_CROSS_BROWSER=1 playwright test tests/e2e/smoke.spec.ts --project=desktop --project=firefox --project=webkit --project=iphone",
+    "test:e2e:browsers": "BE_CROSS_BROWSER=1 playwright test tests/e2e/smoke.spec.ts --project=desktop --project=firefox --project=webkit --project=iphone --project=iphone-se --project=iphone-max",
     "test:sim": "tsx scripts/tournament.ts",
     "test:sim:smoke": "tsx scripts/tournament.ts --smoke",
+    "test:sim:v2": "tsx scripts/sim-v2.ts",
     "mcp": "tsx mcp/server.ts",
     "gen:verify": "tsx scripts/verify-expeditions.ts --from 1 --to 1000 --catalog",
     "mcp:demo": "tsx mcp/agent-demo.ts",
@@ -40,7 +41,9 @@
     "acceptance:fun": "tsx scripts/acceptance-fun.ts",
     "acceptance:novice": "tsx scripts/novice-pass.ts",
     "monkey": "tsx scripts/monkey.ts",
-    "eval": "tsx scripts/eval.ts"
+    "eval": "tsx scripts/eval.ts",
+    "scan:secrets": "tsx scripts/scan-secrets.ts",
+    "ai:monitor": "tsx scripts/ai-monitor.ts"
   },
   "dependencies": {
     "ai": "7.0.155",

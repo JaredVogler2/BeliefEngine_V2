@@ -7,7 +7,7 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 |---|---|---|
 | 01 V1 audit | **VERIFIED** | [`V1_AUDIT.md`](V1_AUDIT.md); V1 baseline run in a clone ([`BASELINE.md`](BASELINE.md)) |
 | 02 Migration and baseline | **VERIFIED** | [`MIGRATION.md`](MIGRATION.md), [`BASELINE.md`](BASELINE.md), `tests/unit/v2-migration.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
-| 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
+| 03 Provider, auth, budgets | **VERIFIED with mocks, a real Redis and an offline `vercel build`; LIVE UNVERIFIED (no credential); NOT DEPLOYED** | [`AI_SETUP.md`](AI_SETUP.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), `tests/unit/ai-*.test.ts`, `tests/e2e/v2-online.spec.ts`, [`screenshots/v2-phase03/`](screenshots/v2-phase03/) |
 | 04 Generative belief language | **VERIFIED (gate: typed, validated, deterministic, V1-compatible, three novel executable claims, property tests); the interactive preview UI arrives with phase 05's composer** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md), `tests/unit/reality-language.test.ts`, `tests/unit/reality-properties.test.ts`, `tests/fixtures/reality-corpus-1.json` |
 | 05 Interpreter and compiler | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider configured: model accuracy, latency and token cost not measured). On sentences neither reader was tuned on, the offline reader v2 reads 13/30 supported sentences faithfully against V1's 3/30 (labels 51/80 against 34/80); it refuses rather than invents (1 invented effect in 32 impossible sentences, 0/7 injections obeyed); written beliefs become executable rules that change the world (integration test, two villages) | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
 | 06 Simulation primitives | **VERIFIED (gate)**: executor, 17 operators, chickens and loose stones in engine tests; hens, stones and the raised bank drawn on the classic map and in 3D and checked in the browser from belief to changed scene (phase 09). Stated limits: floodwater turned aside is not conserved elsewhere, faster growth has no water demand; effects are drawn as state, animated in phase 10 | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts`, `tests/e2e/v2-world3d.spec.ts` |
@@ -16,13 +16,132 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 09 Belief-to-reality bridge | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** A typed sentence becomes law only through the whole chain (preview → hashed confirmation → real persuasion → threshold with hysteresis → catalyst → executor → V1 hazards), proven in the browser for the three proof claims plus a complete win and a complete loss; below threshold nothing happens; replays need no model and no network. Measured: written beliefs reach law in 6-9 days, so they rarely decide a chapter (phase 11) | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md), entry below, [`screenshots/v2-phase09/`](screenshots/v2-phase09/) |
 | 10 3D visual effects | **IN PROGRESS: the effect registry and three physical laws in 3D VERIFIED (they match canonical state, tested over the recorded chains and in the browser); the gate's "looks like premium real-time gameplay" NOT MET by my own reading (the art stages of the 3D plan remain); frame times on a GPU or phone UNVERIFIED** | [`3D_EFFECTS.md`](3D_EFFECTS.md), `tests/unit/render3d-reality.test.ts`, `tests/e2e/v2-world3d.spec.ts`, [`screenshots/v2-phase10/`](screenshots/v2-phase10/) |
 | 11 Generative gameplay and balance | **VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds strategic variety" needs a provider). Under the old rules no written-belief policy won a single seed of 30 in any chapter; under rules 2 (recorded per run; older runs replay exactly) written beliefs win in all three (Redbank 27/30, Harvest 28/30, Ashwood 21/30), a decoy belief backfires on 11 of 30, the dominant cheap win (a written copy of the unpicked opening story, 20/20) is closed (0/30); four modes with separate records; leaders stand against magic that harms livelihoods | [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md), [`data/tournament-v2/`](data/tournament-v2/), `tests/unit/gameplay-v2.test.ts`, `tests/e2e/v2-modes.spec.ts`, [`screenshots/v2-phase11/`](screenshots/v2-phase11/) |
-| 12 Desktop and iPhone UX | **VERIFIED in Chromium (desktop and phone profile, four iPhone sizes); WebKit and the iPhone 14 profile run in CI's cross-browser smoke; real iPhone Safari UNVERIFIED; LIVE UNVERIFIED.** A main menu that names every mode; the composer keeps an unsent belief and its reading, can stop an online reading, falls back on an outage with nothing spent; "who tells it first" after writing; a villager card that answers what they think, why, whether they would listen and what they will do, with a "Why?" link to the event; the debrief says what a written law cost; a new seed keeps the V2 mode (it used to start a Classic run) | [`UX_V2.md`](UX_V2.md), entry below, `tests/e2e/v2-ux.spec.ts`, [`screenshots/v2-phase12/`](screenshots/v2-phase12/) |
+| 12 Desktop and iPhone UX | **VERIFIED in Chromium (desktop and phone profile, four iPhone sizes); the Generative smoke VERIFIED in CI on WebKit, the iPhone 14 profile and Firefox (run 40644114976); real iPhone Safari UNVERIFIED; LIVE UNVERIFIED.** A main menu that names every mode; the composer keeps an unsent belief and its reading, can stop an online reading, falls back on an outage with nothing spent; "who tells it first" after writing; a villager card that answers what they think, why, whether they would listen and what they will do, with a "Why?" link to the event; the debrief says what a written law cost; a new seed keeps the V2 mode (it used to start a Classic run) | [`UX_V2.md`](UX_V2.md), entry below, `tests/e2e/v2-ux.spec.ts`, [`screenshots/v2-phase12/`](screenshots/v2-phase12/) |
 | 13 MCP and tool play | **VERIFIED locally (stdio, the official SDK client): an agent plays a whole Generative Reality run through tools on the browser's own state hash; online reading through MCP TESTED MOCK ONLY; LIVE UNVERIFIED; a model-powered V2 agent session NOT RUN; remote Streamable HTTP NOT BUILT** (no durable shared store). V1 tools unchanged | [`MCP_V2.md`](MCP_V2.md), entry below, `tests/unit/mcp-v2*.test.ts`, [`data/mcp/v2-hens-session.md`](data/mcp/v2-hens-session.md) |
 | 14 Replay, persistence and evals | **VERIFIED offline (gate met): a Generative run replays like a Classic one once its inputs are recorded; a complete browser win and four losses replay offline with no provider call; evaluations measured offline and with MOCK stand-ins, LIVE not run** | [`REPLAY_V2.md`](REPLAY_V2.md), entry below, [`data/evals/REPORT.md`](data/evals/REPORT.md), `tests/unit/ledger*.test.ts`, `tests/unit/evals.test.ts` |
-| 15-17 | NOT STARTED | |
+| 15 Security, privacy, cost and failure | **VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.** Threat model with every attack mapped to a control and a test; a chaos suite (hostile text, hostile structures, a heavier compute load than play can reach, physics limits, double taps, stale confirmations, session scopes, CORS and caching headers, a cold start); the secret scan runs in CI over every tracked file, every commit and the built site; gateway privacy routing (no training always, zero retention by setting); an operator cost monitor. Found and fixed four defects (entry) | [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), entry below, `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts` |
+| 16 Integration and release testing | **Integrated but not live-tested: the six journeys PASS offline and with scripted providers (A Classic offline, B novel laws, C living society, D replay, E MCP over stdio, F phone sizes in Chromium and CI WebKit); V2 runs at scale replay exactly from stored model outputs; LIVE UNVERIFIED; NOT DEPLOYED** | [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md), [`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md), entry below |
+| 17 Adversarial fun review | **Review done; two P0 and five P1 fixed and VERIFIED offline, with mocks and in Chromium; FUN SUBJECTIVE/UNVERIFIED (no playtest); LIVE UNVERIFIED; NOT DEPLOYED.** A model could swap what a sentence's change is (289 of 292 swapped readings trusted → 11); the composer's price was not always the charge (4 of 72 → 0 of 108); written-belief rules 3 price a ward around every home for the ground it covers; ideas, offers, flavour and wording fixed; a first-time player's sentence is understood 35 of 69 times (blind held-out set). V2 is not complete: LIVE, deployment, a playtest and the premium 3D look remain | [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md), [`data/fun-review-v2/`](data/fun-review-v2/), [`data/tournament-v2/`](data/tournament-v2/) `rules3-*`, `tests/unit/reality-rules3.test.ts`, `tests/e2e/v2-review.spec.ts`, [`screenshots/v2-phase17/`](screenshots/v2-phase17/) |
 | 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
+
+---
+
+## 2026-10-28 — Phase 17: adversarial fun review (fixes VERIFIED; FUN UNVERIFIED; LIVE UNVERIFIED; NOT DEPLOYED)
+
+**What was done** (reference: [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md); fixes in `d3b83c1`)
+
+- **Reviewed** as eight reviewers against the running code: ten failure cases with reproductions and code paths, four non-issues
+  checked, the seven questions answered from evidence, a rubric. Evidence script `scripts/fun-review-v2.ts`, run on this tree and on a
+  checkout of `5132f26` for the "before" numbers ([`data/fun-review-v2/`](data/fun-review-v2/)).
+- **P0-1 effect fidelity**: a model's reading is held to the change its words name (`fidelity.ts` `changesNamed`); swapped-effect
+  readings trusted at full confidence 289/292 → 11/292, honest readings unchanged (191/193).
+- **P0-2 price truth**: the composer's price is the engine's charge for every run (4 of 72 written beliefs showed 3 and charged 2, and
+  the button refused a legal write); MCP reports the same number.
+- **P1 fixes**: written-belief rules 3 (a clause measured from every landmark of a kind priced for the ground they cover; the charge from
+  the whole power; "Every night", "any home", the acting reach; a Living Village stays under 2); village-aware ideas (Ashwood 0/3 →
+  3/3 understood); helpful offers for impossible sentences (3/8 harmful → 0/8); flavour kept and shown; no repeated left-out line;
+  reader `offline-v2.3` (place words, merged repeats, typed contractions) and its anchor phrases indexed by word (reading p50
+  12.9 → 2.5 ms).
+- **Measured honestly**: two blind sets of first-time players' sentences written by independent agents; the dev set the fixes used:
+  22/68 → 36/68; the held-out set: 34/69 → **35/69**; impossible sentences accepted: 0 both. The rules-3 tournament (30 seeds a chapter)
+  is published: Redbank's spamming village-wide ward 20/30 → 0/30, lantern-ward play unchanged; Harvest unchanged; Ashwood's best bot
+  policy 21/30 → 15/30 (its three-hamlet ward now costs what it always showed).
+
+**Commands and results**: lint and typecheck clean; `npm test` 60 files, 684 passed; the V2 browser specs (bridge, ux, journeys,
+reality, modes, online, minds) on desktop and phone 52 passed, 20 skipped by design; `v2-review.spec.ts` 6 passed (screenshots in
+[`screenshots/v2-phase17/`](screenshots/v2-phase17/)); `v2-world3d` and `v2-bridge` on desktop-3d 4 passed; the flaky 3D phone
+person-click (CI on `5132f26`) passed 6 of 6 repeats after the fix; `npm run eval`: corpora unchanged (172/172, 78/80, 51/80);
+`test:sim:v2` at 20 seeds and 40 villages under rules 3: 620 of 620 replayed exactly, 8,212 stand-in decisions accepted, 0 refused;
+`npm run size` entry 296 KB gzip of 300. Chains recorded under rules 1 and 2 replay to their recorded hashes.
+
+**Not verified:** FUN (no human playtest; all judgements are the reviewers'); LIVE (no credential: no model-backed playthrough, no
+no-key/live comparison); a real iPhone; a GPU; the premium 3D look. NOT DEPLOYED. V2 is not complete by the strict finish.
+
+---
+
+## 2026-10-28 — Phase 16: integration and release testing (integrated but not live-tested; NOT DEPLOYED)
+
+**What was done** (references: [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md))
+
+- **Journeys as tests.** A: `tests/e2e/v2-journeys.spec.ts` plays V1's recorded Classic win by clicks and a loss with every request
+  watched (0 to `/api`, 0 off-origin), both on V1's hashes and both confirmed by the debrief's on-device replay. B: the same spec types
+  "chickens rise into the air when bells sound" (read as the hens' lift on the bell, previewed, nothing spent) and a sentence whose
+  "time runs backwards" clause is named and left out; `tests/unit/journeys-v2.test.ts` checks the readings and preview headless.
+  C: six named villagers with different goals hear one new belief at a gathering; their intentions differ (proof-seekers look for
+  proof); staging it before it is law backfires, all six lose conviction and some change plans; over the recorded "rain" chain trust
+  moves on 5+ edges and a faction endorses; the scripted stand-in's decisions pass the server's and the engine's checks, change
+  nothing until dusk, and replay with no model. D: a belief read by "a model" (the stand-in) replays from its recorded structure while
+  a newer model id that reads the words as a stronger lift changes nothing; truncated, future, edited saves and an edited ledger are
+  refused by name. E: the real stdio test gained stale and repeated confirmations, a villager's answer and inspection. F: the
+  cross-browser smoke now runs on WebKit at iPhone SE (320), iPhone 14 (390) and iPhone 14 Pro Max (430).
+- **At scale with stored model outputs.** `scripts/sim-v2.ts` (`npm run test:sim:v2`): V2 policies over three chapters, the Lab, the
+  Living Village and generated villages; every morning the stand-in decides for the villagers due to think (through the server's
+  task code) and every written belief is read again by it; each run then replays from options + actions alone to the same hashes
+  with an identical ledger. At 20 seeds and 40 generated villages ([`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md)): 620 runs, 4,942 game days, 8,356 stand-in decisions accepted (0 refused), 500 beliefs written with the stand-in's reading, 3,171 ledger entries, and **620 of 620 replayed exactly** (636 s, sharing the machine with the browser suite). MOCK ONLY.
+- **Release documents.** `docs/FINAL_ACCEPTANCE.md` (V2's table; V1's moved to `docs/v1/`), `docs/RELEASE.md` (install, build,
+  verify, Vercel settings by name, OIDC, cost caps, rollback), the README's Classic-offline / Generative table (and no "LLM-enabled"
+  claim while LIVE is unverified). The hosting check now also plays a Generative Reality run under the production CSP.
+
+**Commands and results**: the new journey tests pass (`journeys-v2.test.ts` 7, `mcp-v2-stdio.test.ts` 4, `v2-journeys.spec.ts` 3 passed and 1 skipped by design); `npm run verify:hosting` verified with the Generative Reality flow; `npm run test:sim:smoke` 256/256, SMOKE OK; `npm run typecheck` and lint clean. `npm test` 59 files, 670 passed; the whole Chromium suite (desktop + phone) 195 passed, 73 skipped by design, 0 failed (20.7 min); `test:sim:v2` at 20 seeds and 40 villages: 620 of 620 replayed exactly; `npm run size` entry 295 KB gzip of 300; `npm run scan:secrets -- --history --dist` clean; screenshots in [`screenshots/v2-phase16/`](screenshots/v2-phase16/). The 3D suite and the cross-browser smoke run in CI.
+
+**Not verified:** LIVE (no credential): the live checklist is listed and not run; NOT DEPLOYED (no authorisation); no human playtest;
+no real iPhone; no GPU.
+
+---
+
+## 2026-10-28 — Phase 15: security, privacy, cost and failure (VERIFIED with mocks; LIVE UNVERIFIED; NOT DEPLOYED)
+
+**What was done** (references: [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md))
+
+- **Threat model** over phase 03's service and everything built since: what is protected, the trust boundaries, the untrusted
+  inputs, and a table mapping each attack the prompt names to its control and the test that shows it.
+- **Chaos suite** (`tests/unit/security-chaos.test.ts`, 14 tests, adding to phase 03's `ai-*.test.ts`): BiDi, zero-width and control
+  characters, markup, fake tool calls and "SYSTEM:" instructions in the browser reader and through MCP (stripped, read as words,
+  instructions refused by name, state unchanged); a path-escaping run id (`BAD_RUN_ID`); a trigger nested 200 deep and an OR of 10,000
+  (refused in under 50 ms); crafted saves with 10,000 hens or a 60,000-event log (refused before anything iterates); the five beliefs
+  a Lab run may write (13 clauses) forced live every night with the bell rung and every beacon lit (all five act, 11-13 clauses a
+  night, slowest night 25-46 ms here against a 500 ms budget, no clause past 40 targets); double taps (one charge; `ALREADY_SPOKE`);
+  a stale reading (`STALE_REVISION`, nothing spent); an unknown model id (priced at the worst case); a reading-only session asking
+  for villager decisions (refused, provider never called); `no-store`, `nosniff`, JSON and **no CORS grant** on every answer
+  including a 415; a **cold start** (a brand-new instance honours the old one's sessions and its spent cap).
+- **Physics limits** (`physics limits` in the same suite): time reversal, code, the game itself, endless resources, the whole world,
+  ten thousand chicks and invented units are refused or named as left out, identically in balanced play and the Lab; what a partial
+  reading keeps stays inside every operator's bounds; a spawn law forced live all chapter never keeps more hens alive than the caps
+  allow, every chick costs food, and the save still loads. The reader gained two names for things it used to narrow or drop
+  silently: "the whole world" (now `absolute`, as "everywhere" already was) and a number with a unit (`measure`: "5000 metres high"
+  is the ordinary lift, now said). Checked against all 332 corpus sentences before and after: every reading identical, so no
+  evaluation number moved (reader id unchanged).
+- **Secrets**: `npm run scan:secrets` (`scripts/scan-secrets.ts`): eleven credential patterns plus tracked env files and `.gitignore`;
+  names file, line and rule, never the value. CI now checks out the whole history and runs it over every tracked file and every line
+  added by every commit (`--history`), and over the built site after the build (`--dist`, which also refuses any credential name in
+  the bundle). Clean.
+- **Privacy routing**: every gateway call asks for providers that do not train on what they are sent (`disallowPromptTraining`, all
+  plans, no extra cost) and, with `BE_AI_ZERO_RETENTION=1`, zero data retention (Pro and Enterprise); a provider that cannot comply
+  refuses and the player reads offline. Read from Vercel's docs (updated 2026-09-10 and 2026-09-22) and from the installed
+  `@ai-sdk/gateway` 4.0.128 types. `/api/ai-status` reports the routing; the consent notice says it.
+- **Cost monitor**: the meter now records spend per model, fallbacks and the application's own quota refusals; `npm run ai:monitor`
+  prints the operator panel from `/api/ai-metrics` (live server, `--watch`, or `--demo` in-process with the scripted provider).
+
+**Found and fixed on the way**
+
+1. My first cut of the save caps refused **honest** saves: dead hens stay on the list, so a run with a hatching law passes 24 entries.
+   The spawn test caught it (mutation-checked: the old cap fails it); the cap is now on living hens plus at most one flock a dawn.
+2. A quota refusal kept the session's in-flight lease until it expired, so the next request read "busy" instead of the real reason;
+   the lease is now released at once.
+3. Quota refusals were invisible to the operator; they now count as fallbacks.
+4. The first compute test claimed three acting laws when only one acted (two were authored-story twins held until day 4, and finite
+   attention means no village holds five written beliefs strongly at once). It now forces the laws live and asserts that all five act.
+
+**Commands and results** (this machine): `npm run lint` clean; `npm run typecheck` clean; `npm test` 58 files, 662 tests passed
+(112 s, with a real Redis); the browser specs the consent notice touches (`v2-online`, `v2-reality`, `v2-minds`, `v2-ux`, `smoke`) on the desktop and phone
+projects: 42 passed, 14 skipped by design, 0 failed (2.2 min); `npm run size`: entry 295 KB gzip of 300; `npm run scan:secrets -- --history --dist` clean; `npm run ai:monitor -- --demo` (output in
+[`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md)); V1 golden hashes unchanged (Classic untouched).
+
+**Not verified:** any live provider behaviour, including the privacy routing at the real gateway (**LIVE: UNVERIFIED**); a deployment
+(**NOT DEPLOYED**); Upstash itself (a shim over real Redis stands in). **Known limits:** no bot check on `/api/session` yet; secret
+scanning is pattern-based; provider retention without zero data retention is the provider's policy.
 
 ---
 
@@ -477,7 +596,7 @@ PROGRESS. The entry bundle has 9 KB gzip of headroom left: phase 05 loads the re
 - Checked the current APIs before writing code: `ai@7.0.155` (latest; `generateText` + `Output.object`, `instructions` replaces the
   deprecated `system`), `@ai-sdk/gateway@4.0.128` (API key, else OIDC), the gateway budget and OIDC docs (updated 2026-09-08/10),
   and the public model catalog (496 models; defaults `anthropic/claude-haiku-5.5` $0.10/$0.50 and `anthropic/claude-sonnet-5.5`
-  $2/$10 per million tokens). Recorded in [`AI_SETUP.md`](AI_SETUP.md) and [`AI_COSTS.md`](AI_COSTS.md).
+  $2/$10 per million tokens). Recorded in [`AI_SETUP.md`](AI_SETUP.md) and [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md).
 - Built `server/ai/` as one transport-free app behind five Vercel Functions in `api/`: `GET /api/ai-status`, `POST /api/session`
   (consent + allowed origin + per-network rate → HMAC-signed 2 h token), `POST /api/interpret-belief` (the V1 vocabulary contract;
   phase 05 adds v2), `POST /api/npc-decision` (validated against each villager's own moves, targets and memories),
@@ -515,7 +634,7 @@ PROGRESS. The entry bundle has 9 KB gzip of headroom left: phase 05 loads the re
 has been called. **LIVE: UNVERIFIED.** No Vercel project exists for this repository: **NOT DEPLOYED.**
 
 **Known limits:** no CAPTCHA/BotID (sessions are rate-limited per network; project-wide call and dollar caps bound the total); the
-Upstash REST protocol is exercised through a local shim over real Redis, not against Upstash itself; costs in `AI_COSTS.md` are
+Upstash REST protocol is exercised through a local shim over real Redis, not against Upstash itself; costs in `COST_AND_QUOTAS.md` are
 list-price arithmetic, not measurements.
 
 ---

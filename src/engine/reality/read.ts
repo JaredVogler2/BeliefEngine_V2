@@ -1,13 +1,13 @@
 import type { RunState } from '../core/types.ts';
 import { sanitizeText } from '../nl/parse.ts';
 import { regionAt } from '../world/grid.ts';
-import { LAB_LIMITS, LIMITS, validateRealityAst, type Clause, type Condition, type Effect, type Omission, type RealityAst, type Trigger, type TriggerEvent } from './ast.ts';
+import { LAB_LIMITS, LIMITS, sameChange, validateRealityAst, type Clause, type Condition, type Effect, type Omission, type RealityAst, type Trigger, type TriggerEvent } from './ast.ts';
 import { buildRealityClaim, clauseText, type RealityBuild } from './build.ts';
 import { realityRules } from './state.ts';
 import { ANCHOR_WORDS, KINDS, REALITY_LANG, type TargetKind } from './ontology.ts';
 import { OPERATORS, type OpId } from './operators.ts';
 import {
-  ACTIVE_MODIFIERS, CONDITIONS, FLAVOR, ILLNESS_WORDS, INSTRUCTION_PATTERNS, IRREGULAR, KIND_WORDS, NEAR_PREPS, NEGATORS, NUMBERS, PRONOUNS, READER_ID, REASONS, SENSES,
+  ACTIVE_MODIFIERS, CONDITIONS, FLAVOR, ILLNESS_WORDS, INSTRUCTION_PATTERNS, IRREGULAR, KIND_WORDS, MEASURE_UNITS, NEAR_PREPS, NEGATORS, NUMBERS, PRONOUNS, READER_ID, REASONS, SENSES,
   SPEECH_VERBS, STRENGTH, SUBORDINATORS, TRIGGERS, UNKNOWN_PLACES, type ReasonDef, type Sense,
 } from './lexicon.ts';
 
@@ -78,6 +78,8 @@ const CONTRACTIONS: [RegExp, string][] = [
   [/\bcan['’]t\b/g, 'cannot'], [/\bwon['’]t\b/g, 'will not'], [/\bdon['’]t\b/g, 'do not'], [/\bdoesn['’]t\b/g, 'does not'], [/\bdidn['’]t\b/g, 'did not'],
   [/\bisn['’]t\b/g, 'is not'], [/\baren['’]t\b/g, 'are not'], [/\bwasn['’]t\b/g, 'was not'], [/\bshouldn['’]t\b/g, 'should not'], [/\bcouldn['’]t\b/g, 'could not'],
   [/\bwouldn['’]t\b/g, 'would not'], [/\bain['’]t\b/g, 'is not'], [/\bcan not\b/g, 'cannot'], [/\bit['’]s\b/g, 'it is'], [/['’]s\b/g, ''], [/s['’](?=\s|$)/g, 's'],
+  // the same, typed without the apostrophe ("the wolves cant see", "so it dont reach the homes")
+  [/\bcant\b/g, 'cannot'], [/\bdont\b/g, 'do not'], [/\bdoesnt\b/g, 'does not'], [/\bdidnt\b/g, 'did not'], [/\bisnt\b/g, 'is not'], [/\barent\b/g, 'are not'], [/\bwont\b/g, 'will not'], [/\bcouldnt\b/g, 'could not'], [/\bwouldnt\b/g, 'would not'],
 ];
 
 /** Lower case, contractions spelled out, possessives dropped, punctuation kept as its own token (clause boundaries). */
@@ -105,6 +107,7 @@ export function stripInstructions(text: string): { rest: string; removed: string
 }
 
 const PUNCT = new Set([',', ';', '.', '!', '?', ':']);
+const MEASURE = REASONS.find((r) => r.id === 'measure')!;
 const DETERMINERS = new Set(['the', 'a', 'an', 'our', 'every', 'each', 'all', 'no', 'this', 'that', 'these', 'those', 'its', 'their', 'his', 'her', 'my', 'your', 'any']);
 const JOINERS = new Set(['and', 'but', 'then', 'yet']);
 const SPLIT_SUBS = new Set(['when', 'whenever', 'while', 'if', 'unless', 'wherever', 'until']);
@@ -216,14 +219,28 @@ const SENSE_INDEX: [string, Sense[]][] = (() => {
   return [...m.entries()];
 })();
 
-const ANCHOR_MODS = ['lit', 'burning', 'glowing', 'shining', 'ringing', 'pealing', 'tolling', 'chiming', 'old', 'village', 'our'];
-const ANCHOR_PHRASES: { phrase: string; anchor: string; radius: number; active: boolean }[] = (() => {
-  const out: { phrase: string; anchor: string; radius: number; active: boolean }[] = [];
-  for (const [anchor, words] of Object.entries(ANCHOR_WORDS))
-    for (const w of words)
-      for (const prep of NEAR_PREPS)
-        for (const mods of [[], ['the'], ['a'], ...ANCHOR_MODS.map((x) => [x]), ...ANCHOR_MODS.map((x) => ['the', x])])
-          out.push({ phrase: [prep.phrase, ...mods, w].join(' '), anchor, radius: prep.radius, active: mods.some((x) => (ACTIVE_MODIFIERS[anchor] ?? []).includes(x)) });
+const ANCHOR_MODS = ['lit', 'burning', 'glowing', 'shining', 'ringing', 'pealing', 'tolling', 'chiming', 'old', 'village', 'our', 'every', 'each', 'all', 'all the', 'their', 'animal'];
+const QUANTIFIER_MODS = new Set(['every', 'each', 'all', 'all the', 'their', 'animal']);
+/** Verbs whose object is the place itself ("wolves avoid the pens"); only for places that are not also a power (the lanterns, the bell). */
+const PLACE_VERBS = ['avoid', 'shun', 'fear', 'flee', 'flee from', 'circle', 'stay off', 'keep off'];
+const POWER_ANCHORS = new Set(['belltower', 'beacon', 'campfire']);
+type AnchorPhrase = { phrase: string; anchor: string; radius: number; active: boolean };
+/** Every way of naming a place to measure from, grouped by the place's word (a sentence is only tried against the words it has). */
+const ANCHOR_PHRASES: [string, AnchorPhrase[]][] = (() => {
+  const out: [string, AnchorPhrase[]][] = [];
+  for (const [anchor, words] of Object.entries(ANCHOR_WORDS)) {
+    const preps = [...NEAR_PREPS, ...(POWER_ANCHORS.has(anchor) ? [] : PLACE_VERBS.map((phrase) => ({ phrase, radius: 2 })))];
+    for (const w of words) {
+      const group: AnchorPhrase[] = [];
+      for (const prep of preps)
+        for (const mods of [[], ['the'], ['a'], ...ANCHOR_MODS.map((x) => [x]), ...ANCHOR_MODS.map((x) => ['the', x])]) {
+          // "the walls of every house" are the houses' own walls, not a place near them
+          if (prep.phrase === 'of' && mods.some((x) => QUANTIFIER_MODS.has(x))) continue;
+          group.push({ phrase: [prep.phrase, ...mods, w].join(' '), anchor, radius: prep.radius, active: mods.some((x) => (ACTIVE_MODIFIERS[anchor] ?? []).includes(x)) });
+        }
+      out.push([w, group]);
+    }
+  }
   return out;
 })();
 
@@ -258,12 +275,14 @@ export function mentionsOf(toks: Tok[], s: RunState): Mention[] {
   for (const c of CONDITIONS) for (const p of c.phrases) add('cond', p, { test: c.test });
   for (const t of TRIGGERS) for (const p of t.phrases) add('trigger', p, { event: t.event, ...(t.min ? { min: t.min } : {}) });
   for (const [p, senses] of SENSE_INDEX) add('sense', p, { senses });
-  for (const a of ANCHOR_PHRASES)
-    if (possible(a.phrase))
-      for (const hit of findAll(toks, a.phrase)) {
-        const n = normalizeBelief(ANCHOR_WORDS[a.anchor].find((w) => a.phrase.endsWith(` ${w}`)) ?? '').split(' ').length || 1;
-        cands.push({ cat: 'anchor', toks: hit.slice(-n), soft: hit.slice(0, -n), at: hit[hit.length - n], end: hit[hit.length - 1] + 1, phrase: a.phrase, anchor: a.anchor, radius: a.radius, active: a.active });
-      }
+  for (const [word, group] of ANCHOR_PHRASES)
+    if (possible(word))
+      for (const a of group)
+        if (possible(a.phrase))
+          for (const hit of findAll(toks, a.phrase)) {
+            const n = normalizeBelief(word).split(' ').length || 1;
+            cands.push({ cat: 'anchor', toks: hit.slice(-n), soft: hit.slice(0, -n), at: hit[hit.length - n], end: hit[hit.length - 1] + 1, phrase: a.phrase, anchor: a.anchor, radius: a.radius, active: a.active });
+          }
   for (const p of placesOf(s)) {
     add('place', p.phrase, { region: p.region });
     for (const prep of ['in', 'on', 'over', 'to', 'toward', 'towards', 'onto', 'across', 'of', 'at'])
@@ -276,6 +295,10 @@ export function mentionsOf(toks: Tok[], s: RunState): Mention[] {
   for (const [w, n] of Object.entries(NUMBERS)) if (w !== 'a') add('number', w, { value: n });
   toks.forEach((t, i) => {
     if (/^\d+$/.test(t.w)) cands.push({ cat: 'number', toks: [i], at: i, end: i + 1, phrase: t.w, value: Math.min(1e6, Number(t.w)) });
+    // a number with a unit is a measure, not a count: "5000 metres high" is named as left out (the amounts are the game's own)
+    const next = toks[i + 1];
+    if (next && (/^\d+$/.test(t.w) || (t.w !== 'a' && t.w in NUMBERS)) && variants(next.w).some((v) => MEASURE_UNITS.has(v)))
+      cands.push({ cat: 'reason', toks: [i, i + 1], at: i, end: i + 2, phrase: `${t.w} ${next.w}`, reason: MEASURE });
   });
   for (const n of NEGATORS) add('negator', n);
   for (const p of PRONOUNS) add('pronoun', p);
@@ -283,7 +306,10 @@ export function mentionsOf(toks: Tok[], s: RunState): Mention[] {
   // a word after "the", "every", "our"... is a thing, not a verb: "the flood flows away", "the crossing holds"
   const kindAt = new Set(cands.filter((m) => m.cat === 'kind' && m.toks.length === 1).map((m) => m.at));
   const nounAfterDet = (m: Mention) => m.toks.length === 1 && (m.cat === 'sense' || m.cat === 'trigger') && kindAt.has(m.at) && m.at > 0 && DETERMINERS.has(toks[m.at - 1].w);
-  const pool = cands.filter((m) => !nounAfterDet(m));
+  // ...and so is the first word of a clause when a verb follows it: "Floods turn away from the village" (the floods do the turning)
+  const clauseStart = (i: number) => i === 0 || PUNCT.has(toks[i - 1].w) || JOINERS.has(toks[i - 1].w);
+  const nounFirst = (m: Mention) => m.toks.length === 1 && m.cat === 'sense' && kindAt.has(m.at) && clauseStart(m.at) && cands.some((x) => x.cat === 'sense' && x.at > m.at && !x.toks.includes(m.at) && !toks.slice(m.at + 1, x.at).some((t) => PUNCT.has(t.w)));
+  const pool = cands.filter((m) => !nounAfterDet(m) && !nounFirst(m));
   // longest first (by the words spanned), then by category, then left to right; each word is used once
   const span = (m: Mention) => m.toks.length + (m.soft?.length ?? 0);
   // on a tie, a phrase with its verb ("bell rings") beats a bare noun phrase ("the bell")
@@ -311,7 +337,7 @@ interface Seg {
   joined: boolean;
 }
 
-function segmentsOf(toks: Tok[]): Seg[] {
+export function segmentsOf(toks: Tok[]): Seg[] {
   const out: Seg[] = [];
   let from = 0;
   let joined = false;
@@ -420,6 +446,8 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       if (m.reason.block) blockers.push(m);
       addReason(m.reason.id, wordsOf(m), m.reason.why);
     }
+  // words that only colour the sentence ("into the night", "like mist") change nothing; they are kept with it, and the player is shown so
+  for (const m of ms) if (m.cat === 'flavor') addReason('narrative', wordsOf(m));
 
   // ---- one clause per segment that names a change
   const senseSegs = segs.filter((g) => ms.some((m) => m.cat === 'sense' && within(m, g)));
@@ -502,6 +530,9 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
         take(pron, refs[0]);
         d.refKinds = refs.slice(0, 2);
       } else d.problem = `incompatible:${subj.kind}`;
+    } else if (subj?.cat === 'kind' && subj.kind === 'wolf' && objFit && asKind(objFit) && fits(asKind(objFit)!) && senseM.senses!.some((x) => x.op === 'MODIFY_VISIBILITY')) {
+      // "the wolves cannot see the houses": what the hunters cannot see is what is hidden from them
+      take(objFit, asKind(objFit)!);
     } else if (subj?.cat === 'kind' && subj.kind) d.problem = `incompatible:${objects.map(asKind).find((k) => k) ?? subj.kind}`;
     else if (subj && sourceOf(subj) && objects.length) d.problem = `incompatible:${objects.map(asKind).find((k) => k) ?? 'villager'}`;
     else if (!subj && objFit && !pronoun) {
@@ -711,7 +742,18 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
   // ---- two verbs for one change ("the barley swells and ripens"): one clause
   for (let j = built.length - 1; j > 0; j--) {
     const b = built[j].clause;
-    if (built.slice(0, j).some((x) => x.clause.target.kind === b.target.kind && x.clause.effect.op === b.effect.op && dirOf(x.clause.effect) === dirOf(b.effect) && JSON.stringify(x.clause.when) === JSON.stringify(b.when))) built.splice(j, 1);
+    if (built.slice(0, j).some((x) => x.clause.target.kind === b.target.kind && x.clause.effect.op === b.effect.op && dirOf(x.clause.effect) === dirOf(b.effect) && JSON.stringify(x.clause.when) === JSON.stringify(b.when))) {
+      built.splice(j, 1);
+      continue;
+    }
+    // ...and the same change said again with another power or none ("wolves fear smoke, so they stay away from the hamlets"): one
+    // clause too, set off by the power the sentence names (the first one, if it names two), rather than a sentence refused whole
+    const k = built.slice(0, j).findIndex((x) => sameChange(x.clause, b));
+    if (k < 0) continue;
+    const a = built[k];
+    if (!a.d.events.some((e) => !e.not) && built[j].d.events.some((e) => !e.not)) built[k] = { d: { ...a.d, events: built[j].d.events }, clause: { ...a.clause, when: b.when } };
+    else if (built[j].d.events.some((e) => !e.not)) notes.push(`"${wordsOf(built[j].d.senseM)}" says the same change again: it is read once, set off as the first part says`);
+    built.splice(j, 1);
   }
 
   // ---- contradictions: one thing pushed both ways
@@ -967,7 +1009,7 @@ function assemble(s: RunState, text: string, use: { d: Draft; clause: Clause }[]
   for (const regions of tries) {
     const ast: RealityAst = {
       v: 2, lang: REALITY_LANG, text: text.slice(0, MAX_BELIEF_TEXT), author: 'player', source: { reader: 'offline-v2', model: null, prompt: READER_ID, id: null },
-      day: Math.max(0, Math.min(400, s.day)), regions, clauses, omitted: omitted.slice(0, 6), narrative: null,
+      day: Math.max(0, Math.min(400, s.day)), regions, clauses, omitted: omitted.slice(0, 6), narrative: flavourOf(reasons),
     };
     if (!validateRealityAst(ast, opts.lab ? LAB_LIMITS : LIMITS).ok) return null;
     const build = buildRealityClaim(s, ast);
@@ -991,6 +1033,12 @@ function assemble(s: RunState, text: string, use: { d: Draft; clause: Clause }[]
   }));
   const confidence: ReadCandidate['confidence'] = !best.build.ok || assumed.some((a) => a.startsWith('no power')) ? 'low' : assumed.length > 1 ? 'medium' : 'high';
   return { ast: best.ast, map, confidence, assumed, build: best.build };
+}
+
+/** The words kept only as flavour, as the belief's narrative (never executed). */
+function flavourOf(reasons: NamedReason[]): string | null {
+  const words = [...new Set(reasons.filter((r) => r.id === 'narrative' && r.words).map((r) => r.words))];
+  return words.length ? words.join('; ').slice(0, 160) : null;
 }
 
 /** Why this region, stated only when it is true of the region. */
@@ -1063,22 +1111,41 @@ function regionScores(s: RunState, clauses: Clause[]): Map<string, number> {
 }
 
 /** At most two executable beliefs about the same things the sentence named, clearly offered as different from what it asked. */
+/**
+ * What to offer instead of an unsupported sentence about a kind of thing, best first: a change that helps the village (a player who
+ * asked for homes that cannot be damaged is not offered homes that burn more readily). Rain helps a dry valley by falling on its fields
+ * and a flooded one by going elsewhere.
+ */
+const OFFER: Partial<Record<TargetKind, string[]>> = {
+  chicken: ['lift'], stone: ['lighter'], water: ['repel_water', 'slow_water'], fire: ['cooler', 'slower'], wolf: ['away', 'slower'], field: ['grow', 'damp'],
+  home: ['stronger', 'fireproof', 'damp'], bridge: ['stronger', 'harder'], lantern: ['brighter'], villager: ['heal', 'courage', 'calm'], livestock: ['hide'],
+};
+
 function alternativesFor(s: RunState, kinds: Mention[], opts: ReadOptions): ReadCandidate[] {
   const out: ReadCandidate[] = [];
   const seen = new Set<string>();
   for (const m of kinds) {
     if (!m.kind || seen.has(m.kind) || out.length >= 2) continue;
     seen.add(m.kind);
-    const sense = SENSES.find((x) => x.kinds.includes(m.kind!) && !x.onlyNegated && !x.guarantee && !x.toward && x.op !== 'SPAWN_BOUNDED_ENTITY');
-    if (!sense) continue;
-    const d: Draft = { seg: { from: 0, to: 0, sub: false, unless: false, or: false, joined: false }, kind: m.kind, sense, negated: false, senseM: m, targetM: m, modifierM: null, source: null, events: [], conds: [], near: null, place: null, toward: null, strength: null, count: null, problem: null };
-    const pos = openTriggers(s, m.kind)[0];
-    if (pos && ['water', 'wolf', 'rain'].includes(m.kind)) d.events.push({ event: pos, min: null, not: false, words: eventLabel(pos), positional: POSITIONAL[pos] ?? null });
-    const clause: Clause = { id: 'c1', when: triggerOf(d).trigger, where: null, target: { kind: m.kind, near: null, tags: [], region: null }, effect: effectOf(sense, d, () => undefined), duration: 'night' };
-    const label = KINDS[m.kind].label;
-    const words = clauseText(s, clause, [s.world.regions[0]?.id ?? 'river']).slice(0, MAX_BELIEF_TEXT - 1);
-    const c = assemble(s, `${words[0].toUpperCase()}${words.slice(1)}`, [{ d, clause }], opts, [], [], () => label, ['a different belief about the same thing, offered instead']);
-    if (c && c.build.ok) out.push(c);
+    const dry = !!s.scn.features.crops && s.world.landmarks.some((l) => l.kind === 'field');
+    const ids = m.kind === 'rain' ? (dry ? ['rain_to'] : ['rain_away', 'rain_stop']) : (OFFER[m.kind] ?? []);
+    for (const id of ids) {
+      const sense = SENSES.find((x) => x.id === id && x.kinds.includes(m.kind!));
+      if (!sense) continue;
+      const fields = sense.toward ? regionWith(s, 'field') : null;
+      if (sense.toward && !fields) continue;
+      const d: Draft = { seg: { from: 0, to: 0, sub: false, unless: false, or: false, joined: false }, kind: m.kind, sense, negated: false, senseM: m, targetM: m, modifierM: null, source: null, events: [], conds: [], near: null, place: null, toward: fields ? { region: fields, words: 'the fields', kind: 'field' } : null, strength: null, count: null, problem: null };
+      const pos = openTriggers(s, m.kind)[0];
+      if (pos && ['water', 'wolf', 'rain'].includes(m.kind)) d.events.push({ event: pos, min: null, not: false, words: eventLabel(pos), positional: POSITIONAL[pos] ?? null });
+      const clause: Clause = { id: 'c1', when: triggerOf(d).trigger, where: null, target: { kind: m.kind, near: null, tags: [], region: null }, effect: effectOf(sense, d, () => undefined), duration: 'night' };
+      const label = KINDS[m.kind].label;
+      const words = clauseText(s, clause, [s.world.regions[0]?.id ?? 'river']).slice(0, MAX_BELIEF_TEXT - 1);
+      const c = assemble(s, `${words[0].toUpperCase()}${words.slice(1)}`, [{ d, clause }], opts, [], [], () => label, ['a different belief about the same thing, offered instead']);
+      if (c && c.build.ok) {
+        out.push(c);
+        break;
+      }
+    }
   }
   return out;
 }

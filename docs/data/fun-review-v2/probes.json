@@ -1,0 +1,243 @@
+{
+ "root": ".",
+ "reader": "offline-v2.3",
+ "rules": 3,
+ "price": {
+  "checked": 108,
+  "mismatched": 0,
+  "examples": []
+ },
+ "swappedEffects": {
+  "honest": 193,
+  "honestKept": 191,
+  "swaps": 292,
+  "acceptedAtFullConfidence": 11,
+  "keptAtLowConfidence": 33,
+  "dropped": 248,
+  "examples": [
+   "“Wheat growing beside the lit beacons does not catch fire easily.” read as GROW_ENTITY instead of SET_MATERIAL_PROPERTY (citing “catch fire easily”)",
+   "“When the bell rings, the riverside homes are spared.” read as GIVE_STATUS_EFFECT instead of MODIFY_DURABILITY (citing “are spared”)",
+   "“When the bell rings, the riverside homes are spared.” read as MODIFY_DURABILITY instead of GIVE_STATUS_EFFECT (citing “are spared”)",
+   "“At every toll of the bell, the barley turns.” read as DECAY_ENTITY instead of GROW_ENTITY (citing “turns”)",
+   "“At every toll of the bell, the barley turns.” read as GROW_ENTITY instead of DECAY_ENTITY (citing “turns”)"
+  ]
+ },
+ "ideas": {
+  "redbank": {
+   "offered": 3,
+   "understood": 3,
+   "ideas": [
+    "Chickens fly when the bell rings.",
+    "The river turns away from lit lanterns.",
+    "Wet stone becomes light beside lanterns."
+   ]
+  },
+  "harvest": {
+   "offered": 3,
+   "understood": 3,
+   "ideas": [
+    "Chickens fly when the bell rings.",
+    "Crops ripen faster under the night sky.",
+    "Rain falls on the fields when the bell is rung."
+   ]
+  },
+  "ashwood": {
+   "offered": 3,
+   "understood": 3,
+   "ideas": [
+    "Wolves will not come near the smoke fires.",
+    "Smoke hides the pens from the wolves.",
+    "Sickness keeps away from homes with open doors."
+   ]
+  }
+ },
+ "alternatives": {
+  "sentences": 10,
+  "offered": 8,
+  "harmful": 0,
+  "examples": [
+   "“Homes cannot be damaged.” → “Every night: homes in Eastbank hold stronger: up to 70% of flood damage prevented (whether”",
+   "“Nobody in the village can die.” → “Every night: villagers in Eastbank fall sick less: sickness -50%.”",
+   "“The village is protected from all harm.” → “Every night: villagers in Eastbank fall sick less: sickness -50%.”",
+   "“The river always stays low.” → “When a lantern (beacon) is lit: floodwater in Eastbank is turned aside: the ground counts ”",
+   "“The flood is always weak.” → “When a lantern (beacon) is lit: floodwater in Eastbank is turned aside: the ground counts ”",
+   "“The harvest is always perfect.” → “Every night: fields and crops in The Valley ripen up to 20% faster each night.”"
+  ]
+ },
+ "flavour": [
+  {
+   "text": "Chickens fly into the night when the bell rings.",
+   "narrative": "into the night"
+  },
+  {
+   "text": "Sickness keeps away from homes with open doors.",
+   "narrative": "with open doors"
+  },
+  {
+   "text": "Wolves melt like mist in the smoke.",
+   "narrative": null
+  }
+ ],
+ "wards": [
+  {
+   "rules": 2,
+   "text": "Floodwater always flows away from every home.",
+   "power": 43.1,
+   "rating": "strong",
+   "influence": 3,
+   "support": {
+    "percent": 75,
+    "believers": 5
+   },
+   "charged": 3
+  },
+  {
+   "rules": 2,
+   "text": "The river turns away from the village.",
+   "power": 22,
+   "rating": "moderate",
+   "influence": 2,
+   "support": {
+    "percent": 65,
+    "believers": 4
+   },
+   "charged": 2
+  },
+  {
+   "rules": 2,
+   "text": "The river turns away from lit lanterns.",
+   "power": 26.9,
+   "rating": "moderate",
+   "influence": 2,
+   "support": {
+    "percent": 65,
+    "believers": 4
+   },
+   "charged": 2
+  },
+  {
+   "rules": 3,
+   "text": "Floodwater always flows away from every home.",
+   "power": 48.9,
+   "rating": "strong",
+   "influence": 3,
+   "support": {
+    "percent": 75,
+    "believers": 6
+   },
+   "charged": 3
+  },
+  {
+   "rules": 3,
+   "text": "The river turns away from the village.",
+   "power": 48.9,
+   "rating": "strong",
+   "influence": 3,
+   "support": {
+    "percent": 75,
+    "believers": 6
+   },
+   "charged": 3
+  },
+  {
+   "rules": 3,
+   "text": "The river turns away from lit lanterns.",
+   "power": 26.9,
+   "rating": "moderate",
+   "influence": 2,
+   "support": {
+    "percent": 65,
+    "believers": 4
+   },
+   "charged": 2
+  }
+ ],
+ "coverage": {
+  "homes": 8,
+  "tilesWithin2": 104,
+  "oneCircle": 21
+ },
+ "novice": {
+  "dev": {
+   "doable": 68,
+   "understood": 36,
+   "impossible": 22,
+   "wronglyAccepted": 0,
+   "byChapter": {
+    "redbank": [
+     10,
+     24
+    ],
+    "harvest": [
+     14,
+     21
+    ],
+    "ashwood": [
+     12,
+     23
+    ]
+   }
+  },
+  "heldOut": {
+   "doable": 69,
+   "understood": 35,
+   "impossible": 21,
+   "wronglyAccepted": 0,
+   "byChapter": {
+    "redbank": [
+     17,
+     24
+    ],
+    "harvest": [
+     9,
+     22
+    ],
+    "ashwood": [
+     9,
+     23
+    ]
+   }
+  }
+ },
+ "personas": {
+  "runs": 24,
+  "rows": {
+   "skeptic": {
+    "villagerRuns": 80,
+    "acts": 14,
+    "byIntent": {
+     "stage_evidence": 9,
+     "spread": 1,
+     "challenge": 1,
+     "ask": 2,
+     "persuade": 1
+    }
+   },
+   "trusting": {
+    "villagerRuns": 104,
+    "acts": 224,
+    "byIntent": {
+     "ask": 40,
+     "spread": 62,
+     "comfort": 49,
+     "stage_evidence": 66,
+     "persuade": 7
+    }
+   },
+   "middle": {
+    "villagerRuns": 144,
+    "acts": 217,
+    "byIntent": {
+     "ask": 28,
+     "spread": 56,
+     "stage_evidence": 81,
+     "persuade": 21,
+     "comfort": 30,
+     "challenge": 1
+    }
+   }
+  },
+  "spreads": 119,
+  "spreadsThatCooledTheListener": 0
+ }
+}

@@ -43,6 +43,11 @@ export type AiApp = (route: Route, req: Request) => Promise<Response>;
 export const PRIVACY_NOTE =
   'Online interpretation sends the sentence you write and a short list of the village\'s places and features (villager decisions send the named villagers\' public facts and memories) to a language model through the Vercel AI Gateway. The game\'s operator pays for these calls. Nothing is stored that names you: the server keeps hashed counters and, for 7 days, validated readings of sentences so repeats cost nothing. The offline reader always works without any of this.';
 
+/** The privacy note with the routing this server asks of the gateway (see gatewayRouting in sdk-provider.ts). */
+export function privacyNote(zeroRetention: boolean): string {
+  return `${PRIVACY_NOTE} Calls go only to model providers that do not train on what they are sent${zeroRetention ? ' and that keep nothing once they answer (zero data retention)' : '; whether a provider keeps a copy for a while is its own policy, as this server has not asked for zero data retention'}.`;
+}
+
 const SessionRequest = z.strictObject({ consent: z.literal(true), scopes: z.array(z.enum(['interpret', 'npc'])).min(1).max(2).optional() });
 
 export function createAiApp(deps: AppDeps): AiApp {
@@ -99,6 +104,9 @@ export function createAiApp(deps: AppDeps): AiApp {
       const r = await store.reserve(opts.counters);
       if (!r.ok) {
         const why = opts.reasons[r.index] ?? opts.reasons[0];
+        await store.unclaim(leaseKey, lease).catch(() => undefined);
+        leased = false;
+        await meter.refused(opts.route, why.reason);
         return { ok: false, response: fail(429, why.reason, why.message, Math.ceil(ttlDay() / 1000)) };
       }
     } catch (e) {
@@ -172,7 +180,8 @@ export function createAiApp(deps: AppDeps): AiApp {
       models: configured ? { fast: cfg.models.fast, accurate: cfg.models.accurate } : null,
       contracts: { interpret: [1, 2], npc: [1, 2] },
       limits: publicLimits(),
-      privacy: PRIVACY_NOTE,
+      privacy: privacyNote(cfg.zeroRetention),
+      routing: configured && deps.provider!.name !== 'mock' ? { noPromptTraining: true, zeroDataRetention: cfg.zeroRetention } : null,
     });
   }
 

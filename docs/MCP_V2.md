@@ -53,7 +53,7 @@ BE_AI_ENABLED=1 BE_AI_DEV_PROVIDER=mock BE_AI_DEV_MEMORY_STORE=1 npm run mcp
 ```
 
 What it costs: whoever runs the server pays the provider. List-price estimates (not measured: no model has been called from this
-repository) are in [`AI_COSTS.md`](AI_COSTS.md): about $0.00014 for a fast reading and $0.0027 for an accurate one, with the
+repository) are in [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md): about $0.00014 for a fast reading and $0.0027 for an accurate one, with the
 application's own daily cap ($1.00 by default) and per-session allowances enforced before any call.
 
 ## Example: a legal creative claim, from the words to the world

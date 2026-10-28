@@ -69,6 +69,7 @@ export function OnlineRow({ o, prefix, leaves }: { o: OnlineReading; prefix: str
           <ul className="small" style={{ margin: '0 0 0.4rem' }}>
             <li>{leaves}</li>
             <li>Each reading is a paid request, paid by whoever runs this game. There are daily limits; a refused or failed reading costs you nothing.</li>
+            <li>The server asks for model providers that do not train on what they are sent.</li>
             <li>A model only proposes. The game checks every reading against what this village can physically do, exactly as it checks its own.</li>
             <li>The offline reader always works. You can turn this off at any time.</li>
           </ul>

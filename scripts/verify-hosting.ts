@@ -82,6 +82,41 @@ check(!!(await dl.path()), 'a file download (Atlas export) works under the CSP')
 await page.getByTestId('atlas-back').click();
 await page.goto(`${base}/?mode=expedition&seed=4242&rules=1.0.0&gen=1`);
 await page.waitForTimeout(600);
+// a Generative Reality run under the same policy: the lazily loaded composer, a belief written and told, a night
+const pv = await ctx.newPage();
+pv.on('console', (m) => {
+  if (m.type() === 'error') errors.push(`v2: ${m.text()}`);
+});
+pv.on('pageerror', (e) => errors.push(`v2: ${e.message}`));
+const v2Api: string[] = [];
+pv.on('request', (r) => {
+  if (new URL(r.url()).pathname.startsWith('/api/')) v2Api.push(r.url());
+});
+await pv.goto(`${base}/?debug=1`);
+await pv.getByTestId('play').click();
+await pv.getByTestId('mode-reality').click();
+await pv.getByTestId('begin-reality-redbank').click();
+await pv.getByTestId('begin').click();
+const closeSheet = async () => {
+  if (await pv.locator('.side.open').count()) await pv.getByTestId('sheet-toggle').click();
+};
+await pv.locator('[data-claim="river_fears_fire"]').click();
+await closeSheet();
+await pv.getByTestId('reality-open').click();
+await pv.getByTestId('reality-text').fill('Chickens fly when the bell rings.');
+await pv.getByTestId('reality-preview').click();
+await pv.getByTestId('reality-kind').waitFor();
+await pv.getByTestId('reality-confirm').click();
+await pv.getByTestId('tell-first-done').click();
+await closeSheet();
+await pv.getByTestId('end-day').click();
+await pv.getByTestId('confirm-end').click();
+await pv.getByTestId('digest-continue').click();
+const written = await pv.locator('[data-claim^="reality_"]').count();
+check(written === 1, 'a Generative Reality belief is written, told and carried through a night under the production policy');
+check(v2Api.length === 0, `the offline reader makes no request${v2Api.length ? `: ${v2Api.join(', ')}` : ''}`);
+const cspV2 = await pv.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+check(cspV2.length === 0, `no Content-Security-Policy violations in a Generative Reality run${cspV2.length ? `: ${cspV2.join('; ')}` : ''}`);
 // the 3D world under the same policy: it must come up and draw (software WebGL here), with no violation and no console error of its own
 const p3 = await ctx.newPage();
 p3.on('console', (m) => {

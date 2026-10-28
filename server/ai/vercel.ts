@@ -26,7 +26,7 @@ export function buildApp(env: Record<string, string | undefined>, opts: { now?: 
   const config = loadAiConfig(env);
   const store: QuotaStore | null = config.store.kind === 'redis-rest' ? new RedisRestStore(config.store.url, config.store.token) : config.store.kind === 'memory' ? new MemoryStore() : null;
   const mock = env.BE_AI_DEV_PROVIDER === 'mock' && !config.onVercel;
-  const provider: InferenceProvider | null = mock ? demoProvider() : config.credential !== 'none' ? new SdkProvider({ model: gatewayModels(config.apiKey) }) : null;
+  const provider: InferenceProvider | null = mock ? demoProvider() : config.credential !== 'none' ? new SdkProvider({ model: gatewayModels(config.apiKey), zeroRetention: config.zeroRetention }) : null;
   const effective: AiConfig = mock ? withoutCredential(config) : config;
   return { app: createAiApp({ config: effective, store, provider, now: opts.now, log: opts.log }), config: effective };
 }

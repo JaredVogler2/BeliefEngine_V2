@@ -14,7 +14,19 @@ import { NO_USAGE, type FailureKind, type InferenceProvider, type ModelCall, typ
 export interface SdkProviderOptions {
   /** model id → language model. Production: the AI Gateway. Tests: `MockLanguageModelV4` from `ai/test`. */
   model: (modelId: string) => LanguageModel;
+  /** route only to providers with zero-data-retention agreements (Vercel Pro and Enterprise; BE_AI_ZERO_RETENTION=1) */
+  zeroRetention?: boolean;
   now?: () => number;
+}
+
+/**
+ * Privacy routing asked of the gateway on every call: never a provider that trains on what it is sent (all plans, no extra cost),
+ * and, when configured, only providers that keep nothing (zero data retention). If no provider for the model qualifies, the
+ * gateway refuses the call (400 `no_providers_available`) and the player gets the offline reader: nothing is sent elsewhere.
+ * https://vercel.com/docs/ai-gateway/security-and-compliance/disallow-prompt-training and .../zdr (read 2026-10-28).
+ */
+export function gatewayRouting(zeroRetention: boolean): { gateway: { disallowPromptTraining: true; zeroDataRetention?: true } } {
+  return { gateway: { disallowPromptTraining: true, ...(zeroRetention ? { zeroDataRetention: true as const } : {}) } };
 }
 
 export function gatewayModels(apiKey: string | null): (modelId: string) => LanguageModel {
@@ -43,6 +55,7 @@ export function classify(err: unknown): { kind: FailureKind; detail: string } {
   if (name === 'TimeoutError' || name === 'AbortError') return { kind: 'timeout', detail: name };
   if (NoObjectGeneratedError.isInstance(err)) return { kind: 'malformed', detail: 'output did not match the schema' };
   if (status === 402 || e.type === 'quota_for_entity_exceeded') return { kind: 'budget', detail: 'gateway budget exceeded' };
+  if (e.type === 'no_providers_available') return { kind: 'unavailable', detail: 'no provider for this model meets the privacy routing' };
   if (name === 'GatewayRateLimitError' || status === 429) return { kind: 'rate_limited', detail: 'rate limited upstream' };
   if (name === 'GatewayAuthenticationError' || status === 401 || status === 403) return { kind: 'auth', detail: 'gateway authentication failed' };
   if (name === 'GatewayModelNotFoundError' || status === 404) return { kind: 'bad_model', detail: 'model not found' };
@@ -69,6 +82,7 @@ export class SdkProvider implements InferenceProvider {
         output: Output.object({ schema: c.schema, name: c.schemaName, description: c.schemaDescription }),
         maxOutputTokens: c.maxOutputTokens,
         temperature: c.temperature,
+        providerOptions: gatewayRouting(this.opts.zeroRetention ?? false),
         maxRetries: 0,
         abortSignal: AbortSignal.any(signals),
       });
