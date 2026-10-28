@@ -887,6 +887,13 @@ export class PeopleLayer implements Layer {
     return new THREE.Vector3(wk.pos.x, this.walkY(wk.pos.x, wk.pos.z) + 0.34, wk.pos.z);
   }
 
+  /** where a name tag goes over someone drawn now (just above their faction mark), or null when they are not drawn */
+  labelPoint(id: string): THREE.Vector3 | null {
+    const wk = this.walkers.get(id);
+    if (!wk || wk.dead || !wk.rig.root.visible) return null;
+    return new THREE.Vector3(wk.pos.x, this.walkY(wk.pos.x, wk.pos.z) + 0.8 * this.legible, wk.pos.z);
+  }
+
   headPosition(id: string): THREE.Vector3 | null {
     const p = this.locate('villager', id);
     return p ? p.add(new THREE.Vector3(0, 0.12, 0)) : null;
@@ -911,6 +918,12 @@ export class PeopleLayer implements Layer {
     for (const m of matCache.values()) m.dispose();
     matCache.clear();
     lanternMat?.dispose();
+    lanternMat = null;
+  }
+
+  forget(): void {
+    geoCache.clear();
+    matCache.clear();
     lanternMat = null;
   }
 }

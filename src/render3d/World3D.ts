@@ -12,10 +12,12 @@ import { buildHeightField, buildTerrainMesh, type TerrainMesh } from './terrain.
 import { CloudSea } from './clouds.ts';
 import { Water } from './water.ts';
 import { MaterialLib } from './materials.ts';
+import { HazardsLayer } from './hazards.ts';
+import { PeopleLayer } from './people.ts';
 import { createLayers } from './layers.ts';
 import { EffectsLayer } from './effects.ts';
 import { MagicField, attachMagicToStandard } from './magic.ts';
-import { PostChain, displayUniforms, preCompensate, type PostLook, type PostProfile } from './post.ts';
+import { DEFAULT_LOOK, PostChain, displayUniforms, preCompensate, type PostLook, type PostProfile } from './post.ts';
 import { makeEnvironment } from './env.ts';
 import { RealityLayer, type RealityDrawn } from './reality.ts';
 
@@ -35,6 +37,9 @@ function floatBuffersLikely(): boolean {
     return false;
   }
 }
+
+/** how much of the haze high contrast keeps */
+const CONTRAST_FOG = 0.3;
 
 /** which quality tier to start in: an explicit ?quality=, else the setting, with software-rendered and phone-sized windows stepped down */
 export function chooseQuality(setting: 'high' | 'low', w: number): Quality {
@@ -197,12 +202,28 @@ export class World3D implements WorldRenderer {
   private onRestored = (): void => {
     this.contextLost = false;
     this.lastError = null;
+    // Everything on the graphics side died with the context. What lives for the whole view (the sky, the finishing chain, the sun's
+    // shadow map, the environment) is made again rather than disposed, as the village is below, so WebGL is never asked to delete what
+    // it no longer has ("object does not belong to this context").
+    this.scene.remove(this.sky);
+    this.sky = makeSky();
+    this.scene.add(this.sky);
+    if (this.post) {
+      const old = this.post;
+      this.post = new PostChain(this.renderer, this.quality);
+      this.post.setProfile(old.settings);
+      this.post.look = { ...old.look };
+      this.syncPostSize();
+    }
+    this.sun.shadow.map = null;
+    this.envRT = null;
     this.makeEnv();
     if (this.snap) {
       const s = this.snap;
       this.snap = null;
-      this.rebuild(s);
+      this.rebuild(s, true);
     }
+    this.applyMood();
   };
 
   // ------------------------------------------------------------------------------------------------------ lifecycle
@@ -279,6 +300,7 @@ export class World3D implements WorldRenderer {
 
   setOptions(o: Partial<RenderOpts>): void {
     const prevQuality = this.opts.quality;
+    const prevContrast = this.opts.highContrast;
     this.opts = { ...this.opts, ...o };
     this.cam.reduced = this.opts.reducedMotion;
     if (this.ctx) this.ctx.reducedMotion = this.opts.reducedMotion;
@@ -286,6 +308,21 @@ export class World3D implements WorldRenderer {
     if (o.forecast !== undefined && this.snap) this.applyForecast(this.snap, this.opts.reducedMotion);
     if (o.forecast !== undefined || o.showFlood !== undefined) this.syncForecastOverlay();
     for (const l of this.layers) (l as Layer & { setOptions?: (o: RenderOpts) => void }).setOptions?.(this.opts);
+    if (this.opts.highContrast !== prevContrast) this.applyContrast();
+  }
+
+  /** high contrast: shapes inked at full strength and darker, less glow (the haze is thinned as each frame is drawn) */
+  private applyContrast(): void {
+    if (!this.post) return;
+    const high = this.opts.highContrast;
+    this.post.look.ink = high ? 1 : DEFAULT_LOOK.ink;
+    this.post.look.inkColor = high ? 0x0e0a06 : DEFAULT_LOOK.inkColor;
+    this.post.look.bloomStrength = high ? DEFAULT_LOOK.bloomStrength * 0.5 : DEFAULT_LOOK.bloomStrength;
+  }
+
+  /** what high contrast is doing to the frame now: read by tests, never by the game */
+  contrastInfo(): { high: boolean; fogDensity: number; ink: number | null } {
+    return { high: this.opts.highContrast, fogDensity: this.fog.density, ink: this.post ? this.post.look.ink : null };
   }
 
   /** let the view drift slowly round the village (the end-of-run tour); the player's own movement pauses it */
@@ -325,44 +362,49 @@ export class World3D implements WorldRenderer {
 
   // ------------------------------------------------------------------------------------------------------ the world
 
-  private disposeWorld(): void {
+  /**
+   * Let go of everything the village owns. Normally each thing is disposed; after a lost context (`gone`) its graphics died with it, and
+   * asking WebGL to delete them only earns "object does not belong to this context" warnings, so they are dropped instead.
+   */
+  private disposeWorld(gone = false): void {
     for (const l of this.layers) {
       this.scene.remove(l.group);
-      l.dispose();
+      if (gone) l.forget?.();
+      else l.dispose();
     }
     this.layers = [];
     if (this.terrainMesh) {
       this.scene.remove(this.terrainMesh.group);
-      this.terrainMesh.dispose();
+      if (!gone) this.terrainMesh.dispose();
       this.terrainMesh = null;
     }
     if (this.water) {
       this.scene.remove(this.water.mesh);
-      this.water.dispose();
+      if (!gone) this.water.dispose();
       this.water = null;
     }
     if (this.rain) {
       this.scene.remove(this.rain.lines);
-      this.rain.dispose();
+      if (!gone) this.rain.dispose();
       this.rain = null;
     }
     if (this.clouds) {
       this.scene.remove(this.clouds.group);
-      this.clouds.dispose();
+      if (!gone) this.clouds.dispose();
       this.clouds = null;
     }
-    this.magic?.dispose();
+    if (!gone) this.magic?.dispose();
     this.magic = null;
     this.effects = null;
-    this.materials?.dispose();
+    if (!gone) this.materials?.dispose();
     this.materials = null;
     this.ctx = null;
   }
 
-  /** a new village (or the same one reloaded): drop everything the old one owned and build again from the snapshot */
-  private rebuild(snap: SceneSnapshot): void {
+  /** a new village (or the same one reloaded, or rebuilt after a lost context): drop everything the old one owned and build again */
+  private rebuild(snap: SceneSnapshot, gone = false): void {
     const t0 = performance.now();
-    this.disposeWorld();
+    this.disposeWorld(gone);
     const seedNum = seedFrom(snap.scenarioId, snap.seed);
     const terrain = buildHeightField(snap, seedNum);
     this.terrainMesh = buildTerrainMesh(snap, terrain, seedNum, Math.min(8, this.renderer.capabilities.getMaxAnisotropy()));
@@ -502,6 +544,12 @@ export class World3D implements WorldRenderer {
       return;
     }
     if (changes.water) this.water?.setState(snap, !this.opts.reducedMotion);
+    // ground that burned out tonight turns to ash now, not only when the village is next built
+    if (changes.fire && prev) {
+      const ash: [number, number][] = [];
+      for (let i = 0; i < snap.burned.length; i++) if (snap.burned[i] && !prev.burned[i]) ash.push([i % snap.w, Math.floor(i / snap.w)]);
+      this.terrainMesh?.surface.burn(ash);
+    }
     this.syncForecastOverlay();
     this.applyForecast(snap, this.opts.reducedMotion);
     for (const l of this.layers) l.update(snap, changes, this.ctx);
@@ -576,8 +624,9 @@ export class World3D implements WorldRenderer {
 
   private draw(): void {
     if (this.contextLost) return;
-    // haze is for depth, not for washing the village out: a camera that has to stand far back (a tall phone screen) gets less of it
-    this.fog.density = this.atmo.current.fogDensity * Math.min(1, Math.max(0.3, 40 / this.cam.distance));
+    // haze is for depth, not for washing the village out: a camera that has to stand far back (a tall phone screen) gets less of it, and
+    // high contrast keeps only a trace of it
+    this.fog.density = this.atmo.current.fogDensity * Math.min(1, Math.max(0.3, 40 / this.cam.distance)) * (this.opts.highContrast ? CONTRAST_FOG : 1);
     try {
       const t0 = performance.now();
       this.renderer.info.reset();
@@ -627,6 +676,37 @@ export class World3D implements WorldRenderer {
   focusVillager(id: string): void {
     const p = this.locate('villager', id);
     if (p) this.cam.focus(p.x, p.z, this.cam.closeDist());
+  }
+
+  /** where a person's name tag goes on screen now (above them), or null when they are not drawn or not in view */
+  nameAnchor(id: string): { x: number; y: number } | null {
+    const people = this.layers.find((l) => l instanceof PeopleLayer) as PeopleLayer | undefined;
+    const p = people?.labelPoint(id);
+    if (!p) return null;
+    const v = p.project(this.cam.camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02) return null;
+    return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
+  }
+
+  /** where a region's name tag goes on screen now (over the middle of its ground), or null when that is out of view */
+  regionAnchor(id: string): { x: number; y: number } | null {
+    const r = this.snap?.regions.find((q) => q.id === id);
+    if (!r || !this.ctx) return null;
+    let a = 0;
+    let cx = 0;
+    let cz = 0;
+    for (const [x0, y0, x1, y1] of r.rects) {
+      const n = (x1 - x0 + 1) * (y1 - y0 + 1);
+      a += n;
+      cx += ((x0 + x1 + 1) / 2) * n;
+      cz += ((y0 + y1 + 1) / 2) * n;
+    }
+    if (!a) return null;
+    const x = cx / a;
+    const z = cz / a;
+    const v = new THREE.Vector3(x, this.ctx.heightAt(x, z) + 0.35, z).project(this.cam.camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02) return null;
+    return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
   }
 
   /** test and screenshot hook */
@@ -759,6 +839,18 @@ export class World3D implements WorldRenderer {
   realityInfo(): RealityDrawn & { airborne: number } {
     const layer = this.layers.find((l) => l instanceof RealityLayer) as RealityLayer | undefined;
     return layer ? layer.info() : { coops: 0, hens: 0, strays: 0, stones: 0, placed: 0, bank: 0, airborne: 0 };
+  }
+
+  /** the wolves, burning tiles (and the buildings among them), smoky tiles and ash the world is drawing now: read by tests, never by the game */
+  hazardInfo(): { wolves: number; packMarks: number; fireTiles: number; smokeTiles: number; puffs: number; burning: string[]; ashTiles: number } {
+    const layer = this.layers.find((l) => l instanceof HazardsLayer) as HazardsLayer | undefined;
+    const ashTiles = this.terrainMesh?.surface.ashTiles() ?? 0;
+    return layer ? { ...layer.hazardCounts(), burning: layer.burningBuildings(), ashTiles } : { wolves: 0, packMarks: 0, fireTiles: 0, smokeTiles: 0, puffs: 0, burning: [], ashTiles };
+  }
+
+  /** the trust ties the social lens is drawing now: read by tests, never by the game */
+  lensInfo(): { ties: number } {
+    return { ties: this.effects?.lensCount() ?? 0 };
   }
 
   stats(): { fps: number; effects: number; zoom: number } {

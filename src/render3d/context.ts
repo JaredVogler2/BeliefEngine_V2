@@ -72,6 +72,8 @@ export interface Layer {
   /** per frame: purely visual animation, never anything the simulation reads */
   tick(dt: number, time: number, ctx: WorldContext): void;
   dispose(): void;
+  /** the graphics context was lost with everything in it: let go of anything kept beyond this layer (caches), without disposing it */
+  forget?(): void;
   /** invisible hit volumes carrying `userData.entity = { kind, id }`, for picking */
   pickables?(): THREE.Object3D[];
   /** where an entity is in the world right now (for the camera and the effects) */

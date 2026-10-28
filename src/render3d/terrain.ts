@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CHANNEL_DEPTH, HEIGHT_UNIT } from './coords.ts';
 import { fbm, makeNoise } from './rand.ts';
-import { buildGroundTexture } from './groundTexture.ts';
+import { buildGroundTexture, type GroundTexture } from './groundTexture.ts';
 import type { SceneSnapshot } from './snapshot.ts';
 import { markGround } from './post.ts';
 
@@ -206,6 +206,8 @@ const col = (hex: number): THREE.Color => new THREE.Color(hex);
 export interface TerrainMesh {
   group: THREE.Group;
   ground: THREE.Mesh;
+  /** the painted ground: ash where the engine has burned tiles, kept up to date during the run */
+  surface: Pick<GroundTexture, 'burn' | 'ashTiles'>;
   dispose(): void;
 }
 
@@ -359,6 +361,7 @@ export function buildTerrainMesh(snap: SceneSnapshot, data: TerrainData, seedNum
   return {
     group,
     ground: mesh,
+    surface: ground,
     dispose() {
       geo.dispose();
       mat.dispose();

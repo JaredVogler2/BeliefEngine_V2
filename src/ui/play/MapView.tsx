@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { predictedWater } from '../../engine/index.ts';
+import { findClaimDef, firstName, predictedWater } from '../../engine/index.ts';
 import { MapRenderer } from '../../render/MapRenderer.ts';
 import type { WorldRenderer } from '../../render/types.ts';
 import { chooseRenderer, loadWorld3D, rememberRenderer } from '../../render/choose.ts';
@@ -9,6 +9,8 @@ import { getTutorial } from '../tutorial.ts';
 import { useNarrow } from '../useNarrow.ts';
 
 let announcedReason = false;
+/** how close the 3D camera must come (its zoom level) before everyone in view is named, as the classic map names everyone close up */
+const NAMES_ZOOM = 1.9;
 
 export function MapView({ children }: { children?: React.ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -19,6 +21,8 @@ export function MapView({ children }: { children?: React.ReactNode }) {
   const state = useStore((s) => s.state);
   const [mode, setMode] = useState(() => chooseRenderer());
   const [ready, setReady] = useState(false);
+  /** the 3D view lost its graphics context (a phone taking back memory, a driver reset): it is paused until the browser restores it */
+  const [lost, setLost] = useState(false);
   /** what the loading veil says while the 3D world arrives: its code is fetched, then the village is built */
   const [stage, setStage] = useState<'fetching' | 'building'>('fetching');
   const choice = mode.choice;
@@ -51,6 +55,16 @@ export function MapView({ children }: { children?: React.ReactNode }) {
     let ro: ResizeObserver | null = null;
     const cleanups: (() => void)[] = [];
     setReady(false);
+    // (the 3D world keeps the context restorable and rebuilds the village when it comes back; this only tells the player)
+    const onLost = (): void => setLost(true);
+    const onRestored = (): void => setLost(false);
+    canvas.addEventListener('webglcontextlost', onLost);
+    canvas.addEventListener('webglcontextrestored', onRestored);
+    cleanups.push(() => {
+      canvas.removeEventListener('webglcontextlost', onLost);
+      canvas.removeEventListener('webglcontextrestored', onRestored);
+      setLost(false);
+    });
 
     /** a name beside the pointer for whatever is under it (the card with the detail opens on a tap) */
     const showTip = (hit: { kind: 'villager' | 'landmark'; id: string } | null, x: number, y: number): void => {
@@ -90,6 +104,20 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       size();
       ro = new ResizeObserver(size);
       ro.observe(wrap);
+      // a window moved to a screen of another pixel density changes no size the observer sees: follow the density too
+      let density: MediaQueryList | null = null;
+      const onDensity = (): void => {
+        size();
+        watchDensity();
+      };
+      const watchDensity = (): void => {
+        density?.removeEventListener('change', onDensity);
+        if (typeof matchMedia !== 'function') return;
+        density = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+        density.addEventListener('change', onDensity);
+      };
+      watchDensity();
+      cleanups.push(() => density?.removeEventListener('change', onDensity));
       const s0 = store.state;
       if (s0) r.setState(s0);
       r.start();
@@ -235,6 +263,87 @@ export function MapView({ children }: { children?: React.ReactNode }) {
     };
   }, [choice]);
 
+  // names over people in the 3D world (the classic map paints its own): the people the tutorial points at, the selected person while the
+  // card is docked away from them (a phone), and everyone in view once the camera has come close. Tags follow their person every frame.
+  // The story being told is named over each stretch of ground it would govern (the ground itself glows with it).
+  const namesRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = namesRef.current;
+    if (choice !== '3d' || !ready || !box) return;
+    // each tag is measured once, when it is made (its text never changes), so following the people costs no layout per frame
+    const tags = new Map<string, { el: HTMLSpanElement; w: number; h: number }>();
+    let raf = 0;
+    const place = (): void => {
+      raf = requestAnimationFrame(place);
+      const r = rendRef.current;
+      const st = store.state;
+      if (!r?.nameAnchor || !st) return;
+      const u = store.ui;
+      const close = r.stats().zoom >= NAMES_ZOOM;
+      const docked = (wrapRef.current?.clientWidth ?? 1000) < 700;
+      const sel = u.selection?.kind === 'villager' ? u.selection.id : null;
+      const hints = new Set(getTutorial(st, u)?.hintVillagers ?? []);
+      const shown: { tag: { el: HTMLSpanElement; w: number; h: number }; x: number; y: number }[] = [];
+      const make = (key: string, text: string, cls: string): { el: HTMLSpanElement; w: number; h: number } => {
+        let tag = tags.get(key);
+        if (!tag) {
+          const el = document.createElement('span');
+          el.className = cls;
+          el.dataset.id = key;
+          el.textContent = text;
+          box.append(el);
+          tag = { el, w: el.offsetWidth, h: el.offsetHeight };
+          tags.set(key, tag);
+        }
+        return tag;
+      };
+      const story = u.activeClaim && !u.digest ? findClaimDef(st, u.activeClaim) : undefined;
+      if (story && r.regionAnchor) {
+        for (const rid of story.regions) {
+          const at = r.regionAnchor(rid);
+          if (!at) continue;
+          const place = st.world.regions.find((q) => q.id === rid)?.name ?? rid;
+          shown.push({ tag: make(`law:${story.id}:${rid}`, `${story.short} · ${place}`, 'name-tag law'), x: at.x, y: at.y });
+        }
+      }
+      if (!u.digest) {
+        for (const v of st.villagers) {
+          if (v.status === 'dead' || !(close || hints.has(v.id) || (docked && v.id === sel))) continue;
+          const at = r.nameAnchor(v.id);
+          if (!at) continue;
+          const tag = make(v.id, firstName(v.name), 'name-tag');
+          tag.el.classList.toggle('sel', v.id === sel);
+          shown.push({ tag, x: at.x, y: at.y });
+        }
+      }
+      // people sharing a spot would share a name's place: the nearer (lower on screen) keeps it, the others stack above
+      shown.sort((a, b) => b.y - a.y);
+      const placed: { x: number; y: number; w: number; h: number }[] = [];
+      for (const s of shown) {
+        let y = s.y;
+        for (let k = 0; k < 8; k++) {
+          const hit = placed.find((p) => Math.abs(p.x - s.x) < (p.w + s.tag.w) / 2 + 2 && Math.abs(p.y - y) < (p.h + s.tag.h) / 2);
+          if (!hit) break;
+          y = hit.y - (hit.h + s.tag.h) / 2 - 1;
+        }
+        placed.push({ x: s.x, y, w: s.tag.w, h: s.tag.h });
+        s.tag.el.style.transform = `translate(${Math.round(s.x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
+      }
+      const seen = new Set(shown.map((s) => s.tag.el.dataset.id));
+      for (const [id, tag] of tags) {
+        if (seen.has(id)) continue;
+        tag.el.remove();
+        tags.delete(id);
+      }
+    };
+    raf = requestAnimationFrame(place);
+    return () => {
+      cancelAnimationFrame(raf);
+      for (const tag of tags.values()) tag.el.remove();
+      tags.clear();
+    };
+  }, [choice, ready]);
+
   // push state + options into the renderer whenever anything changes, and once it exists (the 3D world arrives a moment after the first render)
   const lastDigest = useRef<unknown>(null);
   const lastAction = useRef<unknown>(null);
@@ -339,6 +448,12 @@ export function MapView({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
       )}
+      {lost && choice === '3d' && (
+        <div className="stage-note lost" role="alert" data-testid="context-lost">
+          <span>The 3D view has paused: the device took back its graphics memory. It should come back by itself.</span>
+          <button className="btn small" onClick={() => switchTo('2d')}>Use the classic map</button>
+        </div>
+      )}
       {noteShown && choice === '2d' && (
         <div className="stage-note" role="note" data-testid="renderer-note">
           <span>Classic map: {mode.reason.replace(/, so the classic map is used.*$/, '')}.</span>
@@ -347,6 +462,7 @@ export function MapView({ children }: { children?: React.ReactNode }) {
         </div>
       )}
       <div className="hover-tip" ref={tipRef} hidden aria-hidden="true" />
+      {choice === '3d' && <div className="name-tags" ref={namesRef} aria-hidden="true" data-testid="name-tags" />}
       <div className={`map-tools ${narrow ? 'narrow' : ''} ${toolsOpen ? 'open' : ''}`}>
         {narrow && (
           <button className="btn icon-btn tools-toggle" aria-label="View controls: zoom, rotate, fit and the 2D or 3D switch" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)} data-testid="tools-toggle">

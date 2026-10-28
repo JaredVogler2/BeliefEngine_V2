@@ -242,6 +242,13 @@ export class EffectsLayer implements Layer {
     }
   }
 
+  /** the trust ties the social lens is showing now (for the tests) */
+  lensCount(): number {
+    let n = 0;
+    for (const r of this.lensRibbons) if (r.mesh.visible) n++;
+    return n;
+  }
+
   /** the number of things being shown or about to be: used by tests and the debug panel */
   effectCount(): number {
     let n = this.queue.length + (this.ctx.magic?.pulseCount ?? 0) + this.sparks.count + this.smoke.count;

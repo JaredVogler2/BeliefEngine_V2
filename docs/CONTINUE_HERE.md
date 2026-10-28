@@ -198,8 +198,12 @@ All seventeen program phases have been worked. What remains needs the owner, or 
 
 ## Parallel track: the 3D world
 
-[`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md): stage 0 (merge V1's 3D work) is done; stage 1 (draw packs, fire,
-smoke, forecast, lens and labels in 3D) and stage 2 (time of day) remain, and with them phase 10's "premium" bar. Written laws'
+[`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md): stage 0 (merge V1's 3D work) is done; stage 1 is mostly done (wolf packs,
+fire, smoke and ash are drawn: `src/render3d/hazards.ts`; the forecast and the social lens reach the 3D world; a lost graphics context
+is told to the player and the pixel density is followed; the V2 3D spec fails on any console warning and has none; people are named
+in 3D as on the classic map, and the story in hand over its ground; high contrast reaches the 3D world); only particle size from the
+viewport (`viewScale` is a constant: an art decision) remains of stage 1; then stage 2 (time of day), and with it phase 10's "premium"
+bar. Written laws'
 effects are drawn and animated from logged events (phase 10, [`3D_EFFECTS.md`](3D_EFFECTS.md)).
 
 ## What MUST NOT be rewritten

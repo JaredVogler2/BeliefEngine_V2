@@ -137,8 +137,9 @@ Daylight planning keeps the same hues but lifts luminance: sunlit moss, warmer s
 - **Belief magic**: gold filaments travel only along real trust ties; a law waking lights its reach on the ground and kindles lanterns
   around its powered sources; a wavering law flickers; a failed or suppressed law goes dark; rival stories are violet. Every effect is
   planned from an engine event id (as `src/render3d/plan.ts` already does) and none appears when the engine says nothing happened.
-- **Threats are visible**: the flood's depth, burning and smoking tiles, wolf packs and their targets, the forecast for tonight. (Today
-  the 3D world does not draw packs, live fire, smoke, the social lens or the forecast; see the quality report.)
+- **Threats are visible**: the flood's depth, burning and smoking tiles, wolf packs and their targets, the forecast for tonight. (Since
+  phase 17 the 3D world draws packs, live fire, smoke and ash, with a mark over each pack at the overview; the forecast and the social
+  lens reach it since V1's 3D work was merged; high contrast and labels are still missing: the plan's stage 1.)
 
 ## 8. Camera and composition
 

@@ -35,8 +35,9 @@ Not complete. Each condition, as it stands:
 
 ## The issues, ranked
 
-Ten real failure cases and four checked non-issues. P0 breaks a promise the game makes (honesty, price, safety); P1 makes the game
-worse to learn or to master; P2 is small or only reachable with a live model. All P0 and the top P1s were fixed in `d3b83c1`.
+Eleven real failure cases and four checked non-issues. P0 breaks a promise the game makes (honesty, price, safety); P1 makes the game
+worse to learn or to master; P2 is small or only reachable with a live model. All P0 and the top P1s were fixed in `d3b83c1`; P1-7, found
+while capturing the 3D world for this review, was fixed after it (the dangers on the ground; [`PROGRESS.md`](PROGRESS.md)).
 
 | # | Issue | Rank | Before (`5132f26`) | After | Status |
 |---|---|---|---|---|---|
@@ -48,6 +49,7 @@ worse to learn or to master; P2 is small or only reachable with a live model. Al
 | P1-4 | The offline reader missed plain phrasings of the chapters' own answers ("Floods turn away from the village.", "Wolves fear smoke, so they stay away…", "The rain answers the bells.", "every pen", "cant") | P1 | blind dev set 22/68; blind held-out set 34/69 | dev 36/68; held-out **35/69** | **partly fixed**: the honest held-out number barely moved |
 | P1-5 | Words that only colour a sentence ("into the night") were dropped without a word; a left-out phrase was listed twice | P1 | flavour shown 0 of 3; duplicated line | 2 of 3 shown as "kept as words only"; listed once | **fixed** |
 | P1-6 | The preview said "When always:" and "within 2 tiles of the home" for a belief that acts every night around every home, and named the selector's radius, not the reach the effect acts with | P1 | | rules 3: "Every night: … within 2 tiles of any home"; the preview names the acting reach | **fixed** (rules 3) |
+| P1-7 | The 3D world drew none of the dangers the 2D map draws: no wolf pack, no live fire, no smoke round a lit fire, and ground that burned out stayed green until the village was rebuilt. A player in 3D could not see Ashwood's packs closing in or a home on fire | P1 | Ashwood seed 1, day 6: 0 wolves drawn (the engine has 3 packs out); Redbank seed 2, day 3: Ivo's home burning, nothing drawn | 9 wolves in 3 packs (as the 2D map draws them), 3 pack marks at the overview, a haze over all 21 smoky tiles; flames from the burning roof, and three nights later its tile is ash, played in the 3D world ([`world3d-ashwood-hazards-desktop.jpg`](screenshots/v2-phase17/world3d-ashwood-hazards-desktop.jpg), [`world3d-ashwood-wolves-phone.jpg`](screenshots/v2-phase17/world3d-ashwood-wolves-phone.jpg), [`world3d-redbank-fire-desktop.jpg`](screenshots/v2-phase17/world3d-redbank-fire-desktop.jpg)) | **fixed** |
 | P2-1 | A villager who doubts a story and "spreads" it (a model's decision) is logged as "X tells Y “story”" though the listener cools on it | P2 | the game's policy: 0 of 119 spreads in 24 Living Village runs; the stand-in: 0 (eval) | | open: only a live model can do it; the text is in hashed events, so changing it needs a new minds version |
 | P2-2 | "The bridge can never break." is read as a strong ward with no note that "never" is not a promise | P2 | | | open |
 | P2-3 | On a phone the 3D villagers are a few pixels tall until the player zooms in; at 320 px the day-1 story cards, tips and HUD cover about half the screen; the low quality tier (chosen in settings, or by a slow device) reads as grey slabs and outlines | P2 | default phone tier: [`world3d-phone-390-medium.jpg`](screenshots/v2-phase17/world3d-phone-390-medium.jpg), [`world3d-phone-320-medium.jpg`](screenshots/v2-phase17/world3d-phone-320-medium.jpg); low tier: [`v2-phase10/I-phone-320-low.jpg`](screenshots/v2-phase10/I-phone-320-low.jpg) | | open (art; needs a human eye and a device) |
@@ -165,6 +167,7 @@ Scores are the reviewers' judgement from the evidence (1 poor, 5 excellent), not
 - **First-time player.** The ideas refused themselves in two chapters (P1-2); half of what they type is not understood offline (P1-4); an
   impossible wish was answered with a harmful one (P1-3).
 - **Technical artist.** The desktop diorama holds together; the phone's low tier does not (P2-3). Not fixed: it needs a person and a device.
+  The 3D world hid every danger the 2D map shows (P1-7): wolves, fire, smoke and ash are now drawn, from the engine's own state.
 - **Prompt-injection attacker.** Nothing new to inject into (instructions in the sentence are named and dropped; 0 of 22 injections obeyed
   in the eval), but a model could rewrite what a sentence does while keeping its words (P0-1). Closed.
 - **Backend SRE.** No change to quotas, sessions or failure paths this phase; a dropped or stopped online reading still costs nothing.
@@ -193,3 +196,5 @@ Scores are the reviewers' judgement from the evidence (1 poor, 5 excellent), not
 - `npx tsx scripts/tournament-v2.ts --seeds 30 --scenarios <chapter> --name rules3-<chapter> --publish`: 810 runs, 0 model calls.
 - `npm run eval`: corpora unchanged; latency above; win diversity from the rules-3 tournament.
 - `npx tsx scripts/fun-review-v2.ts` (and `--root <checkout of 5132f26>`): the before/after numbers in this document.
+- After the review (P1-7): `npm test` 61 files, 690 passed (`render3d-hazards.test.ts` new); the 3D dangers test in `v2-world3d.spec.ts`
+  passed on desktop-3d and phone-3d; the desktop-3d project 24 passed, 2 skipped by design.

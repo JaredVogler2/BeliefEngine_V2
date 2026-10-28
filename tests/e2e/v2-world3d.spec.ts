@@ -11,6 +11,18 @@ import { browserState, chooseClaim, mapPainted, replayTraceViaUi, startRedbank, 
  */
 const URL_3D = '/?debug=1&renderer=3d';
 
+/**
+ * Errors and warnings both: the 3D world must not complain on the console (3D plan, stage 1). The GPU driver's own performance notes
+ * ("GL Driver Message … GPU stall due to ReadPixels", from reading the canvas back) are the browser's, not the game's.
+ */
+function watch3D(page: Page): string[] {
+  const out = watchConsole(page);
+  page.on('console', (m) => {
+    if (m.type() === 'warning' && !/GL Driver Message/.test(m.text())) out.push(`warning: ${m.text()}`);
+  });
+  return out;
+}
+
 interface Info3D { calls: number; triangles: number; tier: string; frames: number; software: boolean }
 type R3D = { kind: string; info: () => Info3D; entityScreen: (k: 'villager' | 'landmark', id: string) => { x: number; y: number } | null; hitTest: (x: number, y: number) => { kind: string; id: string } | null; stats: () => { effects: number } };
 
@@ -43,7 +55,7 @@ async function villagerOnPage(page: Page, id: string): Promise<{ x: number; y: n
 
 test.describe('3D world (Three.js, forced on)', () => {
   test('boots on WebGL2, paints the village and reports a real scene', async ({ page }) => {
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
     const i = await info(page);
@@ -57,7 +69,7 @@ test.describe('3D world (Three.js, forced on)', () => {
 
   test('a click on a person in the 3D world selects them, a story is told and the night resolves with the engine’s own hash', async ({ page }) => {
     test.setTimeout(360_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
     await chooseClaim(page, 'river_fears_fire');
@@ -118,7 +130,7 @@ test.describe('3D world (Three.js, forced on)', () => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only; the phone runs cover touch');
     test.skip(process.env.BE_SLOW_3D !== '1', 'slow on a software rasteriser: set BE_SLOW_3D=1 to run it');
     test.setTimeout(900_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     const prefix = traces.fireWall.actions.slice(0, 8);
     expect(prefix.filter((a) => a.type === 'END_DAY')).toHaveLength(2);
     await startRedbank(page, traces.canonicalSeed, 'normal', URL_3D);
@@ -135,7 +147,7 @@ test.describe('3D world (Three.js, forced on)', () => {
   test('on a phone-sized touch screen the 3D world fits, paints and answers a tap', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('phone'), 'touch profile only');
     test.setTimeout(180_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), 'no sideways scroll').toBe(true);
@@ -143,6 +155,277 @@ test.describe('3D world (Three.js, forced on)', () => {
     const at = await villagerOnPage(page, 'ivo');
     await page.touchscreen.tap(at.x, at.y - 4);
     await expect(page.getByTestId('selection-pop')).toContainText('Ivo Thatcher');
+    expect(errors).toEqual([]);
+  });
+
+  test('the dangers on the ground are drawn where the engine has them: the packs the 2D map shows, the smoke round a lit fire, fire on the ground', async ({ page }, testInfo) => {
+    test.setTimeout(420_000);
+    const errors = watch3D(page);
+    // Ashwood seed 1, the morning of day 6: three packs out, and the smoke of a fire lit at the first campfire on day 4
+    const ash = GameSession.create({ scenarioId: 'ashwood', seed: 1 });
+    expect(ash.act({ type: 'PICK_STARTER', claim: 'wolves_fear_smoke' }).ok).toBe(true);
+    while (ash.state.day < 4) ash.endDay();
+    expect(ash.act({ type: 'RITUAL', ritual: 'burn_smoke', landmark: 'c_n1' }).ok).toBe(true);
+    while (ash.state.day < 6) ash.endDay();
+    // Redbank seed 2, the morning of day 3: the beacons lit on days 1 and 2 set Ivo's home alight
+    const red = GameSession.create({ scenarioId: 'redbank', seed: 2 });
+    expect(red.act({ type: 'PICK_STARTER', claim: 'river_fears_fire' }).ok).toBe(true);
+    for (let d = 0; d < 2; d++) {
+      for (const l of red.state.world.landmarks.filter((x) => x.kind === 'beacon')) red.act({ type: 'RITUAL', ritual: 'light_beacon', landmark: l.id });
+      red.endDay();
+    }
+    const runs = [
+      {
+        name: 'ashwood',
+        state: ash.state,
+        want: { wolves: 9, packMarks: 3, fireTiles: 0, smokeTiles: 21, burning: [] as string[], ashTiles: 0 },
+        // the overview (a pack in the forest shows by its mark, the smoke lies round the lit fire), and the Grey pack at the pen
+        views: { hazards: { x: 11, z: 8.5, dist: 15, elevationDeg: 50 }, wolves: { x: 16.5, z: 9.5, dist: 5, elevationDeg: 36 } },
+        nights: [] as { fireTiles: number; burning: string[]; ashTiles: number }[],
+      },
+      {
+        name: 'redbank',
+        state: red.state,
+        want: { wolves: 0, packMarks: 0, fireTiles: 1, smokeTiles: 0, burning: ['h_ivo'], ashTiles: 0 },
+        views: { fire: { x: 18.5, z: 4.5, dist: 7, elevationDeg: 38 } },
+        // three more nights played in the 3D world: the home burns on, its ruins burn (flames from the ground now), and then its tile is ash
+        nights: [
+          { fireTiles: 1, burning: ['h_ivo'], ashTiles: 0 },
+          { fireTiles: 1, burning: [], ashTiles: 0 },
+          { fireTiles: 0, burning: [], ashTiles: 1 },
+        ],
+      },
+    ];
+    // what the page's own run says the 2D map shows (its rules: today's packs or yesterday's, one wolf more than a pack's size; a standing
+    // home on a burning tile drawn burning; burned-out ground drawn as ash)
+    const shown = () =>
+      page.evaluate(() => {
+        const s = (window as unknown as { __belief: { state: { day: number; threat: { pack?: number }[]; scn: { features: { wolves?: boolean } }; world: { w: number; packs: { size: number }[]; fire: number[]; smoke: number[]; burned: number[]; landmarks: { id: string; x: number; y: number; hp: number }[] } } } }).__belief.state;
+        const packsOn = (back: number) => s.threat[Math.max(0, Math.min(s.day, s.threat.length) - back)]?.pack ?? 0;
+        const active = s.scn.features.wolves ? Math.min(s.world.packs.length, Math.max(packsOn(1), packsOn(2))) : 0;
+        return {
+          wolves: s.world.packs.slice(0, active).reduce((n, p) => n + p.size + 1, 0),
+          packMarks: active,
+          fireTiles: s.world.fire.filter((f) => f > 0).length,
+          smokeTiles: s.world.smoke.filter((d) => d > 0).length,
+          burning: s.world.landmarks.filter((l) => l.hp > 0 && s.world.fire[l.y * s.world.w + l.x] > 0).map((l) => l.id),
+          ashTiles: s.world.burned.filter((b) => b).length,
+        };
+      });
+    const drawn = () => page.evaluate(() => (window as unknown as { __beRenderer: { hazardInfo: () => { wolves: number; packMarks: number; fireTiles: number; smokeTiles: number; puffs: number; burning: string[]; ashTiles: number } } }).__beRenderer.hazardInfo());
+    const drawnNow = async () => {
+      const d = await drawn();
+      return { wolves: d.wolves, packMarks: d.packMarks, fireTiles: d.fireTiles, smokeTiles: d.smokeTiles, burning: d.burning, ashTiles: d.ashTiles };
+    };
+    for (const run of runs) {
+      await page.goto(URL_3D);
+      await page.evaluate((v) => localStorage.setItem('be:save:v1', v), serializeRun(run.state));
+      await page.goto(URL_3D);
+      await page.getByTestId('continue').click();
+      await world3d(page);
+      expect(await shown(), run.name).toEqual(run.want);
+      await expect.poll(drawnNow, { message: `${run.name}: what the 3D world draws` }).toEqual(run.want);
+      // and the flames or the haze are really in the air
+      await expect.poll(async () => (await drawn()).puffs, { message: `${run.name}: flames or haze drawn`, timeout: 30_000 }).toBeGreaterThan(0);
+      if (process.env.BE_SHOTS === '1') {
+        for (const [what, view] of Object.entries(run.views)) {
+          await page.evaluate((v) => {
+            const r = (window as unknown as { __beRenderer: { setView: (v: { x: number; z: number; dist: number; elevationDeg: number }) => void; advance: (s: number) => void } }).__beRenderer;
+            r.setView(v);
+            r.advance(3);
+          }, view);
+          await page.waitForTimeout(1500);
+          // (the software rasteriser once handed the screenshot an empty frame: wait until the canvas is painted)
+          await expect.poll(mapPainted(page), { timeout: 20_000 }).toBeGreaterThan(0.25);
+          await page.screenshot({ path: `docs/screenshots/v2-phase17/world3d-${run.name}-${what}-${testInfo.project.name.startsWith('phone') ? 'phone' : 'desktop'}.jpg`, type: 'jpeg', quality: 85 });
+        }
+      }
+      // nights played while the 3D world draws: it keeps up with the engine without being rebuilt
+      for (const [i, night] of run.nights.entries()) {
+        await page.evaluate(() => (window as unknown as { __belief: { store: { endDay: () => void } } }).__belief.store.endDay());
+        await page.waitForTimeout(400);
+        await page.evaluate(() => (window as unknown as { __belief: { store: { closeDigest: () => void } } }).__belief.store.closeDigest());
+        const now = await shown();
+        expect({ fireTiles: now.fireTiles, burning: now.burning, ashTiles: now.ashTiles }, `${run.name} night ${i + 1}`).toEqual(night);
+        await expect.poll(drawnNow, { message: `${run.name} night ${i + 1}: what the 3D world draws` }).toEqual(now);
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('the social lens is drawn in the 3D world: the Social button lays trust ties over the village and takes them away again', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const ties = () => page.evaluate(() => (window as unknown as { __beRenderer: { lensInfo: () => { ties: number } } }).__beRenderer.lensInfo().ties);
+    expect(await ties()).toBe(0);
+    const social = page.getByRole('button', { name: 'Toggle social lens: trust ties' });
+    await social.click();
+    await expect(social).toHaveAttribute('aria-pressed', 'true');
+    // with nobody selected, the strongest ties (at most eight, so the village is not hidden under a tangle)
+    await expect.poll(ties, { message: 'the strongest ties are drawn' }).toBeGreaterThan(0);
+    expect(await ties()).toBeLessThanOrEqual(8);
+    await social.click();
+    await expect.poll(ties, { message: 'and taken away again' }).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('people are named in the 3D world as on the classic map: everyone in view close up, and the selected person on a phone', async ({ page }, testInfo) => {
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const tags = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('[data-testid="name-tags"] .name-tag')].map((el) => {
+          const b = el.getBoundingClientRect();
+          return { id: (el as HTMLElement).dataset.id ?? '', text: el.textContent ?? '', sel: el.classList.contains('sel'), cx: b.x + b.width / 2, cy: b.y + b.height / 2, bottom: b.bottom };
+        }),
+      );
+    if (testInfo.project.name.startsWith('phone')) {
+      // on a phone the card docks at the bottom, away from the person: the person carries their name instead
+      const at = await villagerOnPage(page, 'ivo');
+      await page.touchscreen.tap(at.x, at.y - 4);
+      await expect(page.getByTestId('selection-pop')).toContainText('Ivo Thatcher');
+      await expect.poll(async () => (await tags()).find((t) => t.id === 'ivo'), { timeout: 30_000 }).toMatchObject({ text: 'Ivo', sel: true });
+      // and the view slides so the card does not cover him: what is at his point (and his name's) is the world, not the card
+      const clear = async () => {
+        const p = await villagerOnPage(page, 'ivo');
+        const t = (await tags()).find((x) => x.id === 'ivo');
+        return page.evaluate((pts) => pts.every(([x, y]) => document.elementFromPoint(x, y)?.tagName === 'CANVAS'), [[p.x, p.y], ...(t ? [[t.cx, t.cy]] : [])]);
+      };
+      await expect.poll(clear, { message: 'Ivo and his name are clear of the card', timeout: 30_000 }).toBe(true);
+      if (process.env.BE_SHOTS === '1') await page.screenshot({ path: 'docs/screenshots/v2-phase17/world3d-names-selected-phone.jpg', type: 'jpeg', quality: 85 });
+    } else {
+      const home = (await tags()).length;
+      await page.evaluate(() => (window as unknown as { __beRenderer: { focusVillager: (id: string) => void } }).__beRenderer.focusVillager('ivo'));
+      await expect.poll(async () => (await tags()).length, { message: 'close up, everyone in view is named', timeout: 30_000 }).toBeGreaterThan(home);
+      await expect.poll(async () => (await tags()).find((t) => t.id === 'ivo')?.text, { timeout: 30_000 }).toBe('Ivo');
+      // the tag sits over Ivo, and takes no tap from the world under it
+      const ivo = (await tags()).find((t) => t.id === 'ivo')!;
+      const p = await villagerOnPage(page, 'ivo');
+      expect(Math.abs(ivo.cx - p.x), 'centred over him').toBeLessThan(40);
+      expect(ivo.bottom, 'above him').toBeLessThan(p.y + 4);
+      expect(await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName ?? '', [ivo.cx, ivo.cy])).toBe('CANVAS');
+      if (process.env.BE_SHOTS === '1') await page.screenshot({ path: 'docs/screenshots/v2-phase17/world3d-names-close-desktop.jpg', type: 'jpeg', quality: 85 });
+      await page.evaluate(() => (window as unknown as { __beRenderer: { fit: () => void } }).__beRenderer.fit());
+      await expect.poll(async () => (await tags()).length, { message: 'back at the overview, only those the game points at', timeout: 30_000 }).toBe(home);
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('the story being told is named over each stretch of ground it would govern; the names follow the story in hand and make way for the night', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const lawTags = () => page.evaluate(() => [...document.querySelectorAll('[data-testid="name-tags"] .name-tag.law')].map((el) => el.textContent ?? ''));
+    expect(await lawTags()).toEqual([]);
+    await chooseClaim(page, 'river_fears_fire');
+    // what the page's own run says: the story's short name, and the regions it would govern
+    const wanted = (claim: string) =>
+      page.evaluate((id) => {
+        const s = (window as unknown as { __belief: { state: { scn: { claimDefs: { id: string; short: string; regions: string[] }[] }; world: { regions: { id: string; name: string }[] } } } }).__belief.state;
+        const d = s.scn.claimDefs.find((c) => c.id === id)!;
+        return d.regions.map((r) => `${d.short} · ${s.world.regions.find((q) => q.id === r)?.name ?? r}`);
+      }, claim);
+    const showing = async (claim: string) => {
+      const want = await wanted(claim);
+      const got = await lawTags();
+      return got.length > 0 && got.every((t) => want.includes(t));
+    };
+    await expect.poll(() => showing('river_fears_fire'), { message: 'named over its ground', timeout: 30_000 }).toBe(true);
+    // the names follow the story in hand
+    await page.evaluate(() => (window as unknown as { __belief: { store: { set: (p: { activeClaim: string }) => void } } }).__belief.store.set({ activeClaim: 'bridge_stands_watched' }));
+    await expect.poll(() => showing('bridge_stands_watched'), { message: 'another story, its own ground', timeout: 30_000 }).toBe(true);
+    // and make way for the night's summary
+    await page.evaluate(() => (window as unknown as { __belief: { store: { endDay: () => void } } }).__belief.store.endDay());
+    await expect(page.getByTestId('digest')).toBeVisible();
+    await expect.poll(lawTags, { message: 'none over the night summary', timeout: 30_000 }).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  test('high contrast reaches the 3D world: the haze thins and shapes are inked at full strength, and both come back', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const info = () => page.evaluate(() => (window as unknown as { __beRenderer: { contrastInfo: () => { high: boolean; fogDensity: number; ink: number | null } } }).__beRenderer.contrastInfo());
+    const setHigh = (on: boolean) => page.evaluate((v) => (window as unknown as { __belief: { store: { setSettings: (s: { highContrast: boolean }) => void } } }).__belief.store.setSettings({ highContrast: v }), on);
+    const before = await info();
+    expect(before.high).toBe(false);
+    await setHigh(true);
+    await expect(page.locator('html')).toHaveAttribute('data-contrast', 'high');
+    await expect.poll(async () => (await info()).high).toBe(true);
+    await expect.poll(async () => (await info()).fogDensity, { message: 'the haze thins', timeout: 30_000 }).toBeLessThan(before.fogDensity * 0.5);
+    if (before.ink !== null) expect((await info()).ink).toBe(1);
+    await setHigh(false);
+    await expect.poll(async () => (await info()).fogDensity, { message: 'and comes back', timeout: 30_000 }).toBeGreaterThan(before.fogDensity * 0.8);
+    if (before.ink !== null) expect((await info()).ink).toBe(before.ink);
+    expect(errors).toEqual([]);
+  });
+
+  test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
+    test.setTimeout(300_000);
+    const errors = watch3D(page);
+    // headless Chromium changes devicePixelRatio for an emulated density but raises no media-query event, as a real browser does when
+    // a window moves to another screen: keep the listener the page registers for its density, to raise that event by hand below
+    await page.addInitScript(() => {
+      const w = window as unknown as { __beDensity: ((e: Event) => void)[] };
+      w.__beDensity = [];
+      const real = window.matchMedia.bind(window);
+      window.matchMedia = (q: string) => {
+        const m = real(q);
+        if (q.includes('resolution')) {
+          const add = m.addEventListener.bind(m);
+          m.addEventListener = ((type: string, fn: (e: Event) => void, opts?: AddEventListenerOptions) => {
+            if (type === 'change') w.__beDensity.push(fn);
+            add(type as 'change', fn, opts);
+          }) as typeof m.addEventListener;
+        }
+        return m;
+      };
+    });
+    // a tier asked for by name is left alone by the quality monitor, so the drawing buffer changes only when the density does
+    await startRedbank(page, 1, 'normal', '/?debug=1&renderer=3d&quality=medium&scale=0.5');
+    await world3d(page);
+    const context = (how: 'loseContext' | 'restoreContext') =>
+      page.evaluate((h) => {
+        const w = window as unknown as { __beLose?: WEBGL_lose_context };
+        w.__beLose ??= (document.querySelector('.stage canvas') as HTMLCanvasElement).getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
+        w.__beLose[h]();
+      }, how);
+    // lost the way a phone loses it when it takes the memory back: the player is told, and offered the classic map
+    await context('loseContext');
+    await expect(page.getByTestId('context-lost')).toBeVisible();
+    await expect(page.getByTestId('context-lost').getByRole('button', { name: 'Use the classic map' })).toBeVisible();
+    // and nothing of the interface covers it (visible is not enough: the top bar once hid it)
+    const covered = await page.getByTestId('context-lost').evaluate((el) => {
+      const b = el.getBoundingClientRect();
+      const pts = [[0.5, 0.5], [0.15, 0.5], [0.85, 0.5]].map(([fx, fy]) => document.elementFromPoint(b.left + b.width * fx, b.top + b.height * fy));
+      return pts.filter((hit) => !hit || !el.contains(hit)).length;
+    });
+    expect(covered, 'points of the notice covered by something else').toBe(0);
+    if (process.env.BE_SHOTS === '1') await page.screenshot({ path: 'docs/screenshots/v2-phase17/world3d-context-lost-desktop.jpg', type: 'jpeg', quality: 85 });
+    // and when the browser gives it back the notice goes and the village is drawn again
+    await context('restoreContext');
+    await expect(page.getByTestId('context-lost')).toHaveCount(0);
+    await expect.poll(mapPainted(page), { message: 'the village is drawn again', timeout: 60_000 }).toBeGreaterThan(0.25);
+    // a window moved to a denser screen: the same size in CSS pixels, so only the density watch can notice (medium tier: up to 1.5)
+    const buffer = () => page.evaluate(() => (document.querySelector('.stage canvas') as HTMLCanvasElement).width);
+    const before = await buffer();
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 2, mobile: false });
+    expect(await page.evaluate(() => window.devicePixelRatio)).toBe(2);
+    expect(await buffer(), 'no size changed, so nothing else redraws at the new density').toBe(before);
+    await page.evaluate(() => (window as unknown as { __beDensity: ((e: Event) => void)[] }).__beDensity.at(-1)?.(new Event('change')));
+    await expect.poll(buffer, { message: 'the drawing buffer follows the density' }).toBe(Math.floor(before * 1.5));
+    await expect.poll(mapPainted(page), { timeout: 30_000 }).toBeGreaterThan(0.25);
     expect(errors).toEqual([]);
   });
 

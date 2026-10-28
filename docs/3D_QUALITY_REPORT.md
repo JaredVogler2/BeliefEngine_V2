@@ -115,7 +115,7 @@ Every 3D frame is too bright even for the daytime band, has no deep shadow at al
 
 | Rank | Deficiency | Plan stage |
 |---|---|---|
-| P0 | the 3D world hides game state the 2D map shows: wolf packs, fire and smoke tiles, forecast and threat mood on load, lens, labels | 0 (V1 PR fixes the forecast on load) and 1 |
+| P0 | the 3D world hides game state the 2D map shows: wolf packs, fire and smoke tiles, forecast and threat mood on load, lens, labels | 0 (V1 PR fixes the forecast on load; the merged renderer also draws the lens) and 1 (packs, fire, smoke and ash drawn since phase 17: [plan](3D_IMPLEMENTATION_PLAN.md) stage 1) |
 | P0 | no time of day: nights are never shown, so there is no warm/cool story at all | 2 |
 | P1 | the board floats in a void with a cut edge | 3 |
 | P1 | water is a turquoise toy surface with no reflections | 4 |

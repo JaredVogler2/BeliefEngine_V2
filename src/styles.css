@@ -252,6 +252,14 @@ html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-
 .pop-more { margin-top: 0.4rem; width: 100%; }
 .hover-tip { position: absolute; z-index: 9; pointer-events: none; padding: 0.2rem 0.55rem; border-radius: 8px; background: rgba(10, 17, 30, 0.88); border: 1px solid var(--glass-line); font-size: 0.78rem; font-weight: 700; white-space: nowrap; transform: translate(-50%, -140%); }
 .hover-tip small { display: block; font-weight: 500; color: var(--muted); }
+/* names over people in the 3D world: they follow their person and never take a tap from the world under them */
+.name-tags { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; }
+.name-tag { position: absolute; left: 0; top: 0; padding: 0.05rem 0.45rem; border-radius: 999px; background: rgba(14, 22, 38, 0.82); border: 1px solid rgba(255, 255, 255, 0.12); color: #f4ecd8; font-size: 0.72rem; font-weight: 600; line-height: 1.35; white-space: nowrap; will-change: transform; }
+.name-tag.sel { color: var(--gold); border-color: var(--gold); }
+.name-tag.law { padding: 0.15rem 0.6rem; background: rgba(38, 28, 10, 0.86); border-color: rgba(242, 184, 75, 0.65); color: var(--gold); font-size: 0.78rem; font-style: italic; }
+html[data-contrast='high'] .name-tag { background: #000; color: #fff; border-color: #fff; }
+html[data-contrast='high'] .name-tag.sel,
+html[data-contrast='high'] .name-tag.law { color: var(--gold); border-color: var(--gold); }
 
 /* the side sheet: full detail, closed until asked for */
 .side { position: absolute; z-index: 20; top: 0; right: 0; bottom: 0; width: min(var(--sheet-w), 100%); display: flex; flex-direction: column; min-height: 0; background: linear-gradient(180deg, rgba(20, 33, 58, 0.98), rgba(11, 18, 32, 0.99)); border-left: 1px solid var(--glass-line); box-shadow: -14px 0 40px rgba(0, 0, 0, 0.45); transform: translateX(104%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
@@ -540,6 +548,9 @@ textarea[data-testid='compose-text'], .field textarea { background: #0b1220; bor
 /* the one-line note shown when the classic map is used because there is no graphics acceleration */
 .stage-note { position: absolute; left: 10px; top: 10px; z-index: 6; display: flex; align-items: center; gap: 0.5rem; max-width: calc(100% - 80px); padding: 0.25rem 0.5rem 0.25rem 0.8rem; border-radius: 999px; background: rgba(16, 26, 43, 0.9); border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
 .stage-note .btn { min-height: 32px; padding: 0.15rem 0.7rem; }
+/* the 3D view lost its graphics context: said in the middle of the (paused) village, clear of the bars round it */
+.stage-note.lost { top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 13; width: max-content; max-width: min(560px, calc(100% - 32px)); flex-wrap: wrap; justify-content: center; text-align: center; border-radius: 14px; padding: 0.6rem 0.9rem; font-size: 0.9rem; color: var(--ink); }
+.stage-note.lost .btn { min-height: 44px; }
 
 /* the end-of-run screen: the real village at the end, with the last important events under it */
 .scene.aftermath { margin: 0 0 1rem; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: #0b1220; }
