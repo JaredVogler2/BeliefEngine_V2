@@ -1,3 +1,4 @@
+import { cleanMeta } from './meta.ts';
 import { emit, type Ctx } from './events.ts';
 import { cloneState } from './clone.ts';
 import { claimDef, findClaimDef, findLandmark, findVillager, trustOf, neighborsOf, edgeBetween, allClaimDefs, evidenceMult, modActive, repeatMult } from './lookup.ts';
@@ -151,7 +152,9 @@ export function applyAction(state: RunState, action: Action): ActionResult {
   s.ap -= cost;
   s.stats.apSpent += cost;
   s.stats.actions += 1;
-  s.today.push({ day: s.day, action, cost });
+  // the day's record keeps the action as the engine took it: any inference metadata it carries is cleaned first (core/meta.ts)
+  const recorded = 'meta' in action && action.meta !== undefined ? ({ ...action, meta: cleanMeta(action.meta) } as Action) : action;
+  s.today.push({ day: s.day, action: recorded, cost });
   return { ok: true, state: s, events: ctx.events, cost, summary: ctx.events.filter((e) => e.step === 'action' && e.importance >= 1).map((e) => e.text).join(' ') };
 }
 

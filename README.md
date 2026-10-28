@@ -38,6 +38,10 @@ what a village believes, and enough shared belief becomes physical law.
   online reading and falls back with nothing spent; after writing it asks who tells it first; a villager card answers what they
   think, why, whether they would listen and what they will do, with a "Why?" link to the event ([`docs/UX_V2.md`](docs/UX_V2.md)).
   Verified in Chromium at desktop and four iPhone sizes; WebKit runs in CI; real iPhone Safari is UNVERIFIED.
+- **Phases 13-14: tools and replays.** The local MCP server plays Generative Reality on the browser's own hashes
+  ([`docs/MCP_V2.md`](docs/MCP_V2.md)); every input that did not come from the rules (a belief read, a model's proposals) is recorded
+  in an external-decision ledger, so a run replays offline exactly, and the debrief checks it; readers and villager decisions are
+  measured on labelled corpora (`npm run eval`, [`docs/REPLAY_V2.md`](docs/REPLAY_V2.md)), offline and MOCK only.
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
   dusk); the baseline report ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)) predates the V1 merge, and the work to reach

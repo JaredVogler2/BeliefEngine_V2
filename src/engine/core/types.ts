@@ -458,12 +458,26 @@ export type Action =
   | { type: 'COUNTER'; claim: Id; against: Id; target: Id }
   | { type: 'PICK_STARTER'; claim: Id }
   | { type: 'TRADE'; deal: Id; target: Id }
-  | { type: 'COMPOSE'; claim: ClaimDef }
+  /** `meta`: what the inference service reported for a model's reading (kept in the action log for the ledger; the engine ignores it) */
+  | { type: 'COMPOSE'; claim: ClaimDef; meta?: InferenceMeta }
   /** decisions a model proposed for villagers due to think today (V2 minds); bound to the run revision the request was built at */
-  | { type: 'NPC_DECIDE'; rev: number; decisions: NpcChoiceInput[]; model?: string; id?: string }
+  | { type: 'NPC_DECIDE'; rev: number; decisions: NpcChoiceInput[]; model?: string; id?: string; meta?: InferenceMeta }
   /** the Keeper talks with a villager (V2 minds): ask, argue for, challenge, or ask what they make of things; `reply` is a model's line */
-  | { type: 'TALK'; target: Id; mode: 'ask' | 'persuade' | 'challenge' | 'guess'; claim?: Id; reply?: { line: string; cites: string[] } }
+  | { type: 'TALK'; target: Id; mode: 'ask' | 'persuade' | 'challenge' | 'guess'; claim?: Id; reply?: { line: string; cites: string[] }; meta?: InferenceMeta }
   | { type: 'END_DAY' };
+
+/** What the inference service reported about one model call (save/ledger.ts): never a key, a prompt or a raw answer. */
+export interface InferenceMeta {
+  provider?: string;
+  model?: string;
+  tier?: string;
+  promptVersion?: string;
+  id?: string;
+  latencyMs?: number;
+  cached?: boolean;
+  costUsd?: number;
+  tokens?: number;
+}
 
 /** A villager decision as it arrives from outside the engine (validated against the live run before anything uses it). */
 export interface NpcChoiceInput {

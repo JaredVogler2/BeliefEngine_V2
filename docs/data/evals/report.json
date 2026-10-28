@@ -1,0 +1,363 @@
+{
+ "generated": "npm run eval",
+ "live": {
+  "run": false,
+  "why": "no provider is configured in this repository; every number here is offline or MOCK"
+ },
+ "beliefs": {
+  "cases": 332,
+  "rows": [
+   {
+    "corpus": "reality-corpus-1",
+    "reader": "offline",
+    "n": 172,
+    "labelOk": 172,
+    "supported": 89,
+    "faithful": 89,
+    "unsupported": 62,
+    "abstained": 62,
+    "reasonOk": 62,
+    "hallucinated": 0,
+    "partial": 18,
+    "partialNamed": 18,
+    "ambiguous": 3,
+    "ambiguousOk": 3,
+    "compound": 11,
+    "clausesKept": 11,
+    "injection": 12,
+    "injectionObeyed": 0,
+    "readings": 111,
+    "grounded": 111
+   },
+   {
+    "corpus": "reality-corpus-1",
+    "reader": "mock",
+    "n": 172,
+    "labelOk": 172,
+    "supported": 89,
+    "faithful": 89,
+    "unsupported": 62,
+    "abstained": 62,
+    "reasonOk": 62,
+    "hallucinated": 0,
+    "partial": 18,
+    "partialNamed": 18,
+    "ambiguous": 3,
+    "ambiguousOk": 3,
+    "compound": 11,
+    "clausesKept": 11,
+    "injection": 12,
+    "injectionObeyed": 0,
+    "readings": 110,
+    "grounded": 110
+   },
+   {
+    "corpus": "reality-corpus-1",
+    "reader": "v1",
+    "n": 172,
+    "labelOk": 80,
+    "supported": 89,
+    "faithful": 19,
+    "unsupported": 62,
+    "abstained": 55,
+    "reasonOk": 0,
+    "hallucinated": 6,
+    "partial": 18,
+    "partialNamed": 0,
+    "ambiguous": 3,
+    "ambiguousOk": 0,
+    "compound": 11,
+    "clausesKept": 2,
+    "injection": 12,
+    "injectionObeyed": 0,
+    "readings": 54,
+    "grounded": 54
+   },
+   {
+    "corpus": "reality-corpus-holdout-1",
+    "reader": "offline",
+    "n": 80,
+    "labelOk": 78,
+    "supported": 30,
+    "faithful": 30,
+    "unsupported": 32,
+    "abstained": 31,
+    "reasonOk": 30,
+    "hallucinated": 1,
+    "partial": 12,
+    "partialNamed": 12,
+    "ambiguous": 6,
+    "ambiguousOk": 5,
+    "compound": 7,
+    "clausesKept": 7,
+    "injection": 3,
+    "injectionObeyed": 0,
+    "readings": 53,
+    "grounded": 53
+   },
+   {
+    "corpus": "reality-corpus-holdout-1",
+    "reader": "mock",
+    "n": 80,
+    "labelOk": 78,
+    "supported": 30,
+    "faithful": 30,
+    "unsupported": 32,
+    "abstained": 31,
+    "reasonOk": 30,
+    "hallucinated": 1,
+    "partial": 12,
+    "partialNamed": 12,
+    "ambiguous": 6,
+    "ambiguousOk": 5,
+    "compound": 7,
+    "clausesKept": 7,
+    "injection": 3,
+    "injectionObeyed": 0,
+    "readings": 53,
+    "grounded": 53
+   },
+   {
+    "corpus": "reality-corpus-holdout-1",
+    "reader": "v1",
+    "n": 80,
+    "labelOk": 32,
+    "supported": 30,
+    "faithful": 3,
+    "unsupported": 32,
+    "abstained": 28,
+    "reasonOk": 0,
+    "hallucinated": 3,
+    "partial": 12,
+    "partialNamed": 0,
+    "ambiguous": 6,
+    "ambiguousOk": 0,
+    "compound": 7,
+    "clausesKept": 0,
+    "injection": 3,
+    "injectionObeyed": 0,
+    "readings": 19,
+    "grounded": 19
+   },
+   {
+    "corpus": "reality-corpus-holdout-2",
+    "reader": "offline",
+    "n": 80,
+    "labelOk": 51,
+    "supported": 30,
+    "faithful": 13,
+    "unsupported": 32,
+    "abstained": 29,
+    "reasonOk": 20,
+    "hallucinated": 0,
+    "partial": 12,
+    "partialNamed": 5,
+    "ambiguous": 6,
+    "ambiguousOk": 0,
+    "compound": 5,
+    "clausesKept": 2,
+    "injection": 7,
+    "injectionObeyed": 0,
+    "readings": 29,
+    "grounded": 29
+   },
+   {
+    "corpus": "reality-corpus-holdout-2",
+    "reader": "mock",
+    "n": 80,
+    "labelOk": 52,
+    "supported": 30,
+    "faithful": 13,
+    "unsupported": 32,
+    "abstained": 30,
+    "reasonOk": 20,
+    "hallucinated": 0,
+    "partial": 12,
+    "partialNamed": 5,
+    "ambiguous": 6,
+    "ambiguousOk": 0,
+    "compound": 5,
+    "clausesKept": 2,
+    "injection": 7,
+    "injectionObeyed": 0,
+    "readings": 28,
+    "grounded": 28
+   },
+   {
+    "corpus": "reality-corpus-holdout-2",
+    "reader": "v1",
+    "n": 80,
+    "labelOk": 34,
+    "supported": 30,
+    "faithful": 3,
+    "unsupported": 32,
+    "abstained": 30,
+    "reasonOk": 0,
+    "hallucinated": 1,
+    "partial": 12,
+    "partialNamed": 0,
+    "ambiguous": 6,
+    "ambiguousOk": 0,
+    "compound": 5,
+    "clausesKept": 0,
+    "injection": 7,
+    "injectionObeyed": 0,
+    "readings": 17,
+    "grounded": 17
+   }
+  ]
+ },
+ "v1Migration": {
+  "corpora": [
+   "tests/fixtures/belief-corpus.json",
+   "tests/fixtures/belief-holdout.json",
+   "tests/fixtures/belief-holdout-2.json"
+  ],
+  "drafts": 130,
+  "validAst": 130,
+  "buildsHere": 130,
+  "partlyUntranslated": 0
+ },
+ "npc": {
+  "situations": 68,
+  "cases": 211,
+  "policyDecisions": 211,
+  "mockAsked": 211,
+  "mockAccepted": 211,
+  "mockRefusedByServer": 0,
+  "rows": [
+   {
+    "reader": "policy (the game's own)",
+    "legal": {
+     "n": 211,
+     "of": 211,
+     "pct": 100
+    },
+    "provenance": {
+     "n": 211,
+     "of": 211,
+     "pct": 100
+    },
+    "spreadsDisbelieved": {
+     "n": 0,
+     "of": 211,
+     "pct": 0
+    },
+    "challengesFirm": {
+     "n": 0,
+     "of": 211,
+     "pct": 0
+    },
+    "skepticHearsay": {
+     "n": 0,
+     "of": 211,
+     "pct": 0
+    }
+   },
+   {
+    "reader": "MOCK stand-in (demoNpc; no model)",
+    "legal": {
+     "n": 211,
+     "of": 211,
+     "pct": 100
+    },
+    "provenance": {
+     "n": 211,
+     "of": 211,
+     "pct": 100
+    },
+    "spreadsDisbelieved": {
+     "n": 0,
+     "of": 211,
+     "pct": 0
+    },
+    "challengesFirm": {
+     "n": 0,
+     "of": 211,
+     "pct": 0
+    },
+    "skepticHearsay": {
+     "n": 0,
+     "of": 211,
+     "pct": 0
+    }
+   }
+  ],
+  "opportunity": {
+   "spreadsDisbelieved": 0,
+   "challengesFirm": 9,
+   "skepticHearsay": 19,
+   "skeptics": 23,
+   "withMemories": 209
+  },
+  "illegalExamples": []
+ },
+ "latencyMs": {
+  "offlineReading": {
+   "p50": 12.87,
+   "p95": 38.83,
+   "n": 332
+  },
+  "mockPipelineReading": {
+   "p50": 20.77,
+   "p95": 41.15,
+   "n": 332
+  },
+  "v1Reading": {
+   "p50": 2.68,
+   "p95": 49.47,
+   "n": 332
+  },
+  "policyDecision": {
+   "p50": 0.15,
+   "p95": 1.52,
+   "n": 68
+  }
+ },
+ "costEstimates": {
+  "readingFast": 0.000152,
+  "readingAccurate": 0.00303,
+  "npcBatchFast": 0.000602,
+  "tokensPerReading": 765,
+  "tokensPerNpcBatch": 2522,
+  "tierShare": {
+   "fast": 177,
+   "accurate": 155
+  }
+ },
+ "winDiversity": [
+  {
+   "scenario": "redbank",
+   "seeds": 30,
+   "policiesThatWin": 5,
+   "of": 9,
+   "best": [
+    "evidence-first 27/30",
+    "careful-synergy 26/30",
+    "ward-greedy 24/30"
+   ]
+  },
+  {
+   "scenario": "harvest",
+   "seeds": 30,
+   "policiesThatWin": 5,
+   "of": 9,
+   "best": [
+    "ward-greedy 28/30",
+    "rival-antagonist 25/30",
+    "evidence-first 13/30"
+   ]
+  },
+  {
+   "scenario": "ashwood",
+   "seeds": 30,
+   "policiesThatWin": 6,
+   "of": 9,
+   "best": [
+    "ward-greedy 21/30",
+    "rival-antagonist 21/30",
+    "evidence-first 18/30"
+   ]
+  }
+ ]
+}

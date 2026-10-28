@@ -7,6 +7,8 @@ export type { ActionOption, Preview, Selection } from './core/actions.ts';
 export { replayRun, stateHash, eventHash } from './core/replay.ts';
 export type { ReplayLog, ReplayResult } from './core/replay.ts';
 export { serializeRun, deserializeRun } from './save/serialize.ts';
+export { deriveLedger, checkLedger, checkRun, ledgerSummary, cleanMeta, actionsOfState, mayHaveExternal, emptyLedger, LEDGER_VERSION, VALIDATOR_VERSION, MAX_LEDGER_ENTRIES } from './save/ledger.ts';
+export type { Ledger, LedgerEntry, LedgerKind, LedgerCheck, LedgerProblem, ReplayStart, Derived, ReplayFile } from './save/ledger.ts';
 export { getScenarioDef, listScenarios } from './content/registry.ts';
 export { getVillagerView, getLawViews, getHand, getForecast, getHud, getModifierViews, getIntents, getCallouts, beliefLabel, influenceRanks } from './core/selectors.ts';
 export type { VillagerView, LawView, ClaimCard, ForecastView, HudView, BeliefView, ModifierView, IntentView, Callout } from './core/selectors.ts';

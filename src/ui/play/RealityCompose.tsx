@@ -143,7 +143,9 @@ export default function RealityCompose() {
 
   const write = () => {
     if (!claim || !draft) return;
-    const res = store.act({ type: 'COMPOSE', claim });
+    // a model's reading carries what the inference service reported about it into the run's ledger (never a key or a prompt)
+    const fromModel = cand?.ast.source.reader === 'model' && meta;
+    const res = store.act({ type: 'COMPOSE', claim, ...(fromModel ? { meta: { provider: meta.provider, model: meta.model, tier: meta.tier, promptVersion: meta.promptVersion, id: meta.id, latencyMs: meta.latencyMs, cached: meta.cached } } : {}) });
     if (res?.ok) {
       setWritten(draft.claim.id);
       store.set({ activeClaim: draft.claim.id });

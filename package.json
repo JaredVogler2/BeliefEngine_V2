@@ -39,7 +39,8 @@
     "acceptance:mcp": "tsx scripts/acceptance-b.ts",
     "acceptance:fun": "tsx scripts/acceptance-fun.ts",
     "acceptance:novice": "tsx scripts/novice-pass.ts",
-    "monkey": "tsx scripts/monkey.ts"
+    "monkey": "tsx scripts/monkey.ts",
+    "eval": "tsx scripts/eval.ts"
   },
   "dependencies": {
     "ai": "7.0.155",

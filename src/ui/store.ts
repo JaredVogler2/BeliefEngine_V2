@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
-import { GameSession, deserializeRun, serializeRun } from '../engine/index.ts';
-import type { Action, ActionResult, CreateRunOptions, GameEvent, DaySummary, RunReward, RunState } from '../engine/index.ts';
+import { GameSession, checkRun, deserializeRun, emptyLedger, mayHaveExternal, serializeRun } from '../engine/index.ts';
+import type { Action, ActionResult, CreateRunOptions, GameEvent, DaySummary, Ledger, RunReward, RunState } from '../engine/index.ts';
 import { DEFAULT_SETTINGS, KEYS, loadSettings, readKey, removeKey, saveSettings, writeKey, type Settings } from './persist.ts';
 import { sfx } from '../audio/audio.ts';
 import { recordRun } from './progress.ts';
@@ -160,7 +160,17 @@ export class GameStore {
 
   /** The current run as a save file the player can keep or hand to another tool (browser, MCP coach). Null if there is no run. */
   exportSave(): string | null {
-    return this.state ? serializeRun(this.state) : null;
+    return this.state ? serializeRun(this.state, { ledger: this.session?.ledger }) : null;
+  }
+
+  /**
+   * A session for a loaded run, with its ledger: the one the save carries, or (an older save, which has none) the one its own action
+   * log derives. A plain Classic run has no external inputs, so nothing is replayed for it. The debrief checks the ledger in full.
+   */
+  private sessionFor(state: RunState, ledger: Ledger | undefined): GameSession {
+    if (ledger || !mayHaveExternal(state)) return new GameSession(state, ledger ?? emptyLedger());
+    const { check, derived } = checkRun(state, undefined);
+    return new GameSession(state, check.ok || check.code === 'LEDGER_MISSING' ? derived.ledger : emptyLedger());
   }
 
   /** Load a save file the player picked. Validated exactly like the autosave; on failure nothing changes and a reason is shown. */
@@ -174,7 +184,7 @@ export class GameStore {
       this.set({ loadError: r.error });
       return false;
     }
-    this.session = new GameSession(r.state);
+    this.session = this.sessionFor(r.state, r.ledger);
     this.prevState = null;
     this.persist();
     const first = r.state.scn.starters.find((c) => r.state.claims.find((x) => x.id === c)?.available) ?? null;
@@ -192,7 +202,7 @@ export class GameStore {
       this.set({ loadError: `${r.error} The save was cleared so you can start fresh.` });
       return false;
     }
-    this.session = new GameSession(r.state);
+    this.session = this.sessionFor(r.state, r.ledger);
     this.prevState = null;
     const first = r.state.scn.starters.find((c) => r.state.claims.find((x) => x.id === c)?.available) ?? null;
     this.ui = { ...this.ui, screen: r.state.outcome ? 'debrief' : 'play', selection: null, activeClaim: first, digest: null, confirmEnd: false, loadError: null, scenarioId: r.state.scenarioId, tutorialDone: true, realityDraft: undefined, logFocus: undefined };
@@ -205,6 +215,24 @@ export class GameStore {
     this.emit();
   }
 
+  /** Delete the saved run and drop it from memory (Settings > Your data). */
+  deleteGame(): void {
+    removeKey(KEYS.save);
+    this.session = null;
+    this.prevState = null;
+    this.ui = { ...this.ui, screen: 'title', realityDraft: undefined, logFocus: undefined, digest: null };
+    this.emit();
+  }
+
+  /** Delete everything this game keeps in this browser (the saved run, the Atlas, settings, what has been seen), then start afresh. */
+  deleteAllLocal(): void {
+    for (const k of Object.values(KEYS)) removeKey(k);
+    this.session = null;
+    this.prevState = null;
+    this.ui = { ...this.ui, screen: 'title', settings: { ...DEFAULT_SETTINGS }, showFlood: DEFAULT_SETTINGS.showFlood, realityDraft: undefined, logFocus: undefined, reward: null, digest: null };
+    this.emit();
+  }
+
   private persist(): void {
     const s = this.state;
     if (!s) return;
@@ -213,7 +241,7 @@ export class GameStore {
       return;
     }
     const wasOk = this.lastSavedOk;
-    this.lastSavedOk = writeKey(KEYS.save, serializeRun(s));
+    this.lastSavedOk = writeKey(KEYS.save, serializeRun(s, { ledger: this.session?.ledger }));
     // tell the player once, with the way out, instead of failing silently
     if (wasOk && !this.lastSavedOk) this.toast('This browser would not save the game (storage is full or blocked). You can keep playing; use Settings > Download this game to keep a copy.', 'error');
   }

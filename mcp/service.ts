@@ -13,8 +13,9 @@ import { z } from 'zod';
 import {
   GEN_VERSION, GameSession, MAX_SEED, RULES_VERSION, buildDebrief, nightReport, findCounterfactual, deserializeRun, describeAction, eventHash, expeditionId, getAvailableActions, getForecast, getHud, getLawViews, getScenarioDef,
   getVillagerView, listScenarios, parseExpeditionId, previewAction, serializeRun, stateHash, influenceRanks, getHand, objectiveStatuses, interpretBelief, allOffers, MAX_CUSTOM_CLAIMS,
-  MAX_REALITY_CLAIMS, optionsFromState, stagingOmen,
+  MAX_REALITY_CLAIMS, optionsFromState, stagingOmen, deriveLedger, checkLedger, ledgerSummary,
 } from '../src/engine/index.ts';
+import type { InferenceMeta, Ledger } from '../src/engine/index.ts';
 import type { Draft } from '../src/engine/index.ts';
 import type { RealityDraft } from '../src/engine/reality/build.ts';
 import { readBelief } from '../src/engine/reality/read.ts';
@@ -87,25 +88,6 @@ interface RunRecord {
   base?: string;
 }
 
-/** Re-run a run's own action log from its starting point (a fresh village, or the imported save). Null if anything is rejected. */
-function replayFromStart(options: CreateRunOptions, base: string | undefined, actions: Action[]): RunState | null {
-  let session: GameSession;
-  if (base) {
-    const l = deserializeRun(base);
-    if (!l.ok) return null;
-    session = new GameSession(l.state);
-  } else session = GameSession.create(options);
-  try {
-    for (const a of actions) {
-      if (a.type === 'END_DAY') session.endDay();
-      else if (!session.act(a).ok) return null;
-    }
-  } catch {
-    return null;
-  }
-  return session.state;
-}
-
 export interface ServiceOptions {
   /** directory for run files; null keeps everything in memory (tests) */
   home: string | null;
@@ -146,7 +128,7 @@ interface BeliefToken {
   astHash: string;
   /** an Inventor draft (submit_belief), or a reality draft (propose_belief) with whether writing it needs the agent's explicit yes */
   draft?: Draft;
-  reality?: { draft: RealityDraft; needsYes: boolean };
+  reality?: { draft: RealityDraft; needsYes: boolean; meta?: InferenceMeta };
   expiresAt: number;
   /** set once confirmed, so confirming the same token again returns the same answer instead of paying twice */
   done?: ToolResult;
@@ -164,8 +146,8 @@ export class GameService {
   private readonly clock: () => number;
   /** confirmation tokens for interpreted beliefs: in memory only, short-lived, bound to one run and one structure */
   private tokens = new Map<string, BeliefToken>();
-  /** runs on disk that were refused on load, with the reason (a version difference), so the caller is told why instead of "no such run" */
-  private refused = new Map<string, string>();
+  /** runs on disk that were refused on load, with the reason (a version difference, a ledger that does not match), so the caller is told why */
+  private refused = new Map<string, { code: string; message: string }>();
   private readonly online: OnlineReader | null;
 
   constructor(opts: ServiceOptions) {
@@ -188,6 +170,7 @@ export class GameService {
     const body = JSON.stringify({
       format: SAVE_FORMAT, v: 1, id: r.id, mode: r.mode, options: r.options, revision: r.revision, createdAt: r.createdAt, updatedAt: r.updatedAt,
       versions: r.base ? undefined : replayVersions(r.options), actions: r.actions, idem: [...r.idem.entries()].slice(-IDEM_KEEP), base: r.base, state: serializeRun(r.session.state),
+      ledger: r.session.ledger,
     });
     const tmp = this.file(r.id) + '.tmp';
     writeFileSync(tmp, body);
@@ -202,21 +185,34 @@ export class GameService {
     try {
       const raw = JSON.parse(readFileSync(f, 'utf8')) as {
         format: string; id: string; mode: Mode; options: CreateRunOptions; revision: number; createdAt: number; updatedAt: number; actions: Action[]; idem: [string, ToolResult][]; state: string; base?: string;
-        versions?: Partial<ReplayVersions>;
+        versions?: Partial<ReplayVersions>; ledger?: Ledger;
       };
       if (raw.format !== SAVE_FORMAT || raw.id !== runId) return null;
       // a run recorded under other rules, content or belief language is not silently re-played into a different result: say what differs
       const drift = raw.base ? [] : versionDrift(raw.versions, replayVersions(raw.options));
       if (drift.length) {
-        this.refused.set(runId, `This run was recorded under different versions than this engine has, so replaying it would not reproduce what happened: ${drift.join('; ')}. The file is kept untouched on disk; open it with the engine version that recorded it.`);
+        this.refused.set(runId, { code: 'RUN_VERSION_MISMATCH', message: `This run was recorded under different versions than this engine has, so replaying it would not reproduce what happened: ${drift.join('; ')}. The file is kept untouched on disk; open it with the engine version that recorded it.` });
         return null;
       }
       const loaded = deserializeRun(raw.state);
       if (!loaded.ok) return null;
-      const replayed = replayFromStart(raw.options, raw.base, raw.actions);
-      if (!replayed || stateHash(replayed) !== stateHash(loaded.state)) return null; // tampered or corrupt: never trust it
+      // replay the run's own log from where it started (no network, no model): it must reach the saved state exactly
+      let start: CreateRunOptions | RunState = raw.options;
+      if (raw.base) {
+        const b = deserializeRun(raw.base);
+        if (!b.ok) return null;
+        start = b.state;
+      }
+      const derived = deriveLedger(start, raw.actions);
+      if (derived.rejected.length || derived.hash !== stateHash(loaded.state)) return null; // tampered or corrupt: never trust it
+      // and its record of external inputs must be what that replay used (a file from before the ledger has none: derived here)
+      const check = checkLedger(raw.ledger, derived, derived.hash);
+      if (!check.ok && !(check.code === 'LEDGER_MISSING' && raw.ledger === undefined)) {
+        this.refused.set(runId, { code: check.code, message: `${check.message} ${check.recovery} The file is kept untouched on disk.` });
+        return null;
+      }
       return {
-        id: runId, mode: raw.mode, options: raw.options, session: new GameSession(loaded.state), revision: raw.revision, actions: raw.actions,
+        id: runId, mode: raw.mode, options: raw.options, session: new GameSession(loaded.state, derived.ledger), revision: raw.revision, actions: raw.actions,
         idem: new Map(raw.idem), createdAt: raw.createdAt, updatedAt: raw.updatedAt, base: raw.base,
       };
     } catch {
@@ -236,7 +232,7 @@ export class GameService {
       }
     }
     const why = this.refused.get(runId);
-    if (!r && why) return fail('RUN_VERSION_MISMATCH', why);
+    if (!r && why) return fail(why.code, why.message);
     return r ?? fail('UNKNOWN_RUN', 'No such run on this server. Start one with create_game, or import_game.');
   }
 
@@ -772,12 +768,14 @@ export class GameService {
         if (r.session.state !== s0) return fail('STALE_REVISION', 'The run changed while the reading was being made. Ask again.', { currentRevision: r.revision, alternatives: ['propose_belief'] });
         if (res.ok) {
           reading = res.reading;
-          online = { used: true, provider: res.meta.provider, model: res.meta.model, cached: res.meta.cached, id: res.meta.id };
+          online = { used: true, provider: res.meta.provider, model: res.meta.model, cached: res.meta.cached, id: res.meta.id, latencyMs: res.meta.latencyMs };
         } else if (want === 'require') {
           return fail(res.reason, `${res.why} Nothing was spent.`, { alternatives: ['propose_belief without online (the offline reader)'] });
         } else online = { used: false, asked: want, why: `${res.why} This is the offline reading; nothing was spent.`, reason: res.reason };
       }
     }
+    let meta: InferenceMeta | undefined;
+    if (online.used) meta = { provider: String(online.provider ?? ''), model: String(online.model ?? ''), id: String(online.id ?? ''), cached: online.cached === true, ...(typeof online.latencyMs === 'number' ? { latencyMs: online.latencyMs } : {}) };
     reading ??= readBelief(s0, a.text, a.region ? { region: a.region } : {});
     this.pruneTokens();
     const now = this.clock();
@@ -786,7 +784,7 @@ export class GameService {
       let token: string | null = null;
       if (c.build.ok) {
         token = randomBytes(16).toString('hex');
-        this.tokens.set(token, { runId: r.id, revision: r.revision, astHash: c.build.draft.claim.reality?.hash ?? '', reality: { draft: c.build.draft, needsYes: yes }, expiresAt: now + TOKEN_TTL_MS });
+        this.tokens.set(token, { runId: r.id, revision: r.revision, astHash: c.build.draft.claim.reality?.hash ?? '', reality: { draft: c.build.draft, needsYes: yes, ...(meta && c.ast.source.reader === 'model' ? { meta } : {}) }, expiresAt: now + TOKEN_TTL_MS });
       }
       return describeCandidate(s0, c, token, yes);
     });
@@ -814,7 +812,7 @@ export class GameService {
       return fail('STALE_REVISION', `The village changed since this belief was read (revision ${t.revision}, now ${r.revision}). Read it again: propose_belief is free.`, { currentRevision: r.revision, alternatives: ['propose_belief'] });
     const title = (a.title ?? '').replace(/[<>]/g, '').trim().slice(0, 40);
     const claim = title ? { ...d.claim, short: title } : d.claim;
-    const act: Action = { type: 'COMPOSE', claim };
+    const act: Action = { type: 'COMPOSE', claim, ...(t.reality!.meta ? { meta: t.reality!.meta } : {}) };
     const res = r.session.act(act);
     if (!res.ok) return fail(res.error.code, res.error.message, { alternatives: res.error.alternatives, currentRevision: r.revision });
     r.actions.push(act);
@@ -994,6 +992,7 @@ export class GameService {
     return ok(`Replay of ${r.actions.length} accepted actions. Feed it to the browser engine or replayRun to reproduce the run exactly.`, {
       runId: r.id, revision: r.revision, replay: { ...r.options, actions: r.actions }, rulesVersion: RULES_VERSION, versions: replayVersions(r.options), stateHash: stateHash(s), eventHash: eventHash(s), finished: !!s.outcome,
       modelProposals: { recorded: proposals, note: 'Model proposals the engine accepted are inside the actions; replaying needs no model and no network.' },
+      ledger: r.session.ledger, externalInputs: ledgerSummary(r.session.ledger).text,
     });
   }
 

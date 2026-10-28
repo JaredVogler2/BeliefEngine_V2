@@ -14,6 +14,7 @@ import { useWhatIf } from './whatif.ts';
 import { store, useStore } from './store.ts';
 import { V2_FEATURES } from '../v2/features.ts';
 import { RealityProvenance } from './play/Provenance.tsx';
+import { ReplayCheck } from './ReplayCheck.tsx';
 
 // ------------------------------------------------------------------ title
 
@@ -522,6 +523,7 @@ export function Debrief() {
         <p>{d.saved} of {state.villagers.length} survived. {d.homesSpared} home(s) and {d.livesSpared} life/lives spared by laws.{d.lost.length ? ` Lost: ${d.lost.map((l) => `${l.name} (${l.cause}, day ${l.day})`).join('; ')}.` : ''}</p>
         <h2>Score {d.score}</h2>
         <table className="breakdown"><tbody>{Object.entries(d.breakdown).map(([k, v]) => <tr key={k}><td>{k}</td><td>{v}</td></tr>)}</tbody></table>
+        <ReplayCheck state={state} />
         <p className="small muted" data-testid="seed-info">{d.seedInfo}{kind !== 'story' ? ` · village ${state.scenarioId}` : ''}{state.modifiers.length ? ` · twists: ${state.modifiers.join(', ')}` : ''}{state.flags.reality ? ` · ${MODE_LABEL[state.flags.reality as 1 | 2 | 3]}` : ''}. Score is a rough guide only; the story above matters more.</p>
         <ul className="small">{d.tips.map((t, i) => <li key={i}>{t}</li>)}</ul>
         <div className="row wrap" style={{ marginTop: '1rem' }}>
@@ -616,12 +618,42 @@ export function SettingsScreen() {
         </div>
         <div className="row wrap" style={{ marginTop: '1rem' }}>
           <button className="btn" onClick={() => store.resetSettings()}>Reset settings</button>
-          {inGame && <button className="btn" onClick={() => { const s = store.state!; store.newRun({ scenarioId: s.scenarioId, seed: s.seed, difficulty: s.difficulty }); store.set({ screen: 'play' }); }} data-testid="restart-seed">Restart this seed</button>}
+          {inGame && <button className="btn" onClick={() => { store.newRun(optionsFromState(store.state!)); store.set({ screen: 'play' }); }} data-testid="restart-seed">Restart this seed</button>}
           {inGame && <button className="btn danger" onClick={() => store.set({ screen: 'title' })} data-testid="to-title">Leave to title (your game is saved)</button>}
         </div>
+        <YourData inGame={inGame} />
         <p className="small muted" style={{ marginTop: '1rem' }}>Settings and saves are stored in this browser only. {store.lastSavedOk ? '' : 'Storage is unavailable, so saves last only until you close the tab.'}</p>
       </div>
     </main>
+  );
+}
+
+/** What this game keeps, where, and the controls to take it away (phase 14). */
+function YourData({ inGame }: { inGame: boolean }) {
+  const [confirm, setConfirm] = useState<null | 'game' | 'all'>(null);
+  return (
+    <div className="card" style={{ marginTop: '1rem' }} data-testid="your-data">
+      <h2>Your data</h2>
+      <ul className="small" style={{ margin: '0 0 0.6rem' }}>
+        <li><b>On this device:</b> the game you are playing (with every belief you wrote and what villagers said to you), your Atlas (records, badges, the laws your Chronicles made) and these settings. None of it leaves this device by itself.</li>
+        <li><b>If you turn on online reading</b> in a Generative run: what its notice lists (your sentence, the village&apos;s name and seed, the region and the day; for villagers, their public facts and memories) goes to this game&apos;s server and a language-model provider. The server keeps hashed usage counters and, for 7 days, validated readings of sentences so a repeat costs nothing; nothing that names you.</li>
+        <li><b>A downloaded save or replay</b> holds the whole run, including what you wrote. Share it only with people you would show the game to.</li>
+      </ul>
+      <div className="row wrap" style={{ gap: '0.5rem' }}>
+        {inGame && (confirm === 'game' ? (
+          <>
+            <button className="btn danger" onClick={() => { setConfirm(null); store.deleteGame(); }} data-testid="delete-game-yes">Delete this game</button>
+            <button className="btn" onClick={() => setConfirm(null)}>Keep it</button>
+          </>
+        ) : <button className="btn" onClick={() => setConfirm('game')} data-testid="delete-game">Delete this game…</button>)}
+        {confirm === 'all' ? (
+          <>
+            <button className="btn danger" onClick={() => { setConfirm(null); store.deleteAllLocal(); }} data-testid="delete-all-yes">Delete everything this game keeps here</button>
+            <button className="btn" onClick={() => setConfirm(null)}>Keep it</button>
+          </>
+        ) : <button className="btn" onClick={() => setConfirm('all')} data-testid="delete-all">Delete everything on this device…</button>}
+      </div>
+    </div>
   );
 }
 
@@ -633,7 +665,7 @@ export function Credits() {
         <h1 style={{ marginTop: '0.8rem' }}>Credits</h1>
         <p>Design, code, procedural art and procedural audio: original, made for this project. No external art, music, fonts or sound files are used — every sprite is drawn in code and every sound is synthesised in your browser.</p>
         <p>Built with React, Three.js, TypeScript and Vite. The simulation is a pure deterministic TypeScript engine; the same engine powers the browser game, the bot tournaments and the MCP agent server.</p>
-        <p className="muted small">Privacy: the game makes no network requests and sets no cookies. Saves and settings live in your browser’s local storage.</p>
+        <p className="muted small">Privacy: Classic play makes no network requests, and the game sets no cookies. Saves and settings live in your browser’s local storage. In a Generative run, online reading (off until you turn it on and accept its notice) sends what that notice lists to this game’s server.</p>
       </div>
     </main>
   );

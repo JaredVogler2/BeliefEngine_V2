@@ -298,6 +298,31 @@ test.describe('desktop and iPhone UX (phase 12)', () => {
     expect(await run()).toEqual(second);
   });
 
+  test('your data: what is kept and where, and deleting this game or everything on this device', async ({ page }) => {
+    await startChronicle(page);
+    await page.getByTestId('reality-open').click();
+    await read(page, HENS);
+    await page.getByTestId('reality-confirm').click();
+    await page.getByTestId('tell-first-done').click();
+    // the save on this device carries the run and its ledger of external inputs
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('be:save:v1') ?? '{}'));
+    expect(saved.ledger.entries).toHaveLength(1);
+    expect(saved.ledger.entries[0]).toMatchObject({ kind: 'interpretation', source: { reader: 'offline-v2' } });
+    await page.goto('/?debug=1');
+    await page.getByRole('button', { name: 'Settings' }).click();
+    const card = page.getByTestId('your-data');
+    await expect(card).toContainText('None of it leaves this device by itself');
+    await expect(card).toContainText('for 7 days, validated readings');
+    await card.scrollIntoViewIfNeeded();
+    await shot(page, 'your-data');
+    await audit(page, 'settings: your data');
+    await page.getByTestId('delete-all').click();
+    await page.getByTestId('delete-all-yes').click();
+    await expect(page.getByTestId('title')).toBeVisible();
+    await expect(page.getByTestId('continue')).toHaveCount(0);
+    expect(await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('be:')))).toEqual([]);
+  });
+
   for (const [w, h] of [[320, 568], [375, 667], [390, 844], [430, 932]] as const) {
     test(`at ${w}×${h} the composer and "who tells it first" fit the screen, with touch-sized controls`, async ({ page, isMobile }) => {
       test.skip(!isMobile, 'iPhone sizes run on the phone profile (touch, coarse pointer)');

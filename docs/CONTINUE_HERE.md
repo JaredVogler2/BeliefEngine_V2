@@ -31,7 +31,8 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
   staying above the iOS keyboard UNVERIFIED (no device). Reference: [`UX_V2.md`](UX_V2.md).
 - **13 MCP and tool play: VERIFIED locally** (stdio, the official SDK client, on the browser's hash); online reading through MCP
   **TESTED MOCK ONLY**; a model-powered V2 agent session NOT RUN; remote Streamable HTTP **NOT BUILT**. Reference: [`MCP_V2.md`](MCP_V2.md).
-- **14 Replay, persistence and evals: NOT STARTED. It is the next task (below).**
+- **14 Replay, persistence and evals: VERIFIED offline (gate met)**; LIVE evals not run. Reference: [`REPLAY_V2.md`](REPLAY_V2.md).
+- **15 Security, privacy, cost and failure: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
@@ -42,7 +43,19 @@ without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`;
 (browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
 matrix, docs, `39ab15b`); phase 11: `e9d6847` (rules 2, modes, tournament, docs); phase 12: the commit after `e9d6847` (menu,
 composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs: `49beb00`);
-phase 13: the commit after `49beb00` (MCP V2 tools, error kinds, online reader, stdio proof, docs).
+phase 13: `6ba4996` (MCP V2 tools, error kinds, online reader, stdio proof, docs); phase 14: the commit after `6ba4996`
+(ledger, saves, replay check, privacy controls, evals).
+
+## Working files changed in phase 14
+
+New: `src/engine/save/ledger.ts`, `src/engine/core/meta.ts`, `src/ui/ReplayCheck.tsx`, `scripts/verify-replay.ts`, `scripts/eval.ts`,
+`scripts/lib/npc-cases.ts`, `tests/unit/{ledger,ledger-save,evals}.test.ts`, `tests/fixtures/npc-cases-1.json`, `docs/REPLAY_V2.md`,
+`docs/data/evals/`, `docs/screenshots/v2-phase14/`. Changed: `src/engine/core/{session,actions,types}.ts` (the ledger in the session;
+`InferenceMeta` cleaned before it is recorded), `src/engine/save/serialize.ts` (the ledger beside the state), `src/engine/index.ts`,
+`src/ui/store.ts` (save/restore the ledger, delete game/everything), `src/ui/screens.tsx` (replay check, Your data, Restart keeps the
+mode, Credits line), `src/ui/play/RealityCompose.tsx` (online metadata), `mcp/service.ts` (run files carry and verify the ledger;
+export_replay returns it), `tests/e2e/v2-bridge.spec.ts`, `tests/e2e/v2-ux.spec.ts`, `tests/unit/mcp-v2.test.ts`, `package.json`
+(`npm run eval`).
 
 ## Working files changed in phase 13
 
@@ -75,7 +88,8 @@ invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging ome
 
 ## Commands run and exact results
 
-Phase 13 (entry in [`PROGRESS.md`](PROGRESS.md)): the MCP tests 62 passed (V1's 45 unchanged); the stdio proof ends on the
+Phase 14 (entry in [`PROGRESS.md`](PROGRESS.md)): `npm test` 56 files, 641 tests (two timing-sensitive ones need a quiet machine);
+the whole Chromium suite 192 passed, 72 skipped, 0 failed; `npm run eval` (report in `docs/data/evals/`). Phase 13 (entry in [`PROGRESS.md`](PROGRESS.md)): the MCP tests 62 passed (V1's 45 unchanged); the stdio proof ends on the
 browser's state hash; `npm test` 52 files, 625 passed. In [`PROGRESS.md`](PROGRESS.md) (phase 12 entry): typecheck and lint pass; `npm test` 50 files, 608 passed; `v2-ux.spec.ts` and
 `smoke.spec.ts` 21 passed (7 skipped by design); the whole Chromium suite 189 passed, 71 skipped, 0 failed; size: entry 292 KB gzip
 of 300; V1 golden hashes unchanged (Classic engine untouched).
@@ -115,23 +129,23 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 14: replay, persistence and evals)
+## Next exact code changes (phase 15: security, privacy, cost and failure)
 
-[`../prompts/14_REPLAY_PERSISTENCE_AND_EVALS.md`](../prompts/14_REPLAY_PERSISTENCE_AND_EVALS.md). Much of the ledger already
-exists implicitly: every accepted model output is inside the action that used it (COMPOSE carries the AST with `source`, NPC_DECIDE
-carries the decisions and `rev`, TALK carries the checked line), and `replayRun` never calls a model. The phase makes that explicit:
+[`../prompts/15_SECURITY_PRIVACY_COST_AND_FAILURE.md`](../prompts/15_SECURITY_PRIVACY_COST_AND_FAILURE.md). Most controls exist
+since phase 03 (`server/ai/app.ts`: signed sessions, origin checks, durable atomic quotas that fail closed, spend reservations, size
+limits, one request at a time, a validated-only cache); the phase is an adversarial pass with evidence:
 
-1. **External-decision ledger** derived from the action log (`src/engine/save/ledger.ts`): one entry per model-sourced input with a
-   stable id, revision, target (claim or villager), canonical hash, provider/model/prompt/ontology/validator versions, inference
-   metadata when known, and parent links; a ledger check on load that names exact incompatibilities (missing, reordered, edited).
-2. **Replay guard**: replaying a run whose ledger does not match its actions fails with a precise error and a recovery option, never a
-   new reading; a reordered NPC_DECIDE is detected (its `rev` no longer matches).
-3. **Persistence**: the save carries the ledger (schema version bump with a migration that derives it from older saves); size bounds.
-4. **Eval corpus**: 200+ labelled beliefs (start from `tests/fixtures/reality-corpus-*.json`), 100+ NPC decision cases, injection and
-   hallucination regressions, conflict cascades, V1 AST migration; metrics by reader (offline vs mock vs LIVE, labelled with sample
-   sizes); `npm run eval` writes a report under `docs/data/evals/`.
-5. Tests: a full Generative win and loss replayed offline to their hashes with the network disabled; a reordered or missing ledger
-   entry refused; no memory leaking between runs; V1 goldens unchanged.
+1. **Threat model and chaos suite** (`tests/unit/security-*.test.ts`): provider missing, 429, 401, timeout, partition, invalid model
+   id, malformed or refused output, over budget, poisoned cache, quota store outage, double-tap, concurrent stale request, closed
+   session, deeply nested AST, 10k entities, expensive compound rules; 100 parallel requests from several app instances on one quota
+   store must not bypass a limit; CORS/CSRF, content types, response caching, run ownership. Unicode/BiDi, HTML and hidden payloads in
+   beliefs, dialogue, imported saves/replays and MCP inputs.
+2. **Physics limits**: AST depth, target counts, radius, per-night execution time and memory budgets enforced and tested (Lab relaxes
+   balance, never compute limits).
+3. **Secrets**: a CI secret scan (no key patterns in the tree or the built bundle; no `VITE_` AI variables); `.env.example` names only.
+4. **Cost monitor**: the operator metrics route and a dev monitor (calls, tokens, spend by model, cache hits, quota counters, p95,
+   fallbacks, budget).
+5. Docs: `docs/SECURITY.md`, `docs/PRIVACY.md`, `docs/COST_AND_QUOTAS.md` (configuration steps, mocked vs live evidence, limits).
 
 ## Parallel track: the 3D world
 

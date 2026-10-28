@@ -163,6 +163,11 @@ describe('MCP V2: written beliefs', () => {
     data(s.confirmBelief({ runId, token: c.token, acknowledge: c.needsAcknowledgement }));
     const rep = data(s.exportReplay({ runId }));
     expect(rep.modelProposals.recorded).toBe(1);
+    // the ledger names who read it and what the service reported, and nothing secret
+    const e = rep.ledger.entries.find((x: { kind: string }) => x.kind === 'interpretation');
+    expect(e.source.reader).toBe('model');
+    expect(e.meta).toMatchObject({ provider: 'mock' });
+    expect(rep.externalInputs).toMatch(/1 from a model/);
     // replaying needs no model: the structure the model proposed is in the action
     expect(stateHash(replayRun(rep.replay).state)).toBe(rep.stateHash);
   });

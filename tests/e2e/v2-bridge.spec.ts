@@ -68,6 +68,11 @@ async function compose(page: Page, t: Trace, capture: string | null): Promise<vo
 /** plays the recorded chain through the page; `beforeNight(day)` runs before each End Day */
 async function play(page: Page, key: string, opts: { capture?: string; beforeNight?: (day: number, g: GameSession) => Promise<void> } = {}): Promise<GameSession> {
   const t = fx[key];
+  // the whole chain, and its replay at the end, run with no request to the inference service
+  const api: string[] = [];
+  page.on('request', (r) => {
+    if (new URL(r.url()).pathname.startsWith('/api/')) api.push(r.url());
+  });
   await start(page, t);
   const g = GameSession.create(t.opts);
   for (const a of t.actions) {
@@ -81,6 +86,15 @@ async function play(page: Page, key: string, opts: { capture?: string; beforeNig
   await expect(page.getByTestId('debrief')).toBeVisible();
   const st = await browserState(page);
   expect(st.hash, 'the page ends on the recorded run').toBe(t.stateHash);
+  // phase 14: the debrief replays the run's own action log on this device and reaches the same end, offline
+  await expect(page.getByTestId('replay-verdict')).toContainText('Replays to the same end');
+  await expect(page.getByTestId('replay-verdict')).toContainText(t.stateHash);
+  await expect(page.getByTestId('replay-inputs')).toContainText('none from a model');
+  expect(api, 'no request to the inference service').toEqual([]);
+  if (process.env.BE_SHOTS14 === '1') {
+    await page.getByTestId('replay-check').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `docs/screenshots/v2-phase14/replay-${key}-desktop.png` });
+  }
   return g;
 }
 
