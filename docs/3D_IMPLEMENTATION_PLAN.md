@@ -6,7 +6,10 @@ scene → motion → polish → mobile → QA → release) and V2's phase 10, an
 ([`ARCHITECTURE.md`](ARCHITECTURE.md) §3): the renderer observes, it never decides, and a rule that changes the simulation must be visible
 when it fires and invisible when it does not.
 
-**Status of this plan:** stage 0 is waiting on V1; stages 1-9 are NOT STARTED. Nothing here is done until its evidence exists.
+**Status of this plan:** stage 0's merge is done (2026-10-28: V1 `main` at `22b7b1c`, which carries JaredVogler2/BeliefEngine#2 and
+JaredVogler2/BeliefEngine#3, merged as ordinary history; verification and the new capture set are recorded in [`PROGRESS.md`](PROGRESS.md));
+stages 1-9 are NOT STARTED. Nothing here is done until its evidence exists. V1's own visual pass (its standard, plan and report) is kept in
+[`v1/`](v1/3D_QUALITY_REPORT.md); the baseline numbers below predate it.
 
 ## Baseline the plan starts from
 
@@ -16,7 +19,7 @@ frame** at the low tier (1366×768, 0.69 render scale, ≈2.9 fps on the softwar
 triangles for Ashwood's forest at high. Daylight only: no frame is ever at night. Wolf packs, live fire and smoke, the social
 lens, the flood forecast and name labels are not drawn in 3D. The plate ends in a cut edge in front of a gradient.
 
-## Stage 0: bring in V1's open 3D work (blocked on V1)
+## Stage 0: bring in V1's open 3D work (merged 2026-10-28)
 
 [JaredVogler2/BeliefEngine#2](https://github.com/JaredVogler2/BeliefEngine/pull/2) (immersive HUD, end-of-run scene, art-director pass,
 batching, 3D browser projects, perf tooling) is based on the commit V2 imported, so it merges as ordinary history.

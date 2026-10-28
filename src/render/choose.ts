@@ -8,7 +8,10 @@ const KEY = 'belief.renderer';
 export function webgl2Available(): boolean {
   try {
     const c = document.createElement('canvas');
-    return !!c.getContext('webgl2');
+    const gl = c.getContext('webgl2');
+    // give the probe's context back at once: some browsers allow only a few live contexts, and the world needs one
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return !!gl;
   } catch {
     return false;
   }

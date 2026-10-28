@@ -5,6 +5,15 @@ import { policyById } from '../../src/engine/ai/bots/generic.ts';
 import { chooseClaim, openSheet, selectVillager, startRedbank } from './helpers.ts';
 
 async function audit(page: Page, label: string) {
+  // a card that is still fading in is measured half transparent over whatever is behind it: let every finite animation finish first
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => Number.isFinite(a.effect?.getComputedTiming().endTime as number))
+        .map((a) => a.finished.catch(() => null)),
+    ),
+  );
   const res = await new AxeBuilder({ page: page as unknown as ConstructorParameters<typeof AxeBuilder>[0]['page'] }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   const bad = res.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious');
   expect(bad.map((v) => `${label}: ${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
@@ -29,9 +38,9 @@ test.describe('accessibility', () => {
     await audit(page, 'play');
     await selectVillager(page, 'Old Harl');
     await audit(page, 'play+villager');
-    await page.getByTestId('tab-laws').click();
+    await openSheet(page, 'laws');
     await audit(page, 'laws');
-    await page.getByTestId('tab-forecast').click();
+    await openSheet(page, 'forecast');
     await audit(page, 'forecast');
   });
 
@@ -89,8 +98,14 @@ test.describe('accessibility', () => {
     await page.locator('canvas').focus();
     await page.keyboard.press('1'); // choose the first story
     await expect(page.locator('[data-claim="river_fears_fire"]')).toHaveAttribute('aria-pressed', 'true');
-    await page.getByTestId('tab-village').focus();
+    // the details sheet is closed until asked for: reach its button and the Village tab with the keyboard alone
+    await page.getByTestId('sheet-toggle').focus();
     await page.keyboard.press('Enter');
+    await expect(page.locator('.side.open')).toBeVisible();
+    await page.getByTestId('tab-village').focus();
+    await expect(page.getByTestId('tab-village')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('village-panel')).toBeVisible();
     await page.getByRole('button', { name: /^Mara Wells/ }).focus();
     await page.keyboard.press('Enter');
     await page.getByRole('button', { name: /^Tell Mara Wells/ }).focus();

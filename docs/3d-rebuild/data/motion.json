@@ -1,0 +1,35 @@
+{
+  "measuredWith": "headless Chromium, software WebGL; advance() steps of the real animation clock",
+  "steps": 6,
+  "secondsPerStep": 2,
+  "meanAbsoluteDifferenceBetweenFrames": {
+    "far bank and sky (top fifth)": [
+      0.01627,
+      0.01583,
+      0.01548,
+      0.0156,
+      0.01533
+    ],
+    "river and banks (centre)": [
+      0.02533,
+      0.02515,
+      0.02481,
+      0.02608,
+      0.02606
+    ],
+    "village (lower right)": [
+      0.01497,
+      0.01442,
+      0.01381,
+      0.01412,
+      0.01429
+    ],
+    "the whole frame": [
+      0.0209,
+      0.0202,
+      0.02004,
+      0.02046,
+      0.02043
+    ]
+  }
+}

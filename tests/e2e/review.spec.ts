@@ -12,21 +12,25 @@ const overlap = (a: { x: number; y: number; width: number; height: number }, b: 
   Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
 
 test.describe('the tutorial coach and the story cards (fix 2 and 3)', () => {
-  test('the coach is a banner above the map: it never covers the map or the story cards', async ({ page }) => {
+  test('the coach is a small floating card: it never covers the tray, the story chips, the selection card or End Day', async ({ page }) => {
     await startRedbank(page, 1);
     const coach = await box(page, '[data-testid=coach]');
-    const map = await box(page, 'canvas');
-    expect(overlap(coach, map)).toBe(0);
+    // the opening choice (full cards), the tray and the top rail are all clear of it
+    for (const sel of ['[data-testid=end-day]', '[data-testid=ap]', '.topbar', '.modes', '.tray']) expect(overlap(coach, await box(page, sel)), sel).toBe(0);
     for (const card of await page.locator('[data-claim]').all()) {
       const b = await card.boundingBox();
       if (b) expect(overlap(coach, b)).toBe(0);
     }
-    // and it stays out of the way once a story is chosen and a villager picked
+    // and it stays out of the way once a story is chosen and a villager picked: the card beside them never sits under it
     await page.locator('[data-claim="river_fears_fire"]').click();
     await selectVillager(page, 'Ivo Thatcher');
     await closeSheet(page);
     const coach2 = await box(page, '[data-testid=coach]');
-    expect(overlap(coach2, await box(page, 'canvas'))).toBe(0);
+    for (const sel of ['[data-testid=end-day]', '.tray', '[data-testid=selection-pop]']) expect(overlap(coach2, await box(page, sel)), sel).toBe(0);
+    for (const card of await page.locator('[data-claim]').all()) {
+      const b = await card.boundingBox();
+      if (b) expect(overlap(coach2, b)).toBe(0);
+    }
   });
 
   test('the opening choice shows what each story does and costs, and the locked ones say when they unlock', async ({ page }) => {
@@ -140,17 +144,16 @@ test.describe('"What would have changed it" (fix 4)', () => {
 test.describe('phone layout (fix 5)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 999) > 600, 'phone project only');
 
-  test('the mute button shares the forecast row, and the coach never covers the map', async ({ page }) => {
+  test('the sound button sits beside the rail, the rail stays compact, and the coach never covers the controls', async ({ page }) => {
     await startRedbank(page, 1);
     const mute = await box(page, '.mute-btn');
-    const stats = await box(page, '.topbar .stats');
-    const threat = await box(page, '.topbar .threat');
-    // the sound button sits beside the forecast banner, not on a row of its own below the status chips
-    expect(Math.abs(mute.y + mute.height / 2 - (threat.y + threat.height / 2))).toBeLessThan(30);
-    expect(mute.y).toBeLessThan(stats.y + stats.height + 80);
-    const top = await box(page, '.topbar');
-    expect(top.height).toBeLessThan(150);
-    expect(overlap(await box(page, '[data-testid=coach]'), await box(page, 'canvas'))).toBe(0);
+    const rail = await box(page, '.topbar');
+    // the sound button is in the top row beside the rail, not on a row of its own below it
+    expect(mute.y).toBeLessThan(rail.y + 24);
+    expect(mute.x).toBeGreaterThanOrEqual(rail.x + rail.width - 4);
+    expect(rail.height).toBeLessThan(120);
+    const coach = await box(page, '[data-testid=coach]');
+    for (const sel of ['[data-testid=end-day]', '.tray', '.topbar']) expect(overlap(coach, await box(page, sel)), sel).toBe(0);
     await expect(page.getByTestId('end-day')).toBeInViewport();
   });
 });

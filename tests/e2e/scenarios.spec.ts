@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { browserState, loadTraces, replayTraceViaUi, selectPlace, selectVillager, startScenario, watchConsole } from './helpers.ts';
+import { browserState, loadTraces, openSheet, replayTraceViaUi, selectPlace, selectVillager, startScenario, watchConsole } from './helpers.ts';
 
 const harvest = loadTraces('harvest');
 const ashwood = loadTraces('ashwood');
@@ -19,7 +19,7 @@ test.describe('Dry Season at Harvest Hollow and Ashwood (desktop)', () => {
     // two starters: nothing happens until one is chosen
     await expect(page.getByTestId('coach')).toBeVisible();
     await page.locator('[data-claim="moonlight_ripens_grain"]').click();
-    await page.getByTestId('tab-forecast').click();
+    await openSheet(page, 'forecast');
     await expect(page.getByTestId('forecast-panel')).toContainText(/crop|field|harvest/i);
     // the broker's card offers the trade (disabled until she believes)
     await selectVillager(page, 'Dalia');

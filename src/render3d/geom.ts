@@ -67,7 +67,7 @@ export function sphere(r: number, ws = 10, hs = 8, sy = 1): THREE.BufferGeometry
 
 /**
  * A gable roof: ridge along x, eaves at y=0, ridge at y=rise, `span` across z, with an overhang all round and a visible thickness.
- * Slopes carry the roofing texture; the two end triangles are the gable walls' lip.
+ * Slopes carry the roofing texture; the ends are open under the overhang, with only thin verges (the gable wall below closes the house).
  */
 export function gableRoof(length: number, span: number, rise: number, overhang = 0.07, thick = 0.035, texel = 0.2): THREE.BufferGeometry {
   const L = length / 2 + overhang;
@@ -93,9 +93,12 @@ export function gableRoof(length: number, span: number, rise: number, overhang =
   // underside
   quad([-L, -t, S], [-L, rise - t * 1.5, 0], [L, rise - t * 1.5, 0], [L, -t, S], 2 * L, slope);
   quad([L, -t, -S], [L, rise - t * 1.5, 0], [-L, rise - t * 1.5, 0], [-L, -t, -S], 2 * L, slope);
-  // end caps
-  tri([-L, -t, S], [-L, -t, -S], [-L, rise - t * 1.5, 0], [0, 0], [1, 0], [0.5, 1]);
-  tri([L, -t, -S], [L, -t, S], [L, rise - t * 1.5, 0], [0, 0], [1, 0], [0.5, 1]);
+  // the verges: only the roof's thickness along each sloped end, so the gable is open under its overhang as a real one is (a solid
+  // triangle here read as a dark fin hanging off every roof)
+  quad([L, -t, S], [L, rise - t * 1.5, 0], [L, rise, 0], [L, 0, S], slope, t);
+  quad([L, -t, -S], [L, 0, -S], [L, rise, 0], [L, rise - t * 1.5, 0], slope, t);
+  quad([-L, -t, S], [-L, 0, S], [-L, rise, 0], [-L, rise - t * 1.5, 0], slope, t);
+  quad([-L, -t, -S], [-L, rise - t * 1.5, 0], [-L, rise, 0], [-L, 0, -S], slope, t);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));

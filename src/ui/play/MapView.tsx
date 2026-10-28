@@ -6,18 +6,26 @@ import { chooseRenderer, loadWorld3D, rememberRenderer } from '../../render/choo
 import { Icon } from '../components.tsx';
 import { store, useStore } from '../store.ts';
 import { getTutorial } from '../tutorial.ts';
+import { useNarrow } from '../useNarrow.ts';
 
 let announcedReason = false;
 
 export function MapView({ children }: { children?: React.ReactNode }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const rendRef = useRef<WorldRenderer | null>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
   const version = useStore((s) => s.version);
   const ui = useStore((s) => s.ui);
   const state = useStore((s) => s.state);
   const [mode, setMode] = useState(() => chooseRenderer());
   const [ready, setReady] = useState(false);
+  /** what the loading veil says while the 3D world arrives: its code is fetched, then the village is built */
+  const [stage, setStage] = useState<'fetching' | 'building'>('fetching');
   const choice = mode.choice;
+  // on a phone the view controls fold into one button: pinch zooms, and the rest is a tap away
+  const narrow = useNarrow();
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const showTools = !narrow || toolsOpen;
 
   // when the classic map is showing and the player did not ask for it, say why, once, and offer the way to 3D
   const [noteShown, setNoteShown] = useState(() => !!mode.reason && !mode.reason.startsWith('classic map chosen') && !announcedReason);
@@ -43,6 +51,33 @@ export function MapView({ children }: { children?: React.ReactNode }) {
     let ro: ResizeObserver | null = null;
     const cleanups: (() => void)[] = [];
     setReady(false);
+
+    /** a name beside the pointer for whatever is under it (the card with the detail opens on a tap) */
+    const showTip = (hit: { kind: 'villager' | 'landmark'; id: string } | null, x: number, y: number): void => {
+      const tip = tipRef.current;
+      if (!tip) return;
+      const st = store.state;
+      if (!hit || !st) {
+        tip.hidden = true;
+        return;
+      }
+      const v = hit.kind === 'villager' ? st.villagers.find((q) => q.id === hit.id) : null;
+      const l = hit.kind === 'landmark' ? st.world.landmarks.find((q) => q.id === hit.id) : null;
+      const title = v ? v.name : l ? l.name : '';
+      const sub = v ? `${v.role}${v.status === 'dead' ? ' · lost' : ''}` : l ? l.kind : '';
+      if (tip.dataset.key !== hit.id) {
+        tip.dataset.key = hit.id;
+        tip.replaceChildren();
+        const b = document.createElement('span');
+        b.textContent = title;
+        const sm = document.createElement('small');
+        sm.textContent = sub;
+        tip.append(b, sm);
+      }
+      tip.style.left = `${x}px`;
+      tip.style.top = `${y}px`;
+      tip.hidden = false;
+    };
 
     const attach = (renderer: WorldRenderer): void => {
       r = renderer;
@@ -84,8 +119,10 @@ export function MapView({ children }: { children?: React.ReactNode }) {
           const hit = r?.hitTest(p.x, p.y) ?? null;
           r?.setHover(hit);
           canvas.style.cursor = hit ? 'pointer' : 'grab';
+          showTip(hit, p.x, p.y);
           return;
         }
+        showTip(null, 0, 0);
         pts.set(e.pointerId, p);
         if (pts.size === 2) {
           const [a, b] = [...pts.values()];
@@ -113,6 +150,13 @@ export function MapView({ children }: { children?: React.ReactNode }) {
         if (wasSingle && drag.moved <= 8 && e.button !== 2) {
           const hit = r?.hitTest(p.x, p.y) ?? null;
           store.select(hit ? { kind: hit.kind, id: hit.id } : null);
+          // the river is not a person or a place, but tapping it is asking about tonight's water
+          const st = store.state;
+          const t = !hit && st?.scn.features.flood ? r?.tileAt?.(p.x, p.y) : null;
+          if (t && st && st.world.terrain[t.y * st.world.w + t.x] === 1) {
+            store.setSettings({ showFlood: true });
+            store.set({ tab: 'forecast', sheetOpen: true });
+          }
         }
       };
       const cancel = (e: PointerEvent) => {
@@ -122,9 +166,14 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       const wheel = (e: WheelEvent) => {
         e.preventDefault();
         const p = local(e);
-        r?.zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12, p.x, p.y);
+        // follow how far the wheel or trackpad moved (a mouse notch is about 100 px, about 12%), so a trackpad glides instead of jumping
+        const px = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+        r?.zoomBy(Math.exp(Math.max(-0.5, Math.min(0.5, -px * 0.00115))), p.x, p.y);
       };
-      const leave = () => r?.setHover(null);
+      const leave = () => {
+        r?.setHover(null);
+        showTip(null, 0, 0);
+      };
       const menu = (e: Event) => e.preventDefault();
       const key = (e: KeyboardEvent) => onMapKey(renderer, e);
       canvas.addEventListener('pointerdown', down);
@@ -151,12 +200,19 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       loadWorld3D()
         .then((World3D) => {
           if (cancelled) return;
-          try {
-            attach(new World3D(canvas));
-          } catch (e) {
-            store.toast(`The 3D world could not start (${e instanceof Error ? e.message : 'WebGL unavailable'}). Using the classic map.`, 'error');
-            setMode({ choice: '2d', reason: 'the 3D world could not start' });
-          }
+          // say that the village is being built, let that be painted, and only then spend the half second it takes
+          setStage('building');
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              if (cancelled) return;
+              try {
+                attach(new World3D(canvas));
+              } catch (e) {
+                store.toast(`The 3D world could not start (${e instanceof Error ? e.message : 'WebGL unavailable'}). Using the classic map.`, 'error');
+                setMode({ choice: '2d', reason: 'the 3D world could not start' });
+              }
+            }),
+          );
         })
         .catch(() => {
           if (!cancelled) setMode({ choice: '2d', reason: 'the 3D world could not load' });
@@ -175,10 +231,11 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       r?.destroy();
       rendRef.current = null;
       canvas.remove();
+      setStage('fetching');
     };
   }, [choice]);
 
-  // push state + options into the renderer whenever anything changes
+  // push state + options into the renderer whenever anything changes, and once it exists (the 3D world arrives a moment after the first render)
   const lastDigest = useRef<unknown>(null);
   const lastAction = useRef<unknown>(null);
   useEffect(() => {
@@ -209,7 +266,46 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       if (ui.digest.events.some((e) => e.code === 'RITUAL' && e.text.startsWith('Ring'))) r.noteBell();
       r.playResolution(ui.digest.events, store.prevState);
     }
-  }, [version, state, ui]);
+  }, [version, state, ui, ready]);
+
+  // keep the village clear of the interface: tell the renderer how much of the canvas the rail, tray, tools and open sheet cover
+  useEffect(() => {
+    if (!ready) return;
+    const apply = (): void => {
+      const r = rendRef.current;
+      const wrap = wrapRef.current;
+      if (!r?.setInsets || !wrap) return;
+      const sr = wrap.getBoundingClientRect();
+      const q = (sel: string): DOMRect | null => document.querySelector(sel)?.getBoundingClientRect() ?? null;
+      const top = q('.topbar');
+      const tray = q('.tray');
+      const modes = q('.modes');
+      const tools = q('.map-tools');
+      const side = q('.side.open');
+      // on a phone the card for the selection and the open sheet sit above the tray: the village is framed in what is left above them
+      const dock = q(".pop[data-dock='1'][data-ready='1']");
+      const wide = sr.width > 900;
+      const sheetH = !wide && side ? sr.bottom - side.top : 0;
+      const dockTop = dock && dock.top > sr.top + sr.height * 0.25 ? sr.bottom - dock.top : 0;
+      // while the opening choice is up the card docks under the rail instead (the cards need the bottom)
+      const dockHigh = dock && dock.top <= sr.top + sr.height * 0.25 ? dock.bottom - sr.top : 0;
+      // on a phone the lens rail and the view controls float over the village's edges, as the rail always has: counting the controls
+      // pushed the village off-centre at rest, and opening them would re-frame it. A wide screen frames the village clear of both
+      r.setInsets({
+        top: Math.max(top ? top.bottom - sr.top + 8 : 0, dockHigh + 8),
+        bottom: Math.max(tray ? sr.bottom - tray.top + 8 : 0, dockTop + 8, sheetH + 8),
+        left: wide && modes ? Math.max(0, modes.right - sr.left + 8) : 0,
+        right: Math.max(wide && side ? sr.right - side.left : 0, wide && tools ? sr.right - tools.left + 6 : 0),
+      });
+    };
+    apply();
+    const t = window.setInterval(apply, 250);
+    window.addEventListener('resize', apply);
+    return () => {
+      window.clearInterval(t);
+      window.removeEventListener('resize', apply);
+    };
+  }, [ready, choice]);
 
   const focusSel = () => {
     const r = rendRef.current;
@@ -232,7 +328,15 @@ export function MapView({ children }: { children?: React.ReactNode }) {
     <div className="stage" ref={wrapRef} data-renderer={choice} data-ready={ready ? '1' : '0'}>
       {choice === '3d' && !ready && (
         <div className="stage-loading" role="status">
-          <span>Raising the village…</span>
+          <div className="sl-scene" aria-hidden="true">
+            <i className="sl-cloud a" />
+            <i className="sl-cloud b" />
+            <i className="sl-island" />
+          </div>
+          <span>{stage === 'fetching' ? 'Fetching the 3D world…' : 'Raising the village…'}</span>
+          <div className="sl-bar" aria-hidden="true">
+            <i style={{ width: stage === 'fetching' ? '38%' : '86%' }} />
+          </div>
         </div>
       )}
       {noteShown && choice === '2d' && (
@@ -242,37 +346,39 @@ export function MapView({ children }: { children?: React.ReactNode }) {
           <button className="btn small ghost" onClick={dismissNote} aria-label="Dismiss this note">Dismiss</button>
         </div>
       )}
-      <div className="map-tools">
-        <button className="btn icon-btn" aria-label="Zoom in" onClick={() => rendRef.current?.zoomBy(1.25)}>
-          <Icon name="plus" />
-        </button>
-        <button className="btn icon-btn" aria-label="Zoom out" onClick={() => rendRef.current?.zoomBy(1 / 1.25)}>
-          <Icon name="minus" />
-        </button>
-        <button className="btn icon-btn" aria-label="Focus on selection, or fit the whole map" onClick={focusSel}>
-          <Icon name="fit" />
-        </button>
-        {choice === '3d' && (
+      <div className="hover-tip" ref={tipRef} hidden aria-hidden="true" />
+      <div className={`map-tools ${narrow ? 'narrow' : ''} ${toolsOpen ? 'open' : ''}`}>
+        {narrow && (
+          <button className="btn icon-btn tools-toggle" aria-label="View controls: zoom, rotate, fit and the 2D or 3D switch" aria-expanded={toolsOpen} onClick={() => setToolsOpen(!toolsOpen)} data-testid="tools-toggle">
+            <Icon name={toolsOpen ? 'close' : 'fit'} />
+          </button>
+        )}
+        {showTools && (
           <>
-            <button className="btn icon-btn" aria-label="Rotate the view left" onClick={() => rendRef.current?.orbitBy?.(0.25, 0)} data-testid="orbit-left">
-              <span aria-hidden="true">⟲</span>
+            <button className="btn icon-btn" aria-label="Zoom in" onClick={() => rendRef.current?.zoomBy(1.25)}>
+              <Icon name="plus" />
             </button>
-            <button className="btn icon-btn" aria-label="Rotate the view right" onClick={() => rendRef.current?.orbitBy?.(-0.25, 0)} data-testid="orbit-right">
-              <span aria-hidden="true">⟳</span>
+            <button className="btn icon-btn" aria-label="Zoom out" onClick={() => rendRef.current?.zoomBy(1 / 1.25)}>
+              <Icon name="minus" />
+            </button>
+            <button className="btn icon-btn" aria-label="Focus on selection, or fit the whole map" onClick={focusSel}>
+              <Icon name="fit" />
+            </button>
+            {choice === '3d' && (
+              <>
+                <button className="btn icon-btn" aria-label="Rotate the view left" onClick={() => rendRef.current?.orbitBy?.(0.25, 0)} data-testid="orbit-left">
+                  <span aria-hidden="true">⟲</span>
+                </button>
+                <button className="btn icon-btn" aria-label="Rotate the view right" onClick={() => rendRef.current?.orbitBy?.(-0.25, 0)} data-testid="orbit-right">
+                  <span aria-hidden="true">⟳</span>
+                </button>
+              </>
+            )}
+            <button className="btn icon-btn" aria-label={choice === '3d' ? 'Switch to the classic 2D map' : 'Switch to the 3D world'} onClick={() => switchTo(choice === '3d' ? '2d' : '3d')} data-testid="renderer-toggle">
+              <span aria-hidden="true" style={{ fontWeight: 700, fontSize: '0.72rem' }}>{choice === '3d' ? '2D' : '3D'}</span>
             </button>
           </>
         )}
-        <button className="btn icon-btn" aria-label="Toggle social lens: trust ties" aria-pressed={ui.lens === 'social'} onClick={() => store.set({ lens: ui.lens === 'social' ? 'none' : 'social' })}>
-          <Icon name="lens" />
-        </button>
-        {state?.scn.features.flood && (
-          <button className="btn icon-btn" aria-label="Toggle tonight's flood forecast on the map" aria-pressed={ui.showFlood} onClick={() => store.setSettings({ showFlood: !ui.showFlood })}>
-            <Icon name="flood" />
-          </button>
-        )}
-        <button className="btn icon-btn" aria-label={choice === '3d' ? 'Switch to the classic 2D map' : 'Switch to the 3D world'} onClick={() => switchTo(choice === '3d' ? '2d' : '3d')} data-testid="renderer-toggle">
-          <span aria-hidden="true" style={{ fontWeight: 700, fontSize: '0.72rem' }}>{choice === '3d' ? '2D' : '3D'}</span>
-        </button>
       </div>
       {children}
     </div>

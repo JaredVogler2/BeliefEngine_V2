@@ -20,10 +20,12 @@ const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 type RGB = [number, number, number];
 const hex = (h: number): RGB => [((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255];
 const PAL = {
-  grass: hex(0x5f9a45), grassLight: hex(0x93b857), grassDeep: hex(0x3d7a3c), gold: hex(0xb9aa4c), meadowFlower: hex(0xe8d680),
+  // the standard's meadow (docs/3D_VISUAL_STANDARD.md): sage and olive, not toy green
+  grass: hex(0x7d9a52), grassLight: hex(0xa7b56a), grassDeep: hex(0x56733f), gold: hex(0xb8a65a), meadowFlower: hex(0xe8d680),
+  yard: hex(0x8a6a45), yardWorn: hex(0xa3835a),
   field: hex(0x8c6438), fieldDark: hex(0x6a4829), furrow: hex(0x5a3c22), crop: hex(0x8fae4a),
   road: hex(0xc9ad7c), roadWorn: hex(0xa88c5f), pebble: hex(0x8f7d62), path: hex(0xb7a06c),
-  rock: hex(0x8d8777), rockDark: hex(0x66645a), wet: hex(0x4a4733), forest: hex(0x3d6b3b), forestFloor: hex(0x4b5a31), needles: hex(0x6d5a34),
+  rock: hex(0x8d8777), rockDark: hex(0x66645a), wet: hex(0x4a4733), forest: hex(0x3d6b3b), forestFloor: hex(0x4f5b33), needles: hex(0x6d5a34),
   sand: hex(0xdac98f), marsh: hex(0x5f7d4a), hill: hex(0x9ba757), ash: hex(0x35352f), mud: hex(0x6d5837),
 };
 
@@ -71,8 +73,12 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
     if (bd > 1.1 && bd < 8) paths.push({ ax: l.x + 0.5, ay: l.y + 0.5 + 0.55, bx: best[0] + 0.5, by: best[1] + 0.5 });
   }
 
+  // trodden earth yards round the homes, a little deeper on the door side (the door faces south, +y)
+  const yards = snap.landmarks.filter((l) => (l.kind === 'home' || l.kind === 'cabin') && l.hp > 0).map((l) => ({ x: l.x + 0.5, y: l.y + 0.62, r: l.kind === 'cabin' ? 0.72 : 0.86 }));
+
   // coarse fields: one RGB macro colour plus a few weights per cell
   const macro = new Float32Array(cw * ch * 3);
+  const wYard = new Float32Array(cw * ch);
   const wRoad = new Float32Array(cw * ch);
   const wPath = new Float32Array(cw * ch);
   const wField = new Float32Array(cw * ch);
@@ -133,6 +139,14 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
         pc = Math.max(pc, 1 - smooth(0.07, 0.2, Math.hypot(pu - (p.ax + dx * t), pv - (p.ay + dy * t))));
       }
       wPath[k] = pc;
+      let yd = 0;
+      for (const y of yards) {
+        if (Math.abs(u - y.x) > 1.6 || Math.abs(v - y.y) > 1.6) continue;
+        const yu = u + (noise(u * 2.6 + 17, v * 2.6) - 0.5) * 0.45;
+        const yv = v + (noise(u * 2.6, v * 2.6 + 23) - 0.5) * 0.45;
+        yd = Math.max(yd, 1 - smooth(0.55, 1.0, Math.hypot(yu - y.x, (yv - y.y) * 1.15) / y.r));
+      }
+      wYard[k] = yd;
       wWet[k] = wetAt(u, v);
       macro[k * 3] = tmp[0];
       macro[k * 3 + 1] = tmp[1];
@@ -180,13 +194,14 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
       const rock = sample(wRock, fu, fv, 1, 0);
       const forest = sample(wForest, fu, fv, 1, 0);
       const wet = sample(wWet, fu, fv, 1, 0);
+      const yard = sample(wYard, fu, fv, 1, 0);
       // fine grain at the pixel scale
       const n1 = hash(x, y);
       const n2 = hash(x >> 1, y >> 1);
       const grain = 0.9 + 0.2 * (0.6 * n1 + 0.4 * n2);
       // blades and flecks on grass
       const fleck = hash(x * 3 + 11, y * 5 + 7) > 0.97 ? 1 : 0;
-      const grassW = (1 - road) * (1 - field) * (1 - rock) * (1 - path * 0.7);
+      const grassW = (1 - road) * (1 - field) * (1 - rock) * (1 - path * 0.7) * (1 - yard * 0.8);
       r = r * grain + fleck * grassW * 0.07;
       gg = gg * grain + fleck * grassW * 0.1;
       b = b * grain;
@@ -207,6 +222,14 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
         r = lerp(r, fr, field);
         gg = lerp(gg, fg, field);
         b = lerp(b, fb, field);
+      }
+      // earth yards: packed dirt, paler where it is most walked, with grass creeping back at the edges
+      if (yard > 0.02) {
+        const worn = smooth(0.3, 0.75, noise2(u * 4.3 + 7, v * 4.3 + 3));
+        const k = smooth(0.0, 0.85, yard) * 0.92 * (1 - field);
+        r = lerp(r, lerp(PAL.yard[0], PAL.yardWorn[0], worn) * grain, k);
+        gg = lerp(gg, lerp(PAL.yard[1], PAL.yardWorn[1], worn) * grain, k);
+        b = lerp(b, lerp(PAL.yard[2], PAL.yardWorn[2], worn) * grain, k);
       }
       // trodden paths
       if (path > 0.02) {
@@ -260,6 +283,23 @@ export function buildGroundTexture(snap: SceneSnapshot, data: TerrainData, seedN
   g.putImageData(img, 0, 0);
   g.fillStyle = 'rgba(40,38,34,0.78)';
   for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) if (snap.burned[ty * w + tx]) g.fillRect(tx * PPT + 2, ty * PPT + 2, PPT - 4, PPT - 4);
+  // contact shadows: the soft dark a building leaves in the grass and dust around its feet (what ambient occlusion would add), multiplied in
+  const AO: Record<string, number> = { home: 0.95, cabin: 0.85, hall: 1.3, chapel: 1.05, mill: 1.05, market: 1.15, shelter: 1.15, granary: 0.9, belltower: 0.85, well: 0.45, pen: 0.95, campfire: 0.3, beacon: 0.4 };
+  g.save();
+  g.globalCompositeOperation = 'multiply';
+  for (const l of snap.landmarks) {
+    const r = AO[l.kind];
+    if (!r || l.hp <= 0) continue;
+    const cx = (l.x + 0.5) * PPT;
+    const cy = (l.y + 0.5) * PPT;
+    const grad = g.createRadialGradient(cx, cy, r * PPT * 0.3, cx, cy, r * PPT * 1.15);
+    grad.addColorStop(0, 'rgb(118,108,92)');
+    grad.addColorStop(0.45, 'rgb(190,182,168)');
+    grad.addColorStop(1, 'rgb(255,255,255)');
+    g.fillStyle = grad;
+    g.fillRect(cx - r * PPT * 1.2, cy - r * PPT * 1.2, r * PPT * 2.4, r * PPT * 2.4);
+  }
+  g.restore();
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = maxAniso;

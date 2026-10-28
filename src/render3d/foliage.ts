@@ -6,6 +6,8 @@ import { fbm, makeNoise, type Rng } from './rand.ts';
 import type { SceneChanges, SceneSnapshot } from './snapshot.ts';
 import { TERRAIN } from './terrain.ts';
 import { makeTree, type TreeKind } from './trees.ts';
+import { markGround } from './post.ts';
+import { PROP_RADIUS, YARD_PROPS, propFacing, yardProp } from './props.ts';
 
 /**
  * The living ground: forests and orchards, shrubs, tufts of grass, wildflowers, rocks, reeds along the water, fenced fields with
@@ -31,6 +33,8 @@ function sway(mat: THREE.MeshStandardMaterial, amp: number, heightBase = 0): voi
        transformed.z += cos(uWind * 1.1 + ph * 1.3) * ${amp.toFixed(4)} * 0.7 * bend * bend * 4.0;`,
     );
   };
+  // the function's text is the same for every amplitude, so name the program by its numbers or three.js would share one between them
+  mat.customProgramCacheKey = () => `sway:${amp}:${heightBase}`;
 }
 
 interface Inst {
@@ -256,24 +260,54 @@ export class FoliageLayer implements Layer {
       const j = Math.floor(z * G);
       return i >= 1 && j >= 1 && i < gw - 1 && j < gh - 1 && blocked[j * gw + i] === 0;
     };
-    const trees: Record<TreeKind, Inst[]> = { oak: [], pine: [], birch: [], willow: [], apple: [], shrub: [], stump: [] };
+    // ---- the clutter of lived-in yards: one or two things at the edge of each home's trodden earth, never in front of the door
+    const yardParts: Parts = [];
+    for (const l of snap.landmarks) {
+      if ((l.kind !== 'home' && l.kind !== 'cabin') || l.hp <= 0) continue;
+      const order = [...YARD_PROPS];
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+      const want = r() < 0.55 ? 2 : 1;
+      let placed = 0;
+      for (const kind of order) {
+        if (placed >= want) break;
+        const rad = PROP_RADIUS[kind];
+        for (let tries = 0; tries < 10; tries++) {
+          const a = r() * Math.PI * 2;
+          if (Math.sin(a) > 0.7) continue;
+          const d = 0.82 + rad + r() * 0.12;
+          const x = l.x + 0.5 + Math.cos(a) * d;
+          const z = l.y + 0.5 + Math.sin(a) * d;
+          if (!free(x, z) || ![0, 1, 2, 3].every((k) => free(x + Math.cos(k * Math.PI * 0.5) * rad, z + Math.sin(k * Math.PI * 0.5) * rad))) continue;
+          yardProp(yardParts, kind, x, ctx.heightAt(x, z) - 0.005, z, propFacing(a), r);
+          mark(x, z, rad + 0.05, 1);
+          placed++;
+          break;
+        }
+      }
+    }
+    const trees: Record<TreeKind, Inst[]> = { oak: [], pine: [], birch: [], willow: [], apple: [], shrub: [], stump: [], blossom: [], autumn: [], cypress: [] };
     const plant = (kind: TreeKind, x: number, z: number, scale: number): void => {
       const y = ctx.heightAt(x, z) - 0.012;
       trees[kind].push({ x, y, z, s: scale * (0.82 + r() * 0.4), ry: r() * Math.PI * 2, color: new THREE.Color(1 - r() * 0.14, 1 - r() * 0.1, 1 - r() * 0.18) });
     };
     // ---- forests: dense, mixed, shaped by the engine's forest tiles
-    const forestMix = (n: number): TreeKind => (n < 0.58 ? 'pine' : n < 0.86 ? 'oak' : 'birch');
+    const forestMix = (n: number): TreeKind => (n < 0.48 ? 'pine' : n < 0.6 ? 'cypress' : n < 0.86 ? 'oak' : 'birch');
     for (let ty = 0; ty < h; ty++) {
       for (let tx = 0; tx < w; tx++) {
         if (snap.terrain[ty * w + tx] !== TERRAIN.FOREST) continue;
-        const count = Math.round(7 * treesMul);
+        const count = Math.round(9 * treesMul);
         for (let k = 0; k < count; k++) {
           const x = tx + 0.08 + r() * 0.84;
           const z = ty + 0.08 + r() * 0.84;
           if (!free(x, z)) continue;
           const mixN = noise(x * 0.35, z * 0.35);
-          const kind = forestMix(mixN * 0.7 + r() * 0.3);
-          plant(kind, x, z, kind === 'pine' ? 1.15 : 1.05);
+          let kind = forestMix(mixN * 0.7 + r() * 0.3);
+          // one broadleaf in a few has turned, in loose drifts rather than blocks
+          if (kind === 'oak' && noise(x * 0.5 + 40, z * 0.5) > 0.62 && r() < 0.6) kind = 'autumn';
+          plant(kind, x, z, kind === 'pine' ? 1.15 : kind === 'cypress' ? 1.1 : 1.05);
           if (r() < 0.25) {
             const bx = x + (r() - 0.5) * 0.3;
             const bz = z + (r() - 0.5) * 0.3;
@@ -284,6 +318,28 @@ export class FoliageLayer implements Layer {
           const x = tx + 0.2 + r() * 0.6;
           const z = ty + 0.2 + r() * 0.6;
           if (free(x, z)) plant('stump', x, z, 1);
+        }
+      }
+    }
+    // ---- hedgerows: broken lines of shrubs along the roadsides, where the road meets open ground
+    for (let ty = 0; ty < h; ty++) {
+      for (let tx = 0; tx < w; tx++) {
+        if (snap.terrain[ty * w + tx] !== TERRAIN.ROAD) continue;
+        for (const [nx, nz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as [number, number][]) {
+          const ax = tx + nx;
+          const az = ty + nz;
+          if (ax < 0 || az < 0 || ax >= w || az >= h) continue;
+          const nt = snap.terrain[az * w + ax];
+          if (nt === TERRAIN.ROAD || nt === TERRAIN.RIVER || nt === TERRAIN.FIELD || nt === TERRAIN.FOREST) continue;
+          // a hedge runs along most of a roadside, with gaps where it has been cut back
+          if (noise(ax * 0.7 + nx * 3, az * 0.7 + nz * 3) < 0.45) continue;
+          for (let k = 0; k < 4; k++) {
+            const along = (k + 0.5) / 4 - 0.5 + (r() - 0.5) * 0.08;
+            const off = 0.7 + r() * 0.06;
+            const x = tx + 0.5 + nx * off + (nz !== 0 ? along : 0);
+            const z = ty + 0.5 + nz * off + (nx !== 0 ? along : 0);
+            if (free(x, z) && r() < 0.85) plant('shrub', x, z, 0.75 + r() * 0.35);
+          }
         }
       }
     }
@@ -298,8 +354,12 @@ export class FoliageLayer implements Layer {
           const x = tx + r();
           const z = ty + r();
           if (!free(x, z)) continue;
-          if (grove > 0.58 && r() < (grove - 0.5) * 2.2) plant(r() < 0.55 ? 'oak' : 'birch', x, z, 0.9 + r() * 0.3);
+          // here and there a broad tree has turned: warm patches where a second, slower noise is high
+          const turned = noise(x * 0.22 + 40, z * 0.22) > 0.76;
+          if (grove > 0.58 && r() < (grove - 0.5) * 2.2) plant(r() < 0.55 ? (turned ? 'autumn' : 'oak') : 'birch', x, z, 0.9 + r() * 0.3);
           else if (grove > 0.5 && r() < 0.12) plant('shrub', x, z, 0.8 + r() * 0.6);
+          // and a lone tree in open meadow now and then, so no stretch of grass is quite empty
+          else if (r() < 0.035) plant(r() < 0.2 ? 'cypress' : turned ? 'autumn' : r() < 0.7 ? 'oak' : 'birch', x, z, 0.85 + r() * 0.3);
         }
         // willows lean over the water
         const wetHere = terrain.wet[Math.min(terrain.nz - 1, Math.floor((ty + 0.5) * 4)) * terrain.nx + Math.min(terrain.nx - 1, Math.floor((tx + 0.5) * 4))];
@@ -320,14 +380,23 @@ export class FoliageLayer implements Layer {
         const rad = 0.95 + r() * 0.4;
         const x = l.x + 0.5 + Math.cos(a) * rad;
         const z = l.y + 0.5 + Math.sin(a) * rad;
-        if (free(x, z)) plant('apple', x, z, 0.8 + r() * 0.2);
+        if (free(x, z)) plant(k === 0 && r() < 0.6 ? 'blossom' : 'apple', x, z, 0.8 + r() * 0.2);
+      }
+    }
+    // a pair of cypresses by some front doors and by the chapel, as in any old village
+    for (const l of snap.landmarks) {
+      if (!((l.kind === 'home' && r() < 0.3) || l.kind === 'chapel')) continue;
+      for (const sx of [-1, 1]) {
+        const x = l.x + 0.5 + sx * (0.62 + r() * 0.12);
+        const z = l.y + 0.5 + 0.5 + r() * 0.15;
+        if (free(x, z)) plant('cypress', x, z, 0.85 + r() * 0.2);
       }
     }
     for (const kind of Object.keys(trees) as TreeKind[]) {
       if (!trees[kind].length) continue;
       const geo = makeTree(kind, r);
       const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, flatShading: false });
-      sway(mat, kind === 'pine' ? 0.012 : kind === 'willow' ? 0.02 : 0.018, 0.25);
+      sway(mat, kind === 'pine' || kind === 'cypress' ? 0.012 : kind === 'willow' ? 0.02 : 0.018, 0.25);
       this.geos.push(geo);
       this.mats.push(mat);
       this.addMesh(instanced(geo, mat, trees[kind], kind !== 'shrub'));
@@ -367,7 +436,7 @@ export class FoliageLayer implements Layer {
     }
     if (tufts.length) {
       const geo = tuftGeometry();
-      const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide });
+      const mat = markGround(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide }));
       sway(mat, 0.03, 0.0);
       this.geos.push(geo);
       this.mats.push(mat);
@@ -375,7 +444,7 @@ export class FoliageLayer implements Layer {
     }
     if (flowers.length) {
       const geo = new THREE.SphereGeometry(0.013, 5, 4);
-      const mat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
+      const mat = markGround(new THREE.MeshStandardMaterial({ roughness: 0.7 }));
       this.geos.push(geo);
       this.mats.push(mat);
       this.addMesh(instanced(geo, mat, flowers, false, false));
@@ -410,7 +479,8 @@ export class FoliageLayer implements Layer {
     }
     if (rocks.length) {
       const geo = rockGeometry(r);
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 });
+      // small stones lie flat on the ground: no ink round each one
+      const mat = markGround(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1 }));
       mat.color.set(0xa8a294);
       this.geos.push(geo);
       this.mats.push(mat);
@@ -419,7 +489,7 @@ export class FoliageLayer implements Layer {
     if (reeds.length) {
       const geo = new THREE.ConeGeometry(0.012, 0.34, 4, 1);
       geo.translate(0, 0.17, 0);
-      const mat = new THREE.MeshStandardMaterial({ color: 0x7d9a4a, roughness: 1, side: THREE.DoubleSide });
+      const mat = markGround(new THREE.MeshStandardMaterial({ color: 0x7d9a4a, roughness: 1, side: THREE.DoubleSide }));
       sway(mat, 0.05, 0);
       this.geos.push(geo);
       this.mats.push(mat);
@@ -483,7 +553,7 @@ export class FoliageLayer implements Layer {
       const at = key.indexOf('@');
       return at < 0 ? ctx.materials.get(key) : ctx.materials.get(key.slice(0, at), Number.parseInt(key.slice(at + 1), 16));
     };
-    for (const parts of [fenceParts, hayParts]) {
+    for (const parts of [fenceParts, hayParts, yardParts]) {
       for (const [key, geo] of mergeByMaterial(parts)) {
         const m = new THREE.Mesh(geo, resolve(key));
         m.castShadow = true;
@@ -495,7 +565,7 @@ export class FoliageLayer implements Layer {
     }
     if (cropItems.length) {
       const geo = plantGeometry();
-      const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
+      const mat = markGround(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide }));
       sway(mat, 0.02, 0);
       const mesh = new THREE.InstancedMesh(geo, mat, cropItems.length);
       mesh.castShadow = false;

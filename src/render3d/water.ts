@@ -42,6 +42,7 @@ const FRAG = /* glsl */ `
   uniform vec3 uShallow;
   uniform vec3 uTint;
   uniform float uTierF;
+  uniform float uRain;
   #include <fog_pars_fragment>
   float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   float vn(vec2 p) {
@@ -73,9 +74,18 @@ const FRAG = /* glsl */ `
     col += uSunColor * spec * 1.2;
     col = mix(col, uSky, fres * 0.45);
     // foam hugs the shore and breaks up in long thin streaks; the quick middle of the river gets a few white threads
-    float shore = smoothstep(0.07, 0.0, vDepth) * (0.45 + 0.55 * vn(vec2(across * 14.0, along * 4.0)));
+    float shore = (1.0 - smoothstep(0.0, 0.07, vDepth)) * (0.45 + 0.55 * vn(vec2(across * 14.0, along * 4.0)));
     float threads = smoothstep(0.78, 0.95, n2 * 0.55 + n3 * 0.5) * 0.35 * vRiver * uTierF;
     col = mix(col, vec3(0.93, 0.97, 0.95), clamp(shore * 0.9 + threads, 0.0, 1.0) * 0.8);
+    // rain on the water: a ring spreads from a random point in every cell, each at its own moment
+    if (uRain > 0.02) {
+      vec2 gp = p * 3.4;
+      vec2 id = floor(gp);
+      vec2 f = fract(gp) - 0.5 - (vec2(h21(id + 3.1), h21(id + 7.7)) - 0.5) * 0.5;
+      float t = fract(uTime * 0.8 + h21(id));
+      float ring = smoothstep(0.045, 0.0, abs(length(f) - t * 0.42)) * (1.0 - t) * uRain * uTierF;
+      col += vec3(0.7, 0.8, 0.85) * ring * 0.55;
+    }
     col *= uTint;
     float edge = vDepth + (vn(p * 9.0) - 0.5) * 0.04;
     float alpha = smoothstep(0.0, 0.05, edge) * mix(0.8, 0.96, smoothstep(0.1, 0.6, d));
@@ -196,6 +206,7 @@ export class Water {
           uShallow: { value: new THREE.Color(0x3fa59a) },
           uTint: { value: new THREE.Color(1, 1, 1) },
           uTierF: { value: tier === 'high' ? 1 : tier === 'medium' ? 0.5 : 0 },
+          uRain: { value: 0 },
         },
       ]),
     });
@@ -219,6 +230,11 @@ export class Water {
     (this.mat.uniforms.uSunDir.value as THREE.Vector3).copy(sunDir).normalize();
     (this.mat.uniforms.uSunColor.value as THREE.Color).copy(sunColor);
     (this.mat.uniforms.uSky.value as THREE.Color).copy(sky);
+  }
+
+  /** how hard it is raining (0..1): rings spread on the surface */
+  setRain(v: number): void {
+    this.mat.uniforms.uRain.value = v;
   }
 
   /** the water's colour shifts with the weather: murky and dark in a flood */

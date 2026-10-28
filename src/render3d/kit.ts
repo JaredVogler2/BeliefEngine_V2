@@ -43,7 +43,8 @@ const T = {
 /** a window on the front face (z = +zf), with frame, bars, glass, sill and optional shutters */
 export function windowAt(parts: Parts, x: number, y: number, zf: number, ry = 0, shutters = true, scale = 1): void {
   const s = scale;
-  // front is the local +z; `ry` rotates the whole window with its wall
+  // front is the local +z; `ry` rotates the whole window with its wall, and `zf` is the wall's distance along that rotated front, so a
+  // window on the back wall is (x, y, +D/2, PI), not (x, y, -D/2, PI)
   const put = (g: THREE.BufferGeometry, mat: string, px: number, py: number, pz: number): void => {
     const c = Math.cos(ry);
     const sn = Math.sin(ry);
@@ -120,7 +121,8 @@ export const beam = (parts: Parts, x0: number, y0: number, z0: number, x1: numbe
   const dz = z1 - z0;
   const len = Math.hypot(dx, dy, dz);
   const g = place(T.beam, 0, 0, 0);
-  g.translate(-0.5, 0, 0);
+  // from the start point toward the end (the template is centred on x and stands on y = 0): run it along +x, then centre its thickness
+  g.translate(0.5, -0.01, 0);
   g.scale(len, 1, 1);
   const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(1, 0, 0), new THREE.Vector3(dx, dy, dz).normalize());
   g.applyQuaternion(q);

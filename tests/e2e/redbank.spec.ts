@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { browserState, chooseClaim, replayTraceViaUi, selectVillager, startRedbank, traces, watchConsole } from './helpers.ts';
+import { browserState, chooseClaim, openSheet, replayTraceViaUi, selectVillager, startRedbank, traces, watchConsole } from './helpers.ts';
 
 test.describe('Flood at Redbank (desktop)', () => {
   test.skip(({ viewport }) => (viewport?.width ?? 0) < 900, 'desktop flows');
@@ -19,6 +19,7 @@ test.describe('Flood at Redbank (desktop)', () => {
     await expect(page.getByTestId('coach')).toContainText('Choose a story');
     await page.locator('[data-claim="river_fears_fire"]').click();
     await selectVillager(page, 'Ivo Thatcher');
+    // choosing someone from the village list opens their full card in the side sheet
     const card = page.getByTestId('villager-card');
     await expect(card).toContainText('Ivo Thatcher');
     await expect(card).toContainText('failed comet prophecy');
@@ -48,7 +49,7 @@ test.describe('Flood at Redbank (desktop)', () => {
     const st = await browserState(page);
     expect(st.day).toBe(2);
     expect(st.ap).toBe(5); // 2 unspent + 3
-    await page.getByTestId('tab-laws').click();
+    await openSheet(page, 'laws');
     await expect(page.getByTestId('laws-panel')).toContainText('River fears fire');
     expect(errors).toEqual([]);
   });
@@ -63,6 +64,9 @@ test.describe('Flood at Redbank (desktop)', () => {
       return { x: p.x + b.left, y: p.y + b.top + 10 };
     });
     await page.mouse.click(pos.x, pos.y);
+    await expect(page.getByTestId('selection-pop')).toContainText('Mara Wells');
+    // the full card is one tap away
+    await page.getByRole('button', { name: /More about Mara/ }).click();
     await expect(page.getByTestId('villager-card')).toContainText('Mara Wells');
   });
 

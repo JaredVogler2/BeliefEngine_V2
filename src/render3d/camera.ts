@@ -38,6 +38,11 @@ export class TabletopCamera {
   private maxDist = 40;
   private fitDist = 24;
   reduced = false;
+  /** true until the player (or a focus) takes the camera off its home framing: only then does a resize or a panel opening re-frame the village */
+  private atHome = true;
+  /** the view drifts slowly round the village (the end-of-run tour), until the player takes hold of it */
+  ambient = false;
+  private hold = 0;
   /** a stable text of where the camera is, for tests */
   private moving = false;
 
@@ -58,7 +63,8 @@ export class TabletopCamera {
   setBounds(b: CameraBounds): void {
     this.bounds = b;
     this.recomputeFit();
-    this.goal = { ...this.goal, x: b.w / 2, z: b.h / 2 + 0.3, dist: this.homeDist() };
+    this.atHome = true;
+    this.goal = { ...this.goal, x: b.w / 2, z: b.h / 2 + 0.3, dist: this.homeDist(), az: this.homeAz() };
     this.pose = { ...this.goal };
     this.apply();
   }
@@ -75,7 +81,7 @@ export class TabletopCamera {
       left: lim(i.left, this.view.w * 0.25),
       right: lim(i.right, this.view.w * 0.4),
       top: lim(i.top, this.view.h * 0.3),
-      bottom: lim(i.bottom, this.view.h * 0.4),
+      bottom: lim(i.bottom, this.view.h * 0.58),
     };
     if (instant || this.reduced) {
       this.insets = { ...this.insetGoal };
@@ -93,11 +99,12 @@ export class TabletopCamera {
     if (i.left > 0.5 || i.right > 0.5 || i.top > 0.5 || i.bottom > 0.5) this.camera.setViewOffset(fw, fh, -i.left, -i.top, w, h);
     else this.camera.clearViewOffset();
     this.camera.updateProjectionMatrix();
-    const wasHome = Math.abs(this.goal.dist - this.homeDist()) < 0.01;
     this.recomputeFit();
-    if (wasHome) {
+    if (this.atHome) {
       this.goal.dist = this.homeDist();
+      this.goal.az = this.homeAz();
       this.pose.dist = this.homeDist();
+      this.pose.az = this.homeAz();
     }
     this.clamp();
     this.apply();
@@ -115,7 +122,8 @@ export class TabletopCamera {
     ];
     const fits = (dist: number, margin: number): boolean => {
       const horiz = dist * Math.cos(DEFAULT_ELEVATION);
-      cam.position.set(cx + Math.sin(DEFAULT_AZIMUTH) * horiz, dist * Math.sin(DEFAULT_ELEVATION), cz + Math.cos(DEFAULT_AZIMUTH) * horiz);
+      const az = this.homeAz();
+      cam.position.set(cx + Math.sin(az) * horiz, dist * Math.sin(DEFAULT_ELEVATION), cz + Math.cos(az) * horiz);
       cam.lookAt(cx, 0, cz);
       cam.updateMatrixWorld();
       cam.updateProjectionMatrix();
@@ -137,9 +145,17 @@ export class TabletopCamera {
     this.minDist = 4.2;
   }
 
-  /** where the camera starts and returns to: the whole village on a wide window, the middle of it on a tall phone screen */
+  /** where the camera starts and returns to: the whole village on a wide window; on a tall phone screen a little closer in */
   private homeDist(): number {
-    return this.aspect < 0.9 ? Math.max(this.minDist, this.fitDist * 0.6) : this.fitDist * 0.9;
+    return this.aspect < 0.9 ? Math.max(this.minDist, this.fitDist * 0.74) : this.fitDist * 0.9;
+  }
+
+  /**
+   * a tall screen is filled by turning the plate a quarter-turn, so its long side runs up the screen instead of across it. This follows
+   * the screen, not the part a panel leaves free: opening a sheet must not swing the village round.
+   */
+  private homeAz(): number {
+    return this.view.w / this.view.h < 0.9 ? DEFAULT_AZIMUTH - 90 * DEG : DEFAULT_AZIMUTH;
   }
 
   private clamp(): void {
@@ -153,11 +169,13 @@ export class TabletopCamera {
     g.x = Math.min(w / 2 + mx, Math.max(w / 2 - mx, g.x));
     g.z = Math.min(h / 2 + mz, Math.max(h / 2 - mz, g.z));
     g.el = Math.min(66 * DEG, Math.max(24 * DEG, g.el));
-    g.az = Math.min(DEFAULT_AZIMUTH + 75 * DEG, Math.max(DEFAULT_AZIMUTH - 75 * DEG, g.az));
+    g.az = Math.min(this.homeAz() + 75 * DEG, Math.max(this.homeAz() - 75 * DEG, g.az));
   }
 
   /** ground-plane drag: move the world under the finger */
   panBy(dxPx: number, dyPx: number, viewportH: number): void {
+    this.hold = 8;
+    this.atHome = false;
     const g = this.goal;
     const scale = (2 * g.dist * Math.tan((this.camera.fov * DEG) / 2)) / Math.max(1, viewportH);
     const fx = -Math.sin(g.az);
@@ -174,6 +192,7 @@ export class TabletopCamera {
 
   /** world-space pan used by the keyboard: forward/right in the camera's own frame */
   panWorld(right: number, forward: number): void {
+    this.atHome = false;
     const g = this.goal;
     const fx = -Math.sin(g.az);
     const fz = -Math.cos(g.az);
@@ -184,6 +203,8 @@ export class TabletopCamera {
   }
 
   zoomBy(factor: number, anchor?: { x: number; z: number }): void {
+    this.hold = 8;
+    this.atHome = false;
     const g = this.goal;
     const before = g.dist;
     g.dist /= factor;
@@ -199,6 +220,8 @@ export class TabletopCamera {
   }
 
   orbitBy(dAz: number, dEl: number): void {
+    this.hold = 8;
+    this.atHome = false;
     this.goal.az += dAz;
     this.goal.el += dEl;
     this.clamp();
@@ -207,11 +230,13 @@ export class TabletopCamera {
 
   /** put the whole village back in frame, from the default angle */
   reset(): void {
-    this.goal = { x: this.bounds.w / 2, z: this.bounds.h / 2 + 0.3, dist: this.homeDist(), az: DEFAULT_AZIMUTH, el: DEFAULT_ELEVATION };
+    this.atHome = true;
+    this.goal = { x: this.bounds.w / 2, z: this.bounds.h / 2 + 0.3, dist: this.homeDist(), az: this.homeAz(), el: DEFAULT_ELEVATION };
     this.snapIfReduced(false);
   }
 
   focus(x: number, z: number, dist?: number, snap = false): void {
+    this.atHome = false;
     this.goal.x = x;
     this.goal.z = z;
     if (dist !== undefined) this.goal.dist = dist;
@@ -223,6 +248,11 @@ export class TabletopCamera {
   /** a distance that frames something close up without losing the surroundings */
   closeDist(): number {
     return Math.max(this.minDist, this.fitDist * 0.45);
+  }
+
+  /** how far the camera is from what it looks at, as it is drawn now */
+  get distance(): number {
+    return this.pose.dist;
   }
 
   get zoomLevel(): number {
@@ -240,6 +270,13 @@ export class TabletopCamera {
 
   /** ease the pose towards its goal; returns true while the camera is still moving */
   update(dt: number): boolean {
+    if (this.ambient && !this.reduced) {
+      if (this.hold > 0) this.hold -= dt;
+      else {
+        this.atHome = false;
+        this.goal.az += dt * 0.05;
+      }
+    }
     const ik = 1 - Math.exp(-dt * 10);
     const ig = this.insetGoal;
     const ic = this.insets;
@@ -300,6 +337,7 @@ export class TabletopCamera {
 
   /** test and screenshot hook: jump to an exact view */
   setView(v: { x?: number; z?: number; dist?: number; azimuthDeg?: number; elevationDeg?: number }): void {
+    this.atHome = false;
     const g = this.goal;
     if (v.x !== undefined) g.x = v.x;
     if (v.z !== undefined) g.z = v.z;

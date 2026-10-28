@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { GameSession, serializeRun } from '../../src/engine/index.ts';
 import { policyById } from '../../src/engine/ai/bots/generic.ts';
-import { mapPainted } from './helpers.ts';
+import { mapPainted, openSheet } from './helpers.ts';
 
 /**
  * Visual and layout checks on real engine states (played by bots, loaded through the debug loader) at every supported size.
@@ -145,7 +145,7 @@ test.describe('effects follow the engine', () => {
     await expect(digest).toBeVisible();
     await expect(digest).toContainText(/bridge|flood|night|home/i);
     await page.getByTestId('digest-continue').click();
-    await page.getByTestId('tab-log').click();
+    await openSheet(page, 'log');
     await expect(page.locator('[data-testid="log-panel"], [data-testid="log"]').first()).toBeVisible();
     expect(errors).toEqual([]);
     await ctx.close();

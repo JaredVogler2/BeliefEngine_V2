@@ -26,6 +26,12 @@ async function tell(page: Page, name: string) {
   await page.locator('.act').filter({ hasText: new RegExp(`^Tell ${name}`) }).first().click();
 }
 
+/** Select a villager and open their full sheet (the card beside the selection holds only quick actions; the mind is in the sheet). */
+async function inspect(page: Page, name: string) {
+  await selectVillager(page, name);
+  await openSheet(page, 'selected');
+}
+
 async function endDay(page: Page) {
   await closeSheet(page);
   await page.getByTestId('end-day').click();
@@ -47,12 +53,12 @@ test.describe('Villager minds', () => {
     const errors = watchConsole(page);
     const api = apiLog(page);
     await startReality(page);
-    await selectVillager(page, 'Ivo Thatcher');
+    await inspect(page, 'Ivo Thatcher');
     await expect(page.getByTestId('mind-panel')).toBeVisible();
     await expect(page.getByTestId('mind-memories-empty')).toBeVisible();
     await tell(page, 'Ivo Thatcher');
     await endDay(page);
-    await selectVillager(page, 'Ivo Thatcher');
+    await inspect(page, 'Ivo Thatcher');
     const panel = page.getByTestId('mind-panel');
     await expect(panel.getByTestId('mind-traits')).not.toBeEmpty();
     await expect(panel.getByTestId('mind-memories').locator('li').first()).toBeVisible();
@@ -70,7 +76,7 @@ test.describe('Villager minds', () => {
   test('arguing for a story costs Influence and moves them by the game\'s own rules', async ({ page }) => {
     await startReality(page);
     await endDay(page);
-    await selectVillager(page, 'Old Harl');
+    await inspect(page, 'Old Harl');
     const panel = page.getByTestId('mind-panel');
     await expect(panel.getByTestId('talk-persuade')).toContainText('1 Influence');
     await panel.getByTestId('talk-story').selectOption('river_fears_fire');
@@ -85,7 +91,7 @@ test.describe('Villager minds', () => {
     await startReality(page);
     await tell(page, 'Ivo Thatcher');
     await endDay(page);
-    await selectVillager(page, 'Ivo Thatcher');
+    await inspect(page, 'Ivo Thatcher');
     const panel = page.getByTestId('mind-panel');
     await panel.getByTestId('talk-online').click();
     await expect(panel.getByTestId('talk-consent')).toContainText('What Ivo remembers');
@@ -143,7 +149,7 @@ test.describe('Social dynamics (phase 08)', () => {
     await expect(page.getByTestId('landmark-card')).toBeVisible();
     await page.locator('.act').filter({ hasText: /as proof of/ }).first().click();
     await endDay(page);
-    await selectVillager(page, 'Wren Fisher');
+    await inspect(page, 'Wren Fisher');
     await expect(page.getByTestId('mind-knows')).toContainText('River fears fire');
     await openSheet(page, 'log');
     await expect(page.getByTestId('influence-journal')).toBeVisible();

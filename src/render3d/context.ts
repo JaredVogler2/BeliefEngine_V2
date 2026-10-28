@@ -43,6 +43,10 @@ export interface WorldContext {
   reducedMotion: boolean;
   /** the weather's effect on motion, shared and updated by the world */
   weather: { wind: number; rain: number };
+  /** how far a standing bridge is carried above its resting height so its deck clears the flood (set by the landmarks, read by the people on it) */
+  bridgeLift: number;
+  /** how far the camera stands from what it looks at, updated every frame (the people grow a little at the overview so they stay legible) */
+  viewDistance: number;
   /** the glow belief leaves on the ground and the water, shared by the terrain, the river and the effects */
   magic?: MagicField;
   /** where a villager or landmark is in the world right now */

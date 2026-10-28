@@ -1,5 +1,7 @@
 # Performance: targets, how they are measured, and what was measured
 
+> The 3D world's own scene budgets, tiers, bundle split and frame times (measured on a software rasteriser, never on a GPU or phone) are in [`docs/3d-rebuild/PERFORMANCE.md`](3d-rebuild/PERFORMANCE.md). The figures below are for the engine and the classic map and are unchanged.
+
 Every number here was produced by a command in this repository on the machine named below; none is a claim about a particular phone.
 **Machine:** 4 vCPU Intel Xeon @ 2.1 GHz, 15.7 GB RAM, Linux container, Chromium 153.0.8010.12 headless on a software renderer
 (no GPU), Node 22. A phone's CPU is slower than this per core and its GPU faster at compositing; treat these as a reproducible baseline and a

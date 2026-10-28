@@ -1,5 +1,5 @@
 import type { Duty, RunState } from '../engine/index.ts';
-import { claimDef } from '../engine/core/lookup.ts';
+import { allClaimDefs, claimDef } from '../engine/core/lookup.ts';
 import { passableMask } from '../engine/world/nav.ts';
 import { triggerSources } from '../engine/laws/effects.ts';
 
@@ -102,6 +102,8 @@ export interface SceneSnapshot {
   ties: SceneTie[];
   regions: { id: string; rects: [number, number, number, number][] }[];
   packs: { id: string; x: number; y: number; size: number }[];
+  /** the regions where each story can become law, so choosing a story can show the ground it would govern */
+  claimRegions: Record<string, string[]>;
   /** what kind of danger the chapter has, so the sky can say so */
   threat: string;
 }
@@ -148,6 +150,7 @@ export function getSceneSnapshot(s: RunState): SceneSnapshot {
     ties: s.edges.map((e) => ({ a: e.a, b: e.b, ab: e.ab, ba: e.ba, kind: e.kind })),
     regions: w.regions.map((r) => ({ id: r.id, rects: r.rects.map((q) => [q[0], q[1], q[2], q[3]] as [number, number, number, number]) })),
     packs: w.packs.map((p) => ({ id: p.id, x: p.x, y: p.y, size: p.size })),
+    claimRegions: Object.fromEntries(allClaimDefs(s).map((d) => [d.id, d.regions.slice()])),
     threat: s.scn.threatKind,
   };
 }

@@ -22,7 +22,7 @@ be checked is marked **UNVERIFIED** with the manual steps, and anything that fai
 |---|---|
 | Engine, content, saves, MCP, NL composer: untouched by the 3D work (`git diff main -- src/engine mcp server` shows only the earlier phases) | `src/engine/**`, `mcp/**`, `server/**` |
 | Seeded winning and losing traces (state hash + event hash) used by the replay tests | `tests/fixtures/*-traces.json` |
-| Unit tests (356 at the time of writing) incl. `rng-hash`, `redbank`, `scenarios`, `mcp-*`, `nl-*` | `tests/unit/**` |
+| Unit tests (356 when this audit was written; 364 now) incl. `rng-hash`, `redbank`, `scenarios`, `mcp-*`, `nl-*` | `tests/unit/**` |
 | Browser journeys with real clicks on both renderers' DOM (desktop 1366×768, Pixel 7 390×844) | `tests/e2e/**` |
 | Screenshots of the old flat map at the default seed (calm day 1, flood night, law active; desktop and phone) | `docs/3d-rebuild/screenshots/baseline-2d/` |
 | Saved states: the e2e `persistence` and `resilience` specs save and reload mid-day runs; `scripts/capture-3d.ts` loads bot-played states through `window.__belief.load` | `tests/e2e/persistence.spec.ts`, `tests/e2e/resilience.spec.ts` |
@@ -69,19 +69,38 @@ comparison. A 2D/3D toggle is in the map tools and `?renderer=2d|3d` overrides (
 | New route / flag boots without deleting the old path | PASS: `?renderer=3d` / `?renderer=2d`, plus the map-tools toggle. |
 | No rewrite of social graph, claims, physics, scores or MCP | PASS: the engine and MCP directories have no changes in this work. |
 
+## 3D-02 to 3D-10: what was built, and the checks each rests on
+
+The code is in `src/render3d/**` (about 8,000 lines, one lazy chunk), behind the `WorldRenderer` interface in `src/render/types.ts`. Nothing
+below changes a rule: the renderer reads a copy of the run (`SceneSnapshot`) and the engine never reads the renderer.
+
+| Phase | What exists | Checks |
+|---|---|---|
+| 02 Renderer, camera, lighting | Three.js 0.186.1 on WebGL2 (`World3D.ts`); a tabletop camera that pans, zooms to the cursor, orbits within limits (azimuth ±75°, elevation 24–66°), pinches, resets and focuses a person or place, eased on its own clock (`camera.ts`); a warm low key light with a soft shadow map, a sky fill, tone mapping, distance haze, a screen-space sky with drifting clouds; weather moods chosen from the engine's forecast and flood level (`atmosphere.ts`) | `world3d.spec.ts` boots, draws and picks on two projects; frames A, B, D in `VISUAL_QA.md` |
+| 03 Terrain, water, weather | The height field is the engine's elevation times one constant, rounded off, with the river channel cut, building plots levelled, a layered plate edge; a ground texture painted from the tile map with paths worn to doors (`terrain.ts`, `groundTexture.ts`); a river and flood surface whose height at every tile is the engine's depth (`water.ts`); rain, wind, wet ground | `render3d-scene.test.ts`: heights tile for tile, surface at the engine's depth on every wet tile, no water on any dry tile, a calm village wet only in the river; frames D, E2, M |
+| 04 Architecture and vegetation | Five cottage variants plus cabin, granary, hall, chapel, ruin; bell tower, mill with a turning wheel, market, shelter, well, pen, campfire, beacon; an arched stone bridge built from the engine's own footprint; seven tree kinds, shrubs, tufts, flowers, reeds, crops that ripen with the engine's growth, fences. All procedural, instanced or merged per material | frames A, B, F; `ASSET_LICENSES.md` (no files, nothing to license) |
+| 05 Villagers | One hand-built figure per villager, costume from role and faction and the engine's `look`, held props, animated walk, work, rest, watch, shelter; routes follow the engine's passable tiles; standing on the bridge deck when on it; gestures for events | frames B, C; crowd and tap tests |
+| 06 Belief magic | Pure planners turn logged events and the engine's law geometry into effects (`plan.ts`); shader-painted law ground (rune wheels, rings, drops), reach discs the size of the engine's flood shield, ripples on the river, ribbons only along real ties, social lens, forecast stripes and contours (`magic.ts`, `effects.ts`, `glyphs.ts`) | `render3d-plan.test.ts` (six parity fixtures) and "every effect the world starts names an event the engine logged"; frames C, E, E2, F, K, M |
+| 07 Immersive HUD | A compact rail of views, a story tray, a card anchored to the selection, a side sheet (bottom sheet on a phone) for detail, camera insets so nothing sits under a panel, an end-of-run scene of the real final world (`Hud.tsx`, `Play.tsx`, `MapView.tsx`, `Aftermath.tsx`) | the world keeps at least 75% of a desktop screen and 60% of a phone's at rest (test, on the 3D projects); axe passes on the desktop and phone projects including 320×568 (those run on the classic map, which sits under the very same interface DOM; axe was **not** run against a page with the 3D canvas live); frames A2, C, G, H, I, K, L |
+| 08 Asset pipeline and optimisation | No asset files by design; every texture painted at load from a seed, every mesh built by code; instancing, per-material merging, static batching of landmarks; three quality tiers with a run-time monitor and software-GL detection; lazy 3D chunk; disposal on every rebuild | `PERFORMANCE.md`; bundle budget in CI (`npm run size`); leak test |
+| 09 Visual QA and regression | 16 real frames, a scorecard, ranked defects, a functional regression table | `VISUAL_QA.md`; `world3d.spec.ts` on `desktop-3d` and `phone-3d`; the classic specs on `desktop` and `phone` |
+| 10 Art-director review and release | Defects fixed and frames recaptured; honest per-phase verdicts | `FINAL_REVIEW.md` |
+
 ## Phase table
 
-Statuses are PASS / FAIL / UNVERIFIED. They are re-checked at the end in `FINAL_REVIEW.md`.
+Statuses are PASS / PARTIAL / FAIL / UNVERIFIED, re-checked in `FINAL_REVIEW.md`. "PARTIAL" names what is missing in the row. The later
+world-class visual pass (finishing chain, art pass, phones and screens) is recorded in `docs/3D_QUALITY_REPORT.md`, against the art direction in
+`docs/3D_VISUAL_STANDARD.md` and the plan in `docs/3D_IMPLEMENTATION_PLAN.md`.
 
 | Phase | Status | Evidence / what is outstanding |
 |---|---|---|
 | 3D-01 Source audit and migration | PASS | This document. |
-| 3D-02 Renderer, camera, lighting | in progress | |
-| 3D-03 Terrain, water, weather | in progress | |
-| 3D-04 Architecture and environment | in progress | |
-| 3D-05 Villagers and life | in progress | |
-| 3D-06 Belief magic and feedback | in progress | `tests/unit/render3d-plan.test.ts` (six parity fixtures), `scripts/capture-3d.ts --resolve 1` |
-| 3D-07 Immersive HUD and controls | not started | |
-| 3D-08 Asset pipeline and optimisation | not started | |
-| 3D-09 Visual QA and gameplay regression | not started | |
-| 3D-10 Final art direction and release | not started | |
+| 3D-02 Renderer, camera, lighting | PASS | Controls, picking and lighting work and are tested on software WebGL. **UNVERIFIED:** feel and shadow quality on a real GPU. |
+| 3D-03 Terrain, water, weather | PASS | Engine-derived heights and depths asserted tile for tile; floods cover exactly the engine's flooded tiles. Water has no refraction or reflection. |
+| 3D-04 Architecture and environment | PASS | Detailed procedural kit; flaws listed in `VISUAL_QA.md` (plain plaster, repeated variants). No hand-modelled assets and no glTF pipeline (see below). |
+| 3D-05 Villagers and life | PARTIAL | 14 recognisable, animated, pickable people on the engine's tiles. They are simple, blocky figures, drawn up to a third larger at the overview so they stay legible. Motion was measured frame to frame (`docs/3D_QUALITY_REPORT.md`) but not watched as video. No level-of-detail rig (not needed at 14 people). |
+| 3D-06 Belief magic and feedback | PASS | Parity fixtures and the event-named-effect test; frames E, E2, F, F2. Effects are legible, not yet lavish. |
+| 3D-07 Immersive HUD and controls | PASS | Desktop and phone layouts tested with real pointer events on the 3D projects; keyboard flow and axe on the classic-map projects (same interface DOM). **UNVERIFIED:** a real phone, a real screen reader. A selected house now says what tonight's water does at its door and draws the way to the nearest shelter (`world3d.spec.ts`). |
+| 3D-08 Asset pipeline and optimisation | PARTIAL | Budgets met and measured on software GL; **UNVERIFIED** on any GPU or phone. The playbook's glTF/Blender path was not used: procedural by choice (`ASSET_LICENSES.md`). While the chunk arrives and the village is built, the stage shows a small sky with a floating island and a progress bar. |
+| 3D-09 Visual QA and gameplay regression | PASS | 16 real frames reviewed, 9 defects fixed, regression tables green (see `FINAL_REVIEW.md` for the exact runs). Automated pixel-diff baselines were not built; frames are reviewed by eye and by structural tests, as the phase allows. |
+| 3D-10 Final art direction and release | PARTIAL | Reviewed, repaired, recaptured. Scorecard has three areas at 3 of 5, so **premium is not claimed**. Nothing is deployed: there is no live URL and no Vercel deployment was made. |

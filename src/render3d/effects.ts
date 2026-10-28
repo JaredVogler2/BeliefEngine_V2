@@ -7,6 +7,7 @@ import type { SceneChanges, SceneSnapshot } from './snapshot.ts';
 import { getSceneSnapshot } from './snapshot.ts';
 import { makeGlyphs, type Glyphs } from './glyphs.ts';
 import { engineToWorld } from './coords.ts';
+import { DISPLAY_GLSL, displayUniforms } from './post.ts';
 
 /**
  * The belief magic of the village: effects played from what the engine logged and from the laws it reports. The planning is in
@@ -38,18 +39,23 @@ const RIBBON_VERT = /* glsl */ `
   }
 `;
 const RIBBON_FRAG = /* glsl */ `
+  ${DISPLAY_GLSL}
   varying float vU;
   uniform float uHead;
   uniform float uFade;
   uniform vec3 uColor;
   uniform float uDash;
+  uniform float uSolid;
+  uniform float uTime;
   void main() {
     float tail = smoothstep(uHead - 0.5, uHead, vU) * (1.0 - smoothstep(uHead, uHead + 0.04, vU));
+    // the social lens draws a whole standing ribbon with a slow pulse running along it, not a single trail
+    tail = mix(tail, 0.4 + 0.6 * smoothstep(0.3, 1.0, sin(vU * 14.0 - uTime * 2.2) * 0.5 + 0.5), uSolid);
     // a rough, broken stroke for distrust and rivals: dashes instead of one smooth ribbon
     float dash = mix(1.0, step(0.5, fract(vU * 14.0)), uDash);
     float a = tail * uFade * dash;
     if (a < 0.01) discard;
-    gl_FragColor = vec4(uColor * (0.8 + 0.8 * tail), a);
+    gl_FragColor = vec4(postDisplay(uColor * (0.8 + 0.8 * tail)), a);
     #include <colorspace_fragment>
   }
 `;
@@ -106,6 +112,11 @@ export class EffectsLayer implements Layer {
   private sparks: Particles;
   private smoke: Particles;
   private ribbons: Ribbon[] = [];
+  private lensRibbons: Ribbon[] = [];
+  private lens: 'none' | 'social' = 'none';
+  private activeClaim: string | null = null;
+  private selection: { kind: string; id: string } | null = null;
+  private lensT = 0;
   private runes: RuneSprite[] = [];
   private glyphs: Glyphs | null = null;
   private queue: Queued[] = [];
@@ -142,6 +153,7 @@ export class EffectsLayer implements Layer {
       }
     }
     for (let i = 0; i < MAX_ARCS; i++) this.ribbons.push(this.makeRibbon());
+    for (let i = 0; i < 12; i++) this.lensRibbons.push(this.makeRibbon());
   }
 
   private makeRibbon(): Ribbon {
@@ -167,7 +179,7 @@ export class EffectsLayer implements Layer {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
-      uniforms: { uTime: { value: 0 }, uHead: { value: 0 }, uFade: { value: 0 }, uColor: { value: new THREE.Color(1, 1, 1) }, uRough: { value: 0 }, uDash: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uHead: { value: 0 }, uFade: { value: 0 }, uColor: { value: new THREE.Color(1, 1, 1) }, uRough: { value: 0 }, uDash: { value: 0 }, uSolid: { value: 0 }, ...displayUniforms },
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.frustumCulled = false;
@@ -184,13 +196,14 @@ export class EffectsLayer implements Layer {
     const first = !this.snap || changes.rebuild;
     if (first) this.reset();
     this.snap = snap;
+    if (this.lens === 'social') this.refreshLens();
     const laws = JSON.stringify(snap.laws.map((l) => [l.id, l.status, Math.round(l.strength * 20), Math.round(l.progress / 5), l.sources.length]));
     const bridge = snap.landmarks.find((l) => l.kind === 'bridge');
     const key = `${laws}|${snap.landmarks.map((l) => `${l.id}${l.lit ? 1 : 0}${l.hp > 0 ? 1 : 0}`).join('')}|${bridge?.data.watchers ?? ''}|${snap.landmarks.find((l) => l.kind === 'belltower')?.data.ringing ?? ''}`;
     if (first || key !== this.lastLaws) {
       this.lastLaws = key;
       this.visuals = lawVisuals(snap);
-      this.ctx.magic?.setLaws(this.visuals, snap, first);
+      this.ctx.magic?.setLaws(this.visuals, snap, first, this.highlightRegions());
     }
   }
 
@@ -210,15 +223,30 @@ export class EffectsLayer implements Layer {
     this.log.length = 0;
   }
 
-  setOptions(): void {
+  private highlightRegions(): string[] {
+    return this.activeClaim && this.snap ? this.snap.claimRegions[this.activeClaim] ?? [] : [];
+  }
+
+  setOptions(o?: { lens: 'none' | 'social'; selection: { kind: string; id: string } | null; activeClaim: string | null }): void {
     this.reduced = this.ctx.reducedMotion;
     if (this.ctx.magic) this.ctx.magic.reduced = this.reduced;
+    if (o) {
+      const changed = o.lens !== this.lens || o.selection?.id !== this.selection?.id;
+      this.lens = o.lens;
+      this.selection = o.selection;
+      if (changed) this.refreshLens();
+      if (o.activeClaim !== this.activeClaim) {
+        this.activeClaim = o.activeClaim;
+        if (this.snap) this.ctx.magic?.setLaws(this.visuals, this.snap, false, this.highlightRegions());
+      }
+    }
   }
 
   /** the number of things being shown or about to be: used by tests and the debug panel */
   effectCount(): number {
     let n = this.queue.length + (this.ctx.magic?.pulseCount ?? 0) + this.sparks.count + this.smoke.count;
     for (const r of this.ribbons) if (r.busy) n++;
+    for (const r of this.lensRibbons) if (r.mesh.visible) n++;
     for (const r of this.runes) if (r.busy) n++;
     return n;
   }
@@ -274,6 +302,15 @@ export class EffectsLayer implements Layer {
       this.queue = rest;
     }
     this.tickRibbons(dt, time);
+    if (this.lens === 'social') {
+      this.lensT += dt;
+      for (const r of this.lensRibbons) r.mat.uniforms.uTime.value = time;
+      // people walk: follow them a few times a second
+      if (this.lensT > 0.25) {
+        this.lensT = 0;
+        this.refreshLens();
+      }
+    }
     this.tickRunes(dt);
     this.ambient(dt);
     this.sparks.update(dt);
@@ -484,20 +521,11 @@ export class EffectsLayer implements Layer {
     }
   }
 
-  private ribbon(a: THREE.Vector3, b: THREE.Vector3, color: THREE.Color, durMs: number, rough: boolean): void {
-    const r = this.ribbons.find((q) => !q.busy);
-    if (!r) return;
-    r.busy = true;
-    r.t = 0;
-    r.dur = Math.max(0.2, durMs / 1000);
+  /** lay a ribbon along a curve from `a` to `b`: out of one head, over, down to the other */
+  private fillRibbon(r: Ribbon, a: THREE.Vector3, b: THREE.Vector3): void {
     r.a.copy(a);
     r.b.copy(b);
-    r.color.copy(color);
     r.lift = Math.min(1.5, 0.3 + a.distanceTo(b) * 0.1);
-    r.mat.uniforms.uColor.value = color;
-    r.mat.uniforms.uRough.value = rough ? 1 : 0;
-    r.mat.uniforms.uDash.value = rough ? 1 : 0;
-    // the curve: out of the speaker's head, over, down to the listener's
     const dx = b.x - a.x;
     const dz = b.z - a.z;
     const len = Math.hypot(dx, dz) || 1;
@@ -518,7 +546,67 @@ export class EffectsLayer implements Layer {
       arr[i * 6 + 5] = z - nz * w;
     }
     r.pos.needsUpdate = true;
+  }
+
+  private ribbon(a: THREE.Vector3, b: THREE.Vector3, color: THREE.Color, durMs: number, rough: boolean): void {
+    const r = this.ribbons.find((q) => !q.busy);
+    if (!r) return;
+    r.busy = true;
+    r.t = 0;
+    r.dur = Math.max(0.2, durMs / 1000);
+    r.color.copy(color);
+    r.mat.uniforms.uColor.value = color;
+    r.mat.uniforms.uRough.value = rough ? 1 : 0;
+    r.mat.uniforms.uDash.value = rough ? 1 : 0;
+    r.mat.uniforms.uSolid.value = 0;
+    this.fillRibbon(r, a, b);
     r.mesh.visible = true;
+  }
+
+  // ------------------------------------------------------------------------------------------------------ the social lens
+
+  /**
+   * The ties around whoever is selected (the strongest handful when nobody is), drawn as standing ribbons: brighter for more trust,
+   * broken and cold for a rivalry. Bounded on purpose: the whole graph at once would be a tangle that hides the village.
+   */
+  private lensTies(): { a: string; b: string; w: number; rival: boolean }[] {
+    const snap = this.snap;
+    if (!snap) return [];
+    const alive = new Set(snap.villagers.filter((v) => v.status !== 'dead').map((v) => v.id));
+    const sel = this.selection?.kind === 'villager' ? this.selection.id : null;
+    let ties = snap.ties.filter((t) => alive.has(t.a) && alive.has(t.b));
+    if (sel) ties = ties.filter((t) => t.a === sel || t.b === sel);
+    return ties
+      .map((t) => ({ a: t.a, b: t.b, w: Math.max(t.ab, t.ba) / 100, rival: t.kind === 'rival' }))
+      .sort((x, y) => y.w - x.w)
+      .slice(0, sel ? this.lensRibbons.length : 8);
+  }
+
+  private refreshLens(): void {
+    const on = this.lens === 'social';
+    if (!on) {
+      for (const r of this.lensRibbons) r.mesh.visible = false;
+      return;
+    }
+    const ties = this.lensTies();
+    this.lensRibbons.forEach((r, i) => {
+      const t = ties[i];
+      const a = t ? this.pos({ from: t.a } as EffectPlan, 'from') : null;
+      const b = t ? this.pos({ to: t.b } as EffectPlan, 'to') : null;
+      if (!t || !a || !b) {
+        r.mesh.visible = false;
+        return;
+      }
+      const c = col(VOCAB_COLOR[t.rival ? 'resist' : 'trust']);
+      r.color.copy(c);
+      r.mat.uniforms.uColor.value = c;
+      r.mat.uniforms.uSolid.value = 1;
+      r.mat.uniforms.uRough.value = t.rival ? 1 : 0;
+      r.mat.uniforms.uDash.value = t.rival ? 1 : 0;
+      r.mat.uniforms.uFade.value = 0.3 + 0.6 * Math.min(1, t.w);
+      this.fillRibbon(r, a, b);
+      r.mesh.visible = true;
+    });
   }
 
   private tickRibbons(dt: number, time: number): void {
@@ -602,13 +690,14 @@ export class EffectsLayer implements Layer {
   dispose(): void {
     this.sparks.dispose();
     this.smoke.dispose();
-    for (const r of this.ribbons) {
+    for (const r of [...this.ribbons, ...this.lensRibbons]) {
       r.mesh.geometry.dispose();
       r.mat.dispose();
     }
     for (const r of this.runes) (r.sprite.material as THREE.SpriteMaterial).dispose();
     this.glyphs?.dispose();
     this.ribbons = [];
+    this.lensRibbons = [];
     this.runes = [];
   }
 }

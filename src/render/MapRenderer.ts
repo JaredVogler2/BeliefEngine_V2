@@ -245,6 +245,15 @@ export class MapRenderer implements WorldRenderer {
     return v ? this.worldToScreen(v.x, v.y - 10) : null;
   }
 
+  tileAt(sx: number, sy: number): { x: number; y: number } | null {
+    const s = this.state;
+    if (!s) return null;
+    const w = this.screenToWorld(sx, sy);
+    const x = Math.floor(w.x / TS);
+    const y = Math.floor(w.y / TS);
+    return x >= 0 && y >= 0 && x < s.world.w && y < s.world.h ? { x, y } : null;
+  }
+
   /** screen position of a villager or landmark, for DOM overlays that follow the selection */
   entityScreen(kind: 'villager' | 'landmark', id: string): { x: number; y: number } | null {
     if (kind === 'villager') return this.villagerScreen(id);

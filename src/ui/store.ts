@@ -264,7 +264,8 @@ export class GameStore {
   }
 
   select(sel: Selection): void {
-    this.ui = { ...this.ui, selection: sel, tab: sel ? 'selected' : this.ui.tab, sheetOpen: sel ? true : this.ui.sheetOpen };
+    // choosing someone shows a small card beside them; the side sheet (full detail) opens only when asked for
+    this.ui = { ...this.ui, selection: sel };
     if (sel) sfx('tick');
     this.emit();
   }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { SceneSnapshot } from './snapshot.ts';
+import { DISPLAY_GLSL, displayUniforms } from './post.ts';
 
 /**
  * Weather and the light of the day, as a mood the scene eases into. The mood is chosen from what the engine says: the chapter's
@@ -25,31 +26,40 @@ export interface Mood {
   wind: number;
   rain: number;
   exposure: number;
+  /** how much of the sky is cloud (0 clear, 1 overcast) and its colour */
+  cloud: number;
+  cloudColor: number;
 }
 
 const CALM: Mood = {
-  sunColor: 0xffe0ae, sunIntensity: 3.1, hemiSky: 0xc4dcf4, hemiGround: 0x7a7650, hemiIntensity: 1.45, fillIntensity: 1.0, fog: 0xdbe5d4, fogDensity: 0.0095,
-  skyTop: 0xa9cbe6, skyHorizon: 0xf1ead0, windows: 0, waterTint: 1, wind: 1, rain: 0, exposure: 1.02,
+  sunColor: 0xffd9a0, sunIntensity: 3.6, hemiSky: 0xc4dcf4, hemiGround: 0x7a7650, hemiIntensity: 1.12, fillIntensity: 0.72, fog: 0xdbe5d4, fogDensity: 0.0095,
+  skyTop: 0xa9cbe6, skyHorizon: 0xf1ead0, windows: 0, waterTint: 1, wind: 1, rain: 0, exposure: 1.02, cloud: 0.3, cloudColor: 0xfffaf0,
 };
 const STORM: Mood = {
   sunColor: 0xd6e0ee, sunIntensity: 1.15, hemiSky: 0x93a6bb, hemiGround: 0x55583f, hemiIntensity: 1.25, fillIntensity: 0.7, fog: 0x8e9aa2, fogDensity: 0.021,
-  skyTop: 0x59687a, skyHorizon: 0x9fa9ab, windows: 0.9, waterTint: 0.62, wind: 2.6, rain: 1, exposure: 0.95,
+  skyTop: 0x59687a, skyHorizon: 0x9fa9ab, windows: 0.9, waterTint: 0.62, wind: 2.6, rain: 1, exposure: 0.95, cloud: 1.0, cloudColor: 0x6d7885,
 };
 const THREAT: Mood = {
   sunColor: 0xf4d6a8, sunIntensity: 2.0, hemiSky: 0xb0c0d8, hemiGround: 0x6d6a4c, hemiIntensity: 1.3, fillIntensity: 0.85, fog: 0xc2c4bc, fogDensity: 0.014,
-  skyTop: 0x8aa5c4, skyHorizon: 0xdcd6c2, windows: 0.35, waterTint: 0.85, wind: 1.6, rain: 0, exposure: 1.0,
+  skyTop: 0x8aa5c4, skyHorizon: 0xdcd6c2, windows: 0.35, waterTint: 0.85, wind: 1.6, rain: 0, exposure: 1.0, cloud: 0.5, cloudColor: 0xe8e4da,
 };
 const HEAT: Mood = {
   sunColor: 0xffd08a, sunIntensity: 3.4, hemiSky: 0xd6dcea, hemiGround: 0x8a7a50, hemiIntensity: 1.35, fillIntensity: 0.8, fog: 0xefe0b8, fogDensity: 0.012,
-  skyTop: 0xbcd0e0, skyHorizon: 0xf6e6b8, windows: 0, waterTint: 1, wind: 0.8, rain: 0, exposure: 1.05,
+  skyTop: 0xbcd0e0, skyHorizon: 0xf6e6b8, windows: 0, waterTint: 1, wind: 0.8, rain: 0, exposure: 1.05, cloud: 0.08, cloudColor: 0xffffff,
 };
 const DUSK: Mood = {
   sunColor: 0xffb878, sunIntensity: 2.3, hemiSky: 0xa4aecc, hemiGround: 0x66604a, hemiIntensity: 1.25, fillIntensity: 0.9, fog: 0xc9bdb4, fogDensity: 0.013,
-  skyTop: 0x7e8fb8, skyHorizon: 0xf0c9a0, windows: 0.5, waterTint: 0.9, wind: 1.2, rain: 0, exposure: 1.0,
+  skyTop: 0x7e8fb8, skyHorizon: 0xf0c9a0, windows: 0.5, waterTint: 0.9, wind: 1.2, rain: 0, exposure: 1.0, cloud: 0.55, cloudColor: 0xf2d5bd,
 };
 const SUNBREAK: Mood = {
-  sunColor: 0xffe2a8, sunIntensity: 3.3, hemiSky: 0xcfe4f6, hemiGround: 0x80795a, hemiIntensity: 1.5, fillIntensity: 1.0, fog: 0xe6ecd8, fogDensity: 0.0085,
-  skyTop: 0x9ecbec, skyHorizon: 0xfaeccc, windows: 0, waterTint: 1.05, wind: 0.9, rain: 0, exposure: 1.06,
+  sunColor: 0xffdc9e, sunIntensity: 3.6, hemiSky: 0xcfe4f6, hemiGround: 0x80795a, hemiIntensity: 1.2, fillIntensity: 0.75, fog: 0xe6ecd8, fogDensity: 0.0085,
+  skyTop: 0x9ecbec, skyHorizon: 0xfaeccc, windows: 0, waterTint: 1.05, wind: 0.9, rain: 0, exposure: 1.06, cloud: 0.32, cloudColor: 0xfff4dc,
+};
+
+/** after a loss: the storm has passed but the light has not come back; lamps are lit in whatever still stands */
+const AFTERMATH: Mood = {
+  sunColor: 0xd9c9b0, sunIntensity: 1.5, hemiSky: 0x9aa8bc, hemiGround: 0x5e5a46, hemiIntensity: 1.2, fillIntensity: 0.75, fog: 0xa8aeb0, fogDensity: 0.016,
+  skyTop: 0x6c7b90, skyHorizon: 0xcdc3b0, windows: 0.8, waterTint: 0.7, wind: 0.8, rain: 0, exposure: 0.97, cloud: 0.8, cloudColor: 0xaeb4bc,
 };
 
 const mix = (a: Mood, b: Mood, t: number): Mood => {
@@ -58,7 +68,7 @@ const mix = (a: Mood, b: Mood, t: number): Mood => {
   return {
     sunColor: c(a.sunColor, b.sunColor), sunIntensity: n(a.sunIntensity, b.sunIntensity), hemiSky: c(a.hemiSky, b.hemiSky), hemiGround: c(a.hemiGround, b.hemiGround), hemiIntensity: n(a.hemiIntensity, b.hemiIntensity),
     fillIntensity: n(a.fillIntensity, b.fillIntensity), fog: c(a.fog, b.fog), fogDensity: n(a.fogDensity, b.fogDensity), skyTop: c(a.skyTop, b.skyTop), skyHorizon: c(a.skyHorizon, b.skyHorizon), windows: n(a.windows, b.windows),
-    waterTint: n(a.waterTint, b.waterTint), wind: n(a.wind, b.wind), rain: n(a.rain, b.rain), exposure: n(a.exposure, b.exposure),
+    waterTint: n(a.waterTint, b.waterTint), wind: n(a.wind, b.wind), rain: n(a.rain, b.rain), exposure: n(a.exposure, b.exposure), cloud: n(a.cloud, b.cloud), cloudColor: c(a.cloudColor, b.cloudColor),
   };
 };
 
@@ -68,6 +78,7 @@ const mix = (a: Mood, b: Mood, t: number): Mood => {
  */
 export function moodFor(snap: SceneSnapshot, surge: number): Mood {
   if (snap.outcome === 'victory') return SUNBREAK;
+  if (snap.outcome === 'defeat') return AFTERMATH;
   if (snap.threat === 'flood') {
     const s = Math.min(1, Math.max(0, (Math.max(surge, snap.level >= 3 ? snap.level : 0) - 1) / 3));
     return mix(CALM, STORM, s);
@@ -123,7 +134,7 @@ export class Rain {
     this.mat = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
-      uniforms: { uTime: { value: 0 }, uAmount: { value: 0 }, uWind: { value: 0.6 } },
+      uniforms: { uTime: { value: 0 }, uAmount: { value: 0 }, uWind: { value: 0.6 }, ...displayUniforms },
       vertexShader: /* glsl */ `
         attribute float aEnd;
         uniform float uTime;
@@ -142,10 +153,13 @@ export class Rain {
         }
       `,
       fragmentShader: /* glsl */ `
+        ${DISPLAY_GLSL}
         varying float vA;
         uniform float uAmount;
         void main() {
-          gl_FragColor = vec4(0.78, 0.86, 0.95, vA * 0.42 * uAmount);
+          // (a screen colour: drawn straight it is written as it is; through the finishing chain it is decoded and pre-compensated)
+          vec3 c = vec3(0.78, 0.86, 0.95);
+          gl_FragColor = vec4(uDisplayComp > 0.5 ? postDisplay(pow(c, vec3(2.2))) : c, vA * 0.42 * uAmount);
         }
       `,
     });

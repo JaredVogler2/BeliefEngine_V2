@@ -15,7 +15,7 @@ const InfluenceJournal = lazy(() => import('./MindPanel.tsx').then((m) => ({ def
 
 // ------------------------------------------------------------------ shared action row
 
-interface Opt {
+export interface Opt {
   action: Action;
   label: string;
   cost: number;
@@ -23,7 +23,7 @@ interface Opt {
   badge?: 'good' | 'bad' | null;
 }
 
-function ActionRow({ o, onDone }: { o: Opt; onDone?: () => void }) {
+export function ActionRow({ o, onDone }: { o: Opt; onDone?: () => void }) {
   const ok = o.preview.ok;
   const deltas = o.preview.deltas.slice(0, 3).map((d) => `${firstName(d.name)} ${d.before}→${d.after}`).join(', ');
   return (
@@ -59,7 +59,7 @@ function playable(s: RunState, claimId: string): boolean {
   return !!d && (!d.rival || !!d.adoptable);
 }
 
-function mk(s: RunState, action: Action): Opt {
+export function mk(s: RunState, action: Action): Opt {
   return { action, label: describeAction(s, action), cost: previewAction(s, action).cost, preview: previewAction(s, action) };
 }
 
@@ -131,6 +131,30 @@ function Twists() {
   );
 }
 
+/** every action the Keeper can take on or through this person right now */
+export function villagerOpts(state: RunState, id: string, claimId: string | null): Opt[] {
+  const v = state.villagers.find((x) => x.id === id)!;
+  const out: Opt[] = [];
+  if (v.status === 'dead') return out;
+  if (claimId && state.claims.find((c) => c.id === claimId)?.available && playable(state, claimId)) {
+    out.push(mk(state, { type: 'SEED', claim: claimId, target: id }));
+    const believes = (v.beliefs[claimId]?.conv ?? 0) >= 35;
+    for (const n of neighborsOf(state, id)) {
+      const other = state.villagers.find((x) => x.id === n.id)!;
+      if (other.status === 'dead') continue;
+      if (believes && (other.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: id, to: n.id }));
+      if ((other.beliefs[claimId]?.conv ?? 0) >= 35 && (v.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: n.id, to: id }));
+    }
+  }
+  for (const c of state.scn.claimDefs.filter((d) => d.rival)) {
+    const targeted = state.rivals.some((r) => r.claim === c.id && r.plan?.target === id);
+    if (claimId && ((v.beliefs[c.id]?.conv ?? 0) >= 10 || targeted)) out.push(mk(state, { type: 'COUNTER', claim: claimId, against: c.id, target: id }));
+  }
+  for (const d of state.scn.deals ?? []) if (d.broker === id) out.push(mk(state, { type: 'TRADE', deal: d.id, target: id }));
+  out.push(mk(state, { type: 'SCOUT', target: id }));
+  return out;
+}
+
 function VillagerCard({ id }: { id: string }) {
   const state = useStore((s) => s.state)!;
   const ui = useStore((s) => s.ui);
@@ -141,27 +165,7 @@ function VillagerCard({ id }: { id: string }) {
   const claimId = ui.activeClaim;
   const claimShort = claimId ? findClaimDef(state, claimId)?.short ?? claimId : null;
 
-  const opts = ((): Opt[] => {
-    const out: Opt[] = [];
-    if (v.status === 'dead') return out;
-    if (claimId && state.claims.find((c) => c.id === claimId)?.available && playable(state, claimId)) {
-      out.push(mk(state, { type: 'SEED', claim: claimId, target: id }));
-      const believes = (v.beliefs[claimId]?.conv ?? 0) >= 35;
-      for (const n of neighborsOf(state, id)) {
-        const other = state.villagers.find((x) => x.id === n.id)!;
-        if (other.status === 'dead') continue;
-        if (believes && (other.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: id, to: n.id }));
-        if ((other.beliefs[claimId]?.conv ?? 0) >= 35 && (v.beliefs[claimId]?.conv ?? 0) < 70) out.push(mk(state, { type: 'MESSENGER', claim: claimId, from: n.id, to: id }));
-      }
-    }
-    for (const c of state.scn.claimDefs.filter((d) => d.rival)) {
-      const targeted = state.rivals.some((r) => r.claim === c.id && r.plan?.target === id);
-      if (claimId && ((v.beliefs[c.id]?.conv ?? 0) >= 10 || targeted)) out.push(mk(state, { type: 'COUNTER', claim: claimId, against: c.id, target: id }));
-    }
-    for (const d of state.scn.deals ?? []) if (d.broker === id) out.push(mk(state, { type: 'TRADE', deal: d.id, target: id }));
-    out.push(mk(state, { type: 'SCOUT', target: id }));
-    return out;
-  })();
+  const opts = villagerOpts(state, id, claimId);
 
   const seed = opts.filter((o) => o.action.type === 'SEED');
   const msgFrom = opts.filter((o) => o.action.type === 'MESSENGER' && (o.action as { from: string }).from === id && o.preview.ok).sort((a, b) => b.preview.deltas.reduce((m, d) => m + d.after - d.before, 0) - a.preview.deltas.reduce((m, d) => m + d.after - d.before, 0)).slice(0, 6);
@@ -263,7 +267,7 @@ function VillagerCard({ id }: { id: string }) {
   );
 }
 
-function landmarkBlurb(l: Landmark): string {
+export function landmarkBlurb(l: Landmark): string {
   switch (l.kind) {
     case 'beacon': return l.lit ? `Burning: ${l.fuelNights} night${l.fuelNights === 1 ? '' : 's'} of fuel left.` : 'Cold brazier. Lighting it costs fuel and carries a spark risk.';
     case 'bridge': return `Integrity ${l.hp}/${l.maxHp}.`;
@@ -285,29 +289,33 @@ function landmarkBlurb(l: Landmark): string {
   }
 }
 
+/** the rituals and gatherings a place offers, with the active story */
+export function landmarkOpts(state: RunState, id: string, claimId: string | null): Opt[] {
+  const l = state.world.landmarks.find((x) => x.id === id);
+  const out: Opt[] = [];
+  if (!l) return out;
+  for (const r of state.scn.rituals.filter((q) => q.landmark === l.kind)) {
+    const claims: (string | undefined)[] = [undefined];
+    if (claimId) {
+      const def = findClaimDef(state, claimId);
+      if (def?.ritual === r.id) claims.unshift(claimId);
+    }
+    for (const c of claims) {
+      const o = mk(state, { type: 'RITUAL', ritual: r.id, landmark: l.id, claim: c });
+      if (c) o.badge = omenFor(state, r.omen).value > 0 ? 'good' : omenFor(state, r.omen).value < 0 ? 'bad' : null;
+      out.push(o);
+    }
+  }
+  if (claimId && ['chapel', 'market', 'hall', 'shelter', 'well'].includes(l.kind) && playable(state, claimId)) out.push(mk(state, { type: 'GATHER', claim: claimId, site: l.id }));
+  return out;
+}
+
 function LandmarkCard({ id }: { id: string }) {
   const state = useStore((s) => s.state)!;
   const ui = useStore((s) => s.ui);
   const l = state.world.landmarks.find((x) => x.id === id);
   const claimId = ui.activeClaim;
-  const opts = ((): Opt[] => {
-    const out: Opt[] = [];
-    if (!l) return out;
-    for (const r of state.scn.rituals.filter((q) => q.landmark === l.kind)) {
-      const claims: (string | undefined)[] = [undefined];
-      if (claimId) {
-        const def = findClaimDef(state, claimId);
-        if (def?.ritual === r.id) claims.unshift(claimId);
-      }
-      for (const c of claims) {
-        const o = mk(state, { type: 'RITUAL', ritual: r.id, landmark: l.id, claim: c });
-        if (c) o.badge = omenFor(state, r.omen).value > 0 ? 'good' : omenFor(state, r.omen).value < 0 ? 'bad' : null;
-        out.push(o);
-      }
-    }
-    if (claimId && ['chapel', 'market', 'hall', 'shelter', 'well'].includes(l.kind) && playable(state, claimId)) out.push(mk(state, { type: 'GATHER', claim: claimId, site: l.id }));
-    return out;
-  })();
+  const opts = landmarkOpts(state, id, claimId);
   if (!l) return null;
   const def: ClaimDef | undefined = claimId ? findClaimDef(state, claimId) : undefined;
   const ritual = def?.ritual ? state.scn.rituals.find((r) => r.id === def.ritual) : undefined;
@@ -382,7 +390,7 @@ export function LawsPanel() {
             <div className="small" style={{ marginTop: '0.3rem' }}>
               <b>Win over next:</b>{' '}
               {l.nextSteps.map((n) => (
-                <button key={n.id} className="chip gold" onClick={() => store.select({ kind: 'villager', id: n.id })} style={{ cursor: 'pointer', margin: '2px' }}>{firstName(n.name)} — {n.why}</button>
+                <button key={n.id} className="chip gold" onClick={() => { store.select({ kind: 'villager', id: n.id }); store.set({ tab: 'selected' }); }} style={{ cursor: 'pointer', margin: '2px' }}>{firstName(n.name)} — {n.why}</button>
               ))}
             </div>
           )}
@@ -417,7 +425,9 @@ export function VillagePanel() {
             key={v.id}
             className={`list-btn ${ui.selection?.id === v.id ? 'sel' : ''}`}
             onClick={() => {
+              // asking for someone from the list is asking for their full card; a tap on the map shows the small one beside them instead
               store.select({ kind: 'villager', id: v.id });
+              store.set({ tab: 'selected' });
               getRenderer()?.focusVillager(v.id);
             }}
           >
@@ -438,6 +448,7 @@ export function VillagePanel() {
           data-place={l.id}
           onClick={() => {
             store.select({ kind: 'landmark', id: l.id });
+            store.set({ tab: 'selected' });
             getRenderer()?.focusTile(l.x, l.y, 1.3);
           }}
         >

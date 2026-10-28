@@ -28,11 +28,15 @@ export interface WorldRenderer {
   /** the part of the canvas the interface covers, so the view can keep its subject clear of it (the 3D world shifts its centre) */
   setInsets?(i: { left: number; right: number; top: number; bottom: number }): void;
   hitTest(sx: number, sy: number): HitResult | null;
+  /** the map tile under a screen point, if any (the river and open ground are not entities, but a tap on them can still mean something) */
+  tileAt?(sx: number, sy: number): { x: number; y: number } | null;
   setHover(h: HitResult | null): void;
   playAction(events: GameEvent[]): void;
   playResolution(events: GameEvent[], prev: RunState | null): void;
   noteBell(): void;
   stats(): { fps: number; effects: number; zoom: number };
+  /** the end-of-run tour: a slow drift round the village (the 3D world only) */
+  setAmbient?(on: boolean): void;
   /** debug and screenshot hooks (the 3D world only) */
   advance?(seconds: number): void;
   renderNow?(): void;

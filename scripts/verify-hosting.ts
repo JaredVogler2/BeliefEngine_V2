@@ -4,7 +4,7 @@
  *
  *   npm run build && npx tsx scripts/verify-hosting.ts
  *
- * What this proves: the shipped CSP does not block anything the game does, the cache/security headers are present, and unknown paths fall back to the app.
+ * What this proves: the shipped CSP does not block anything the game does (including the lazily loaded 3D world), the cache/security headers are present, and unknown paths fall back to the app.
  * What it does not prove: that Vercel applies the file as written (no deployment has been made; see docs/RELEASE_CHECKLIST.md).
  */
 import { chromium } from '@playwright/test';
@@ -63,6 +63,7 @@ await page.getByTestId('play').click();
 await page.getByTestId('begin-redbank').click();
 await page.getByTestId('begin').click();
 await page.locator('[data-claim="river_fears_fire"]').click();
+await page.getByTestId('sheet-toggle').click(); // the detail sheet is closed until asked for
 await page.getByTestId('tab-village').click();
 await page.getByRole('button', { name: /^Ivo/ }).first().click();
 await page.locator('.act', { hasText: 'Tell Ivo' }).click();
@@ -81,6 +82,21 @@ check(!!(await dl.path()), 'a file download (Atlas export) works under the CSP')
 await page.getByTestId('atlas-back').click();
 await page.goto(`${base}/?mode=expedition&seed=4242&rules=1.0.0&gen=1`);
 await page.waitForTimeout(600);
+// the 3D world under the same policy: it must come up and draw (software WebGL here), with no violation and no console error of its own
+const p3 = await ctx.newPage();
+p3.on('console', (m) => {
+  if (m.type() === 'error') errors.push(`3d: ${m.text()}`);
+});
+p3.on('pageerror', (e) => errors.push(`3d: ${e.message}`));
+await p3.goto(`${base}/?debug=1&renderer=3d&quality=low&scale=0.5`);
+await p3.getByTestId('play').click();
+await p3.getByTestId('begin-redbank').click();
+await p3.getByTestId('begin').click();
+await p3.waitForSelector('.stage[data-renderer="3d"][data-ready="1"]', { timeout: 120000 });
+await p3.waitForFunction(() => ((window as unknown as { __beRenderer?: { info?: () => { frames: number } } }).__beRenderer?.info?.().frames ?? 0) > 0, undefined, { timeout: 120000 });
+check(true, 'the 3D world came up and drew frames under the production policy');
+const csp3 = await p3.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+check(csp3.length === 0, `no Content-Security-Policy violations while the 3D world runs${csp3.length ? `: ${csp3.join('; ')}` : ''}`);
 const csp = await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
 check(csp.length === 0, `no Content-Security-Policy violations${csp.length ? `: ${csp.join('; ')}` : ''}`);
 check(errors.length === 0, `no console errors${errors.length ? `: ${errors.join(' | ')}` : ''}`);

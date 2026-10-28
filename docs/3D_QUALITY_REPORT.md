@@ -1,5 +1,10 @@
 # 3D quality report: V2 baseline
 
+> **Superseded renderer.** On 2026-10-28 V2 merged V1's later 3D work (JaredVogler2/BeliefEngine#2 and JaredVogler2/BeliefEngine#3: immersive HUD, end-of-run
+> scene, a finishing chain with ink lines and ambient occlusion, yards and props). The frames and scores below are of the renderer *before*
+> that merge; V1's own record of its pass is [`v1/3D_QUALITY_REPORT.md`](v1/3D_QUALITY_REPORT.md). A V2 capture of the merged renderer
+> against this standard is phase 10's first step.
+
 What the 3D world looks like on 2026-10-27, measured against the [visual standard](3D_VISUAL_STANDARD.md). The renderer is V1's,
 exactly as imported from `6a92862` (no file under `src/render3d/` has changed). Every frame below is a capture of the running
 production build's canvas; none is a mock-up. The plan to close the gaps: [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md).

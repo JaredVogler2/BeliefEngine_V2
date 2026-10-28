@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { bridgeSpecOf, deckHeight, type BridgeSpec } from './civic.ts';
 import type { Layer, WorldContext } from './context.ts';
 import { engineToWorld } from './coords.ts';
+import { viewScale } from './particles.ts';
+import { DISPLAY_GLSL, displayUniforms } from './post.ts';
 import { seedFrom } from './rand.ts';
 import type { SceneChanges, SceneSnapshot, SceneVillager } from './snapshot.ts';
 
@@ -261,6 +263,67 @@ export function buildRig(v: SceneVillager): Rig {
   return { root, body, torso, head, armL, armR, legL, legR, held, scale: S, child };
 }
 
+const MARKS = 160;
+const ROUTE_DOTS = 220;
+const ROUTE_VERT = /* glsl */ `
+  attribute float aIdx;
+  varying float vPulse;
+  uniform float uScale;
+  uniform float uTime;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mv;
+    float d = -mv.z;
+    vPulse = pow(0.5 + 0.5 * sin(aIdx * 0.55 - uTime * 5.0), 2.0);
+    gl_PointSize = clamp(0.2 * uScale / d, 5.0, 12.0) * (0.6 + 0.6 * vPulse);
+  }
+`;
+const ROUTE_FRAG = /* glsl */ `
+  ${DISPLAY_GLSL}
+  varying float vPulse;
+  void main() {
+    vec2 p = gl_PointCoord - 0.5;
+    float r = length(p) * 2.0;
+    if (r > 1.0) discard;
+    float a = (0.35 + 0.65 * vPulse) * (1.0 - smoothstep(0.55, 1.0, r));
+    // (held just under white so the route gives off only a faint glow)
+    gl_FragColor = vec4(postDisplay(vec3(0.9, 0.76, 0.4)), a);
+    #include <colorspace_fragment>
+  }
+`;
+const MARK_VERT = /* glsl */ `
+  attribute float aSize;
+  attribute vec3 aColor;
+  varying vec3 vColor;
+  varying float vFade;
+  uniform float uScale;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mv;
+    float d = -mv.z;
+    gl_PointSize = clamp(aSize * uScale / d, 6.0, 20.0) * step(0.001, aSize);
+    vFade = smoothstep(8.0, 17.0, d);
+    vColor = aColor;
+  }
+`;
+const MARK_FRAG = /* glsl */ `
+  ${DISPLAY_GLSL}
+  varying vec3 vColor;
+  varying float vFade;
+  void main() {
+    vec2 p = gl_PointCoord - 0.5;
+    // a diamond with a pale rim, so it reads on grass, water and roofs alike
+    float r = abs(p.x) + abs(p.y);
+    if (r > 0.5) discard;
+    vec3 c = mix(vColor, vec3(1.0), smoothstep(0.3, 0.42, r));
+    float a = vFade * 0.9;
+    if (a < 0.02) discard;
+    // (held under white: a mark is a label, it must not glow)
+    gl_FragColor = vec4(postDisplay(min(c, vec3(0.8))), a);
+    #include <colorspace_fragment>
+  }
+`;
+
 export class PeopleLayer implements Layer {
   readonly group = new THREE.Group();
   private walkers = new Map<string, Walker>();
@@ -279,6 +342,19 @@ export class PeopleLayer implements Layer {
   private time = 0;
   private graves = new THREE.Group();
   private celebrating = false;
+  /** a small faction-coloured pennant over every person, sized in pixels so it stays readable from far away and fades as the camera comes in */
+  private marks: THREE.Points;
+  private markPos = new Float32Array(MARKS * 3);
+  /** how much larger than true size the people are drawn at the current camera distance */
+  private legible = 1;
+  private markCol = new Float32Array(MARKS * 3);
+  private markSize = new Float32Array(MARKS);
+  /** the way out from a selected house to the nearest shelter, as a line of pulsing gold dots over the engine's own passable tiles */
+  private routeDots: THREE.Points;
+  private routePos = new Float32Array(ROUTE_DOTS * 3);
+  private routeIdx = new Float32Array(ROUTE_DOTS);
+  private routeFor = '';
+  private snapRef: SceneSnapshot | null = null;
 
   constructor(ctx: WorldContext) {
     this.ctx = ctx;
@@ -293,6 +369,24 @@ export class PeopleLayer implements Layer {
     this.ringHover.renderOrder = 8;
     this.ringHover.visible = false;
     this.group.add(this.ring, this.ringHover);
+    const mg = new THREE.BufferGeometry();
+    mg.setAttribute('position', new THREE.BufferAttribute(this.markPos, 3).setUsage(THREE.DynamicDrawUsage));
+    mg.setAttribute('aColor', new THREE.BufferAttribute(this.markCol, 3).setUsage(THREE.DynamicDrawUsage));
+    mg.setAttribute('aSize', new THREE.BufferAttribute(this.markSize, 1).setUsage(THREE.DynamicDrawUsage));
+    this.marks = new THREE.Points(mg, new THREE.ShaderMaterial({ vertexShader: MARK_VERT, fragmentShader: MARK_FRAG, transparent: true, depthWrite: false, depthTest: false, uniforms: { uScale: viewScale, ...displayUniforms } }));
+    this.marks.frustumCulled = false;
+    this.marks.renderOrder = 9;
+    this.marks.name = 'people-marks';
+    this.group.add(this.marks);
+    const rg = new THREE.BufferGeometry();
+    rg.setAttribute('position', new THREE.BufferAttribute(this.routePos, 3).setUsage(THREE.DynamicDrawUsage));
+    rg.setAttribute('aIdx', new THREE.BufferAttribute(this.routeIdx, 1));
+    rg.setDrawRange(0, 0);
+    this.routeDots = new THREE.Points(rg, new THREE.ShaderMaterial({ vertexShader: ROUTE_VERT, fragmentShader: ROUTE_FRAG, transparent: true, depthWrite: false, depthTest: false, uniforms: { uScale: viewScale, uTime: { value: 0 }, ...displayUniforms } }));
+    this.routeDots.frustumCulled = false;
+    this.routeDots.renderOrder = 9;
+    this.routeDots.name = 'evacuation-route';
+    this.group.add(this.routeDots);
   }
 
   setOptions(o: { selection: { kind: string; id: string } | null; activeClaim: string | null; known: Set<string>; hints: string[] }): void {
@@ -309,7 +403,7 @@ export class PeopleLayer implements Layer {
   /** the ground height people stand on: terrain, or the bridge deck while they are on it */
   private walkY(x: number, z: number): number {
     const b = this.bridge;
-    if (b && this.bridgeStanding && z > b.row + 0.2 && z < b.row + 0.8 && x > b.x0 - 0.5 && x < b.x1 + 1.5) return Math.max(this.ctx.heightAt(x, z), deckHeight(b, x));
+    if (b && this.bridgeStanding && z > b.row + 0.2 && z < b.row + 0.8 && x > b.x0 - 0.5 && x < b.x1 + 1.5) return Math.max(this.ctx.heightAt(x, z), deckHeight(b, x) + this.ctx.bridgeLift);
     return this.ctx.heightAt(x, z);
   }
 
@@ -390,6 +484,8 @@ export class PeopleLayer implements Layer {
   }
 
   update(snap: SceneSnapshot, changes: SceneChanges, ctx: WorldContext): void {
+    this.snapRef = snap;
+    this.routeFor = ''; // the passable tiles may have changed: lay the way out again
     const bridge = snap.landmarks.find((l) => l.kind === 'bridge');
     this.bridge = bridge ? bridgeSpecOf(bridge.tiles, ctx) : null;
     this.bridgeStanding = !!bridge && bridge.hp > 0;
@@ -524,10 +620,15 @@ export class PeopleLayer implements Layer {
   tick(dt: number, time: number, ctx: WorldContext): void {
     this.time = time;
     const reduced = ctx.reducedMotion;
+    // true size up close; up to a third larger at the overview, so a person is a person and not a speck (their tap volume grows with them)
+    const t = Math.min(1, Math.max(0, (ctx.viewDistance - 12) / 22));
+    const legible = 1 + 0.32 * t * t * (3 - 2 * t);
+    this.legible = legible;
     for (const wk of this.walkers.values()) {
       if (wk.dead) continue;
       const root = wk.rig.root;
       const v = wk.v;
+      root.scale.setScalar(wk.rig.scale * 1.05 * legible);
       // ---- movement along the route
       let moving = false;
       if (wk.path.length) {
@@ -642,7 +743,80 @@ export class PeopleLayer implements Layer {
     this.updateRings(time);
   }
 
+  /** a selected house shows the way its people would go to the nearest shelter, only over tiles the engine says can be walked */
+  private updateRoute(time: number): void {
+    const snap = this.snapRef;
+    const sel = this.selection;
+    const home = snap && sel?.kind === 'landmark' ? snap.landmarks.find((l) => l.id === sel.id && (l.kind === 'home' || l.kind === 'cabin')) : null;
+    const key = home ? `${home.id}:${snap?.revision}` : '';
+    this.routeDots.visible = !!home;
+    (this.routeDots.material as THREE.ShaderMaterial).uniforms.uTime.value = time;
+    if (!snap || !home) {
+      this.routeFor = '';
+      return;
+    }
+    if (key === this.routeFor) return;
+    this.routeFor = key;
+    let shelter: { x: number; y: number } | null = null;
+    let best = 1e9;
+    for (const l of snap.landmarks) {
+      if (l.kind !== 'shelter' || l.hp <= 0) continue;
+      const d = Math.hypot(l.x - home.x, l.y - home.y);
+      if (d < best) {
+        best = d;
+        shelter = l;
+      }
+    }
+    const pts = shelter ? this.route({ x: home.x, y: home.y }, { x: shelter.x, y: shelter.y }, snap) : [];
+    let n = 0;
+    for (let i = 0; i + 1 < pts.length && n < ROUTE_DOTS; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const len = Math.hypot(b.x - a.x, b.z - a.z);
+      const steps = Math.max(1, Math.round(len / 0.22));
+      for (let k = 0; k < steps && n < ROUTE_DOTS; k++) {
+        const t = k / steps;
+        const x = a.x + (b.x - a.x) * t;
+        const z = a.z + (b.z - a.z) * t;
+        this.routePos[n * 3] = x;
+        this.routePos[n * 3 + 1] = this.walkY(x, z) + 0.07;
+        this.routePos[n * 3 + 2] = z;
+        this.routeIdx[n] = n;
+        n++;
+      }
+    }
+    const g = this.routeDots.geometry;
+    g.setDrawRange(0, n);
+    (g.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+    (g.getAttribute('aIdx') as THREE.BufferAttribute).needsUpdate = true;
+  }
+
+  private updateMarks(): void {
+    let i = 0;
+    const tmp = new THREE.Color();
+    for (const wk of this.walkers.values()) {
+      if (i >= MARKS) break;
+      const show = !wk.dead && wk.rig.root.visible;
+      this.markPos[i * 3] = wk.pos.x;
+      this.markPos[i * 3 + 1] = this.walkY(wk.pos.x, wk.pos.z) + 0.62 * this.legible;
+      this.markPos[i * 3 + 2] = wk.pos.z;
+      tmp.set(wk.v.factionColor);
+      this.markCol[i * 3] = tmp.r;
+      this.markCol[i * 3 + 1] = tmp.g;
+      this.markCol[i * 3 + 2] = tmp.b;
+      this.markSize[i] = show ? (this.selection?.kind === 'villager' && this.selection.id === wk.v.id ? 0.62 : 0.4) : 0;
+      i++;
+    }
+    for (; i < MARKS; i++) this.markSize[i] = 0;
+    const g = this.marks.geometry;
+    (g.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
+    (g.getAttribute('aColor') as THREE.BufferAttribute).needsUpdate = true;
+    (g.getAttribute('aSize') as THREE.BufferAttribute).needsUpdate = true;
+  }
+
   private updateRings(time: number): void {
+    this.updateMarks();
+    this.updateRoute(time);
     const sel = this.selection?.kind === 'villager' ? this.walkers.get(this.selection.id) : null;
     this.ring.visible = !!sel && !sel.dead;
     if (sel && !sel.dead) {
@@ -697,6 +871,11 @@ export class PeopleLayer implements Layer {
     }
   }
 
+  /** how many dots of the way out are on show (0 when no house is selected): a hook for tests */
+  routeLength(): number {
+    return this.routeDots.visible ? this.routeDots.geometry.drawRange.count : 0;
+  }
+
   pickables(): THREE.Object3D[] {
     return this.proxyList;
   }
@@ -719,6 +898,10 @@ export class PeopleLayer implements Layer {
 
   dispose(): void {
     this.clear();
+    this.marks.geometry.dispose();
+    (this.marks.material as THREE.Material).dispose();
+    this.routeDots.geometry.dispose();
+    (this.routeDots.material as THREE.Material).dispose();
     this.ring.geometry.dispose();
     (this.ring.material as THREE.Material).dispose();
     this.ringHover.geometry.dispose();

@@ -1,4 +1,4 @@
-import { DebriefScene } from './scene.tsx';
+import { Aftermath } from './play/Aftermath.tsx';
 import { useEffect, useRef, useState } from 'react';
 import type { RunState } from '../engine/index.ts';
 import { MAX_SEED, optionsFromState, buildDebrief, catalogInfo, isVerifiedSeed, createRun, getModifier, getModifierViews, getScenarioDef, listScenarios, numberToDate } from '../engine/index.ts';
@@ -440,7 +440,7 @@ export function Debrief() {
   return (
     <main className="screen" data-testid="debrief">
       <div className="page">
-        <DebriefScene state={state} win={win} />
+        <Aftermath state={state} win={win} />
         <div className="row" style={{ gap: '1rem' }}>
           <div className="medal" aria-hidden="true">{win ? (d.medal === 'gold' ? '🥇' : d.medal === 'silver' ? '🥈' : '🥉') : '†'}</div>
           <div>
@@ -497,7 +497,7 @@ export function HowTo() {
         <h1 style={{ marginTop: '0.8rem' }}>How it works</h1>
         <p><b>Claim → Spread → Belief → Law → Consequence.</b></p>
         <ol>
-          <li><b>Claim.</b> You hold stories about the world, like “the river fears fire”. Choose one in the hand at the bottom of the map.</li>
+          <li><b>Claim.</b> You hold stories about the world, like “the river fears fire”. Choose one of the story chips at the bottom of the screen (the book button beside them says what each does and risks).</li>
           <li><b>Spread.</b> Tell villagers directly (1 Influence each) or ask a believer to carry it to someone they trust. Overnight, stories travel along ties of trust — only between people who can reach each other.</li>
           <li><b>Belief.</b> Hearsay barely moves skeptics. People who <i>watch</i> something happen are convinced far more deeply. Stage a ritual at a landmark on a good-omen night to give people something to see.</li>
           <li><b>Law.</b> When enough of a place believes (the line on the support bar), the story becomes law and the world obeys: flames turn the flood, watched wood does not break, bells draw rain.</li>
@@ -514,6 +514,9 @@ export function HowTo() {
           <tr><td>Select a villager or landmark</td><td>Click / tap</td></tr>
           <tr><td>Pan the map</td><td>Drag, or <span className="kbd">arrows</span> / <span className="kbd">WASD</span></td></tr>
           <tr><td>Zoom</td><td>Wheel, pinch, <span className="kbd">+</span> <span className="kbd">-</span> buttons, <span className="kbd">0</span> to fit</td></tr>
+          <tr><td>Turn and tilt the 3D view</td><td>Right-drag or Shift-drag, the two turn buttons, <span className="kbd">Q</span> <span className="kbd">E</span> to turn, <span className="kbd">R</span> <span className="kbd">F</span> to tilt</td></tr>
+          <tr><td>Ways of looking</td><td>The buttons on the left edge: World, Social (who trusts whom), Laws (the ledger), Flood (tonight's water). Tap the river for the forecast.</td></tr>
+          <tr><td>Everything about someone</td><td>Tap them for a small card with what to do; “More about…” or the list button in the bottom bar opens the full sheet.</td></tr>
           <tr><td>Choose a story</td><td>Click a card, or <span className="kbd">1</span>–<span className="kbd">9</span></td></tr>
           <tr><td>Tell the selected villager the chosen story</td><td><span className="kbd">T</span></td></tr>
           <tr><td>Undo last action</td><td><span className="kbd">U</span> or the Undo button</td></tr>

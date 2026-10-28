@@ -3,6 +3,7 @@ import { CHANNEL_DEPTH, HEIGHT_UNIT } from './coords.ts';
 import { fbm, makeNoise } from './rand.ts';
 import { buildGroundTexture } from './groundTexture.ts';
 import type { SceneSnapshot } from './snapshot.ts';
+import { markGround } from './post.ts';
 
 /** engine terrain ids (src/engine/world/grid.ts), repeated here so the renderer needs nothing but the snapshot */
 export const TERRAIN = { GRASS: 0, RIVER: 1, FIELD: 2, HILL: 3, FOREST: 4, ROAD: 5, ROCK: 6, MARSH: 7, SAND: 8 } as const;
@@ -242,7 +243,7 @@ export function buildTerrainMesh(snap: SceneSnapshot, data: TerrainData, seedNum
   geo.setIndex(index);
   geo.computeVertexNormals();
   const ground = buildGroundTexture(snap, data, seedNum, maxAniso);
-  const mat = new THREE.MeshStandardMaterial({ map: ground.texture, roughness: 0.96, metalness: 0 });
+  const mat = markGround(new THREE.MeshStandardMaterial({ map: ground.texture, roughness: 0.96, metalness: 0 }));
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   mesh.name = 'terrain';
@@ -252,7 +253,7 @@ export function buildTerrainMesh(snap: SceneSnapshot, data: TerrainData, seedNum
   group.add(mesh);
   const BASE = -1.6;
   const bands: { y: number; c: THREE.Color }[] = [
-    { y: 0, c: col(0x4a3a24) }, { y: -0.22, c: col(0x6a5334) }, { y: -0.5, c: col(0x8a7650) }, { y: -0.85, c: col(0x7b7466) }, { y: -1.2, c: col(0x645f56) }, { y: BASE, c: col(0x4d4a44) },
+    { y: 0, c: col(0x436131) }, { y: -0.12, c: col(0x5b4731) }, { y: -0.34, c: col(0x6f5736) }, { y: -0.58, c: col(0x8d7851) }, { y: -0.9, c: col(0x7d7668) }, { y: -1.22, c: col(0x655f56) }, { y: BASE, c: col(0x4d4a44) },
   ];
   const sp: number[] = [];
   const sc: number[] = [];
@@ -262,11 +263,13 @@ export function buildTerrainMesh(snap: SceneSnapshot, data: TerrainData, seedNum
     const startIdx = sp.length / 3;
     for (const p of edge) {
       for (let b = 0; b < bands.length; b++) {
-        const y = b === 0 ? p.y : Math.min(p.y, bands[b].y) - 0.02 * b;
+        // the strata are not level: each boundary wanders along the cut, and a band takes the colour of the layer it ends in
+        const wander = b === 0 || b === bands.length - 1 ? 0 : (noise((p.x + p.z) * 1.7, b * 3.1) - 0.5) * 0.16;
+        const y = b === 0 ? p.y : Math.min(p.y, bands[b].y + wander) - 0.01 * b;
         sp.push(p.x, y, p.z);
-        const c = bands[Math.max(0, b - (b === 0 ? 0 : 0))].c;
-        // each band takes the colour of the layer it ends in, with a little noise along the edge
-        const g = 0.9 + 0.2 * noise(p.x * 3 + p.z * 3, b * 2.5);
+        const c = bands[b].c;
+        // streaks run down the face (noise along the cut only) and patches vary within a layer
+        const g = 0.8 + 0.22 * noise((p.x + p.z) * 5.5, 40) + 0.18 * noise((p.x + p.z) * 1.3, b * 2.5);
         sc.push(c.r * g, c.g * g, c.b * g);
       }
     }
@@ -308,10 +311,50 @@ export function buildTerrainMesh(snap: SceneSnapshot, data: TerrainData, seedNum
   skirt.castShadow = true;
   skirt.name = 'plate-edge';
   group.add(skirt);
-  const bottom = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ color: 0x3b3833, roughness: 1 }));
-  bottom.rotation.x = Math.PI / 2;
-  bottom.position.set(w / 2, BASE, h / 2);
-  group.add(bottom);
+  // below the cut: the island narrows to a craggy root of rock, so the village hangs in the sky instead of resting on a slab
+  const loop: { x: number; z: number }[] = [];
+  for (const p of north) loop.push({ x: p.x, z: p.z });
+  for (const p of east.slice(1)) loop.push({ x: p.x, z: p.z });
+  for (const p of south.slice(0, -1).reverse()) loop.push({ x: p.x, z: p.z });
+  for (const p of west.slice(1, -1).reverse()) loop.push({ x: p.x, z: p.z });
+  const rings: { y: number; k: number }[] = [{ y: BASE, k: 1 }, { y: BASE - 0.55, k: 0.97 }, { y: BASE - 1.35, k: 0.88 }, { y: BASE - 2.3, k: 0.7 }, { y: BASE - 3.4, k: 0.44 }, { y: BASE - 4.5, k: 0.12 }];
+  const cx = w / 2;
+  const cz = h / 2;
+  const n = loop.length;
+  const up: number[] = [];
+  const uc: number[] = [];
+  const ui: number[] = [];
+  const rock = [col(0x4d4a44), col(0x57524a), col(0x45413c), col(0x3a3733), col(0x302e2b), col(0x2a2826)];
+  rings.forEach((r, ri) => {
+    loop.forEach((p, i) => {
+      // crags only ever bite inwards, so the root never sticks out past the cut above it
+      const bite = ri === 0 ? 0 : 1 - 0.16 * noise(p.x * 0.9 + ri * 7, p.z * 0.9 - ri * 3);
+      const jy = ri === 0 ? 0 : (noise(p.x * 1.3 + ri, p.z * 1.3 - ri) - 0.5) * 0.6;
+      up.push(cx + (p.x - cx) * r.k * bite, r.y + jy, cz + (p.z - cz) * r.k * bite);
+      const g = 0.82 + 0.4 * noise(i * 0.31 + ri * 3, ri * 1.7);
+      const c = rock[ri];
+      uc.push(c.r * g, c.g * g, c.b * g);
+    });
+  });
+  for (let r = 0; r < rings.length - 1; r++) {
+    for (let i = 0; i < n; i++) {
+      const a = r * n + i;
+      const b = r * n + ((i + 1) % n);
+      const c = (r + 1) * n + i;
+      const d = (r + 1) * n + ((i + 1) % n);
+      ui.push(a, c, b, b, c, d);
+    }
+  }
+  const rootGeo = new THREE.BufferGeometry();
+  rootGeo.setAttribute('position', new THREE.Float32BufferAttribute(up, 3));
+  rootGeo.setAttribute('color', new THREE.Float32BufferAttribute(uc, 3));
+  rootGeo.setIndex(ui);
+  const flat = rootGeo.toNonIndexed();
+  rootGeo.dispose();
+  flat.computeVertexNormals();
+  const root = new THREE.Mesh(flat, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, flatShading: true, side: THREE.DoubleSide }));
+  root.name = 'island-root';
+  group.add(root);
 
   return {
     group,
@@ -322,8 +365,8 @@ export function buildTerrainMesh(snap: SceneSnapshot, data: TerrainData, seedNum
       ground.dispose();
       skirtGeo.dispose();
       (skirt.material as THREE.Material).dispose();
-      bottom.geometry.dispose();
-      (bottom.material as THREE.Material).dispose();
+      flat.dispose();
+      (root.material as THREE.Material).dispose();
     },
   };
 }
