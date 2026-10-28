@@ -47,6 +47,7 @@ test.describe('Generative Reality', () => {
     await expect(page.getByTestId('reality-did-0')).toContainText('bell');
     await expect(page.getByTestId('reality-support')).toContainText('firm believers');
     await page.getByTestId('reality-confirm').click();
+    await page.getByTestId('tell-first-done').click();
     await closeSheet(page);
     await expect(page.locator('[data-claim^="reality_"]')).toHaveCount(1);
     expect(api).toEqual([]);

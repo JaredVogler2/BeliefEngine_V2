@@ -41,6 +41,8 @@ export interface BeliefView {
   evidence: number | null;
   heard: number;
   why: string | null;
+  /** the logged event `why` describes (a "Why?" link opens it), or null */
+  whyEvent: number | null;
 }
 
 export interface VillagerView {
@@ -78,14 +80,14 @@ export function influenceRanks(s: RunState): Map<string, number> {
   return new Map(ranked.map((r, i) => [r.id, i + 1]));
 }
 
-function whyLast(s: RunState, v: Villager, claimId: string): string | null {
+function whyLast(s: RunState, v: Villager, claimId: string): { text: string; event: number } | null {
   for (let i = s.log.length - 1; i >= 0; i--) {
     const e = s.log[i];
     if (e.target === v.id && e.claim === claimId && e.reason && (e.code === 'BELIEF_SHIFT' || e.code === 'BELIEVER_GAINED' || e.code === 'BELIEVER_LOST' || e.code === 'RUMOR_SEEDED' || e.code === 'MESSENGER_SENT' || e.code === 'RUMOR_CHALLENGED')) {
       const src = e.actor ? findVillager(s, e.actor)?.name : undefined;
-      return `${REASON_TEXT[e.reason] ?? e.reason}${src ? ` (${src})` : ''}, day ${e.day}`;
+      return { text: `${REASON_TEXT[e.reason] ?? e.reason}${src ? ` (${src})` : ''}, day ${e.day}`, event: e.id };
     }
-    if (e.code === 'EVIDENCE_STAGED' && e.claim === claimId && (v.beliefs[claimId]?.cause === e.id)) return `they watched your demonstration, day ${e.day}`;
+    if (e.code === 'EVIDENCE_STAGED' && e.claim === claimId && (v.beliefs[claimId]?.cause === e.id)) return { text: `they watched your demonstration, day ${e.day}`, event: e.id };
   }
   return null;
 }
@@ -111,6 +113,7 @@ export function getVillagerView(s: RunState, id: string): VillagerView {
     const b = v.beliefs[def.id];
     if (!b && !(s.claims.find((c) => c.id === def.id)?.introduced)) continue;
     if (!b) continue;
+    const why = whyLast(s, v, def.id);
     beliefs.push({
       claimId: def.id,
       short: def.short,
@@ -118,7 +121,8 @@ export function getVillagerView(s: RunState, id: string): VillagerView {
       label: beliefLabel(b.conv),
       evidence: scouted ? Math.round(b.evidence) : null,
       heard: b.heard,
-      why: whyLast(s, v, def.id),
+      why: why?.text ?? null,
+      whyEvent: why?.event ?? null,
     });
   }
   beliefs.sort((a, b) => Math.abs(b.conv ?? 0) - Math.abs(a.conv ?? 0));

@@ -59,6 +59,9 @@ async function compose(page: Page, t: Trace, capture: string | null): Promise<vo
   const accept = page.getByTestId('reality-accept');
   if (await accept.count()) await accept.check();
   await page.getByTestId('reality-confirm').click();
+  // written: the dialog asks who hears it first; the recorded chain tells people through the village, so close the question
+  await expect(page.getByTestId('tell-first')).toBeVisible();
+  await page.getByTestId('tell-first-done').click();
   await expect(page.getByTestId('reality-compose')).toHaveCount(0);
 }
 

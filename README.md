@@ -29,8 +29,15 @@ what a village believes, and enough shared belief becomes physical law.
   ([`docs/MINDS.md`](docs/MINDS.md)). The model's part (reading sentences, proposing villager moves) is built behind the inference
   service and tested only with scripted providers: **LIVE UNVERIFIED**. Classic play is V1's, hash for hash.
 - **V1's later 3D work is merged** (immersive HUD, end-of-run scene, finishing chain; JaredVogler2/BeliefEngine#2 and
-  JaredVogler2/BeliefEngine#3). Hens, stones and the bank they raise are drawn in 3D and on the classic map; effects are not yet
-  animated as they happen (phase 10).
+  JaredVogler2/BeliefEngine#3). Hens, stones and the bank they raise are drawn in 3D and on the classic map, and written laws'
+  effects are animated from the events the engine logged (phase 10, [`docs/3D_EFFECTS.md`](docs/3D_EFFECTS.md)).
+- **Phase 11: written beliefs are a strategy, not a wish.** Written-belief rules 2 (recorded per run) make them win chapters by
+  persuasion and proof, close the cheap copy-the-story win, and make harmful magic cost the village's trust; four modes (Classic,
+  Generative Chronicle, Living Village, Reality Lab) keep separate records ([`docs/GAMEPLAY_V2.md`](docs/GAMEPLAY_V2.md)).
+- **Phase 12: legible on desktop and phone.** The main menu names every mode; the composer keeps an unsent belief, can stop an
+  online reading and falls back with nothing spent; after writing it asks who tells it first; a villager card answers what they
+  think, why, whether they would listen and what they will do, with a "Why?" link to the event ([`docs/UX_V2.md`](docs/UX_V2.md)).
+  Verified in Chromium at desktop and four iPhone sizes; WebKit runs in CI; real iPhone Safari is UNVERIFIED.
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
   dusk); the baseline report ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)) predates the V1 merge, and the work to reach

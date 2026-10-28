@@ -1,7 +1,7 @@
 import { Aftermath } from './play/Aftermath.tsx';
 import { useEffect, useRef, useState } from 'react';
 import type { RunState } from '../engine/index.ts';
-import { MAX_SEED, optionsFromState, buildDebrief, catalogInfo, isVerifiedSeed, createRun, getModifier, getModifierViews, getScenarioDef, listScenarios, numberToDate } from '../engine/index.ts';
+import { MAX_SEED, optionsFromState, v2ModeOf, buildDebrief, catalogInfo, isVerifiedSeed, createRun, getModifier, getModifierViews, getScenarioDef, listScenarios, numberToDate } from '../engine/index.ts';
 import type { Difficulty } from '../engine/index.ts';
 import { MapRenderer } from '../render/MapRenderer.ts';
 import { unlockAudio, sfx } from '../audio/audio.ts';
@@ -91,9 +91,22 @@ export function Title() {
               Continue — {getScenarioDef(info.scenarioId).runtime.name}, day {info.day}/{info.maxDay}
             </button>
           )}
-          <button className={`btn ${info ? '' : 'primary'} big`} data-testid="play" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios' }); }}>
-            {info ? 'New game' : 'Play'}
+          <button className={`btn ${info ? '' : 'primary'} big stacked`} data-testid="play" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'story', v2Mode: undefined }); }}>
+            {info ? 'New game: Classic' : 'Play Classic'} <span className="btn-sub">offline, the hand-made stories</span>
           </button>
+          {V2_FEATURES.generativeReality && (
+            <div className="menu-v2" role="group" aria-label="Generative Reality modes">
+              <button className="btn big stacked" data-testid="play-reality" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'reality', v2Mode: 'chronicle' }); }}>
+                Generative Reality <span className="btn-sub">write your own laws</span>
+              </button>
+              <button className="btn stacked" data-testid="play-living" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'reality', v2Mode: 'living' }); }}>
+                Living Village <span className="btn-sub">villagers who remember and argue</span>
+              </button>
+              <button className="btn stacked" data-testid="play-lab" onClick={() => { unlockAudio(); sfx('click'); store.set({ screen: 'scenarios', startTab: 'reality', v2Mode: 'lab' }); }}>
+                Reality Lab <span className="btn-sub">stronger beliefs, never ranked</span>
+              </button>
+            </div>
+          )}
           <button className="btn" data-testid="atlas-open" onClick={() => store.set({ screen: 'atlas' })}>Atlas of Belief{atlasCount > 0 ? ` (${atlasCount} badge${atlasCount === 1 ? '' : 's'})` : ''}</button>
           <button className="btn" onClick={() => store.set({ screen: 'howto' })}>How it works</button>
           <button className="btn" onClick={() => store.set({ screen: 'settings' })}>Settings</button>
@@ -142,7 +155,9 @@ function VillageCard({ p }: { p: VillagePreview }) {
 export function Scenarios() {
   const list = listScenarios();
   const prog = loadProgress();
-  const [tab, setTab] = useState<ModeTab>('story');
+  const ui = useStore((s) => s.ui);
+  const [tab, setTab] = useState<ModeTab>(ui.startTab === 'reality' && !V2_FEATURES.generativeReality ? 'story' : (ui.startTab ?? 'story'));
+  const v2Mode = ui.v2Mode ?? 'chronicle';
   const [seedText, setSeedText] = useState<string>(() => String(freshExpeditionSeed(playedExpeditionSeeds())));
   const seedNum = /^\d{1,10}$/.test(seedText) && Number(seedText) <= MAX_SEED ? Number(seedText) : null;
   const village = seedNum === null ? null : previewVillage(seedNum);
@@ -197,6 +212,15 @@ export function Scenarios() {
               <b>Generative Chronicle</b> (Begin): write your own laws; its own records. <b>Living Village</b>: the chapter&apos;s own stories, with villagers who remember,
               argue and demand proof; its own records. <b>Reality Lab</b>: stronger beliefs, never ranked. Classic (the other tabs) keeps its records apart from all three.
             </p>
+            <details className="card reading-note" data-testid="reality-reading">
+              <summary>How beliefs and villagers are read: offline first, a model only if you ask</summary>
+              <ul className="small">
+                <li>Everything works offline on this device: the game&apos;s own reader turns your sentence into a law it can run, and villagers decide by its own rules.</li>
+                <li>A language model can read your sentences (and voice villagers) instead, if this server offers one. You turn it on in the composer or a villager&apos;s card; it tells you what would be sent and asks first, and nothing leaves this device before you agree.</li>
+                <li>Each online reading is paid by whoever runs this game, within daily limits. A refused, failed or slow reading costs you nothing: the offline reading is used and no Influence is spent.</li>
+                <li>A model only proposes. The game checks every reading against what this village can physically do, exactly as it checks its own.</li>
+              </ul>
+            </details>
             <div className="grid2">
               {list.map((sc) => (
                 <div key={sc.id} className="card scn-card" data-testid={`reality-scn-${sc.id}`}>
@@ -207,9 +231,9 @@ export function Scenarios() {
                     <span className="chip violet">Write your own laws</span>
                   </div>
                   <div className="row wrap" style={{ gap: '0.5rem' }}>
-                    <button className="btn primary" onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), reality: true }); }} data-testid={`begin-reality-${sc.id}`}>Begin</button>
-                    <button className="btn" title="The chapter's own stories, and villagers who remember, argue, demand proof and put their own claims: more of them think each day. Its own records." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), living: true }); }} data-testid={`begin-living-${sc.id}`}>Living Village</button>
-                    <button className="btn" title="Three clauses, wider reach and stronger beliefs; never ranked." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), realityLab: true }); }} data-testid={`begin-lab-${sc.id}`}>Reality Lab (unranked)</button>
+                    <button className={`btn ${v2Mode === 'chronicle' ? 'primary' : ''}`} onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), reality: true }); }} data-testid={`begin-reality-${sc.id}`}>Begin</button>
+                    <button className={`btn ${v2Mode === 'living' ? 'primary' : ''}`} title="The chapter's own stories, and villagers who remember, argue, demand proof and put their own claims: more of them think each day. Its own records." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), living: true }); }} data-testid={`begin-living-${sc.id}`}>Living Village</button>
+                    <button className={`btn ${v2Mode === 'lab' ? 'primary' : ''}`} title="Three clauses, wider reach and stronger beliefs; never ranked." onClick={() => { sfx('click'); store.newRun({ ...storyOptions(sc.id), realityLab: true }); }} data-testid={`begin-lab-${sc.id}`}>Reality Lab (unranked)</button>
                   </div>
                 </div>
               ))}
@@ -453,7 +477,8 @@ export function Debrief() {
   };
   const different = () => {
     sfx('click');
-    const inv = state.flags.inventor ? { inventor: true } : {};
+    // a new seed or village keeps how the run was played: Inventor, or the V2 mode (under today's written-belief rules)
+    const inv = { ...(state.flags.inventor ? { inventor: true } : {}), ...v2ModeOf(state) };
     if (kind === 'story') store.newRun({ ...storyOptions(state.scenarioId, randomSeed(), state.difficulty), ...inv });
     else store.newRun({ ...expeditionOptions(freshExpeditionSeed([...playedExpeditionSeeds(), state.seed]), state.difficulty), ...inv });
     store.set({ screen: 'play' });

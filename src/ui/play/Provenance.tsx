@@ -23,6 +23,11 @@ function One({ p, compact }: { p: Provenance; compact?: boolean }) {
           Of the firm believers it woke with, {p.believers.keeper} first heard it from you, {p.believers.neighbour} through neighbours and {p.believers.witness} by seeing it shown.
         </p>
       )}
+      {!compact && p.harm.nights > 0 && (
+        <p className="small" style={{ margin: '0.2rem 0', color: '#ffb3bf' }} data-testid="provenance-harm">
+          What it cost: it harmed the people who live with it on {p.harm.nights} night{p.harm.nights === 1 ? '' : 's'}{p.harm.regions.length ? ` (${p.harm.regions.join(', ')})` : ''}; {p.harm.people} time{p.harm.people === 1 ? '' : 's'} someone there trusted you less for it.
+        </p>
+      )}
       <ol className="small" style={{ margin: '0.3rem 0 0 1.2rem', padding: 0 }}>
         {steps.map((st, i) => (
           <li key={i} data-kind={st.kind}>

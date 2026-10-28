@@ -228,6 +228,12 @@ describe('claim C, "At night, bell ringing pulls rain toward the orchard and mak
     expect(events(s, 'LAW_HARMED', id).length).toBe(pooled.length);
     const story = provenanceOf(s, id)!;
     expect(story.steps.some((x) => x.kind === 'outcome' && /did harm/.test(x.text))).toBe(true);
+    // the debrief's "what it cost" line counts exactly those nights, names the harmed region and the people it reached
+    const harmed = events(s, 'LAW_HARMED', id);
+    expect(story.harm.nights).toBe(new Set(harmed.map((e) => e.day)).size);
+    expect(story.harm.regions).toContain('Eastbank');
+    expect(story.harm.people).toBe(harmed.reduce((n, e) => n + Number(/(\d+) people/.exec(e.text)![1]), 0));
+    expect(story.harm.people).toBeGreaterThan(0);
     const opposed = events(s, 'LEADER_OPPOSES', id);
     if (opposed.length) expect(story.steps.some((x) => x.kind === 'opposed' && x.event === opposed[0].id)).toBe(true);
     // the river stood one step lower that night than the forecast, because the rain fell on Eastbank instead

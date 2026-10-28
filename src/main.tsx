@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
+import { trackVisualViewport } from './ui/viewport.ts';
 import './styles.css';
 
 const root = document.getElementById('root');
@@ -20,6 +21,7 @@ function unsupported(msg: string): void {
 if (!('structuredClone' in globalThis) || !('ResizeObserver' in globalThis) || !document.createElement('canvas').getContext) {
   unsupported('This browser is too old to run the game. Please use a current version of Chrome, Edge, Firefox or Safari.');
 } else {
+  trackVisualViewport();
   createRoot(root).render(
     <StrictMode>
       <App />

@@ -58,6 +58,7 @@ const REASON_TEXT: Record<string, string> = {
   bad_output: 'The online reader gave an answer the game cannot use.',
   refused: 'The online reader declined this sentence.',
   network: 'The server could not be reached.',
+  cancelled: 'You stopped the online reading.',
 };
 
 export function explain(reason: string, message?: unknown): string {
@@ -82,18 +83,26 @@ export class AiClient {
     this.now = opts.now ?? (() => Date.now());
   }
 
-  private async request(path: string, init: RequestInit, timeoutMs: number): Promise<{ status: number; body: Record<string, unknown> | null } | AiFailure> {
+  /** `cancel` is the player stopping the request (a Stop button): it ends as 'cancelled', never as a timeout or a network failure. */
+  private async request(path: string, init: RequestInit, timeoutMs: number, cancel?: AbortSignal): Promise<{ status: number; body: Record<string, unknown> | null } | AiFailure> {
+    // stopped before it was sent: nothing is sent
+    if (cancel?.aborted) return { ok: false, reason: 'cancelled', why: explain('cancelled') };
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), timeoutMs);
+    const stop = () => ac.abort();
+    cancel?.addEventListener('abort', stop, { once: true });
     try {
       const res = await this.fetchImpl(`${this.base}${path}`, { ...init, signal: ac.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
       const body = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+      if (cancel?.aborted) return { ok: false, reason: 'cancelled', why: explain('cancelled') };
       return { status: res.status, body: body && typeof body === 'object' && !Array.isArray(body) ? body : null };
     } catch (e) {
+      if (cancel?.aborted) return { ok: false, reason: 'cancelled', why: explain('cancelled') };
       const timeout = (e as { name?: string })?.name === 'AbortError';
       return { ok: false, reason: timeout ? 'timeout' : 'network', why: explain(timeout ? 'timeout' : 'network') };
     } finally {
       clearTimeout(timer);
+      cancel?.removeEventListener('abort', stop);
     }
   }
 
@@ -231,14 +240,14 @@ export class AiClient {
     };
   }
 
-  async interpretReality(state: RunState, text: string, opts: { region?: string | null; timeoutMs?: number } = {}): Promise<RealityResult> {
+  async interpretReality(state: RunState, text: string, opts: { region?: string | null; timeoutMs?: number; signal?: AbortSignal } = {}): Promise<RealityResult> {
     if (!state.v2) return { ok: false, reason: 'bad_request', why: 'Written reality beliefs belong to Generative Reality runs.' };
     if (!this.hasSession()) {
       const s = await this.openSession();
       if (!s.ok) return s;
     }
     const payload = { v: 2, text: text.slice(0, 240), lang: REALITY_LANG, scenario: { id: state.scenarioId, seed: state.seed, lab: !!state.v2.lab }, region: opts.region ?? null, day: state.day, run: runRef(state) };
-    const r = await this.request('/api/interpret-reality', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${this.token}` }, body: JSON.stringify(payload) }, opts.timeoutMs ?? 25_000);
+    const r = await this.request('/api/interpret-reality', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${this.token}` }, body: JSON.stringify(payload) }, opts.timeoutMs ?? 25_000, opts.signal);
     if ('ok' in r && r.ok === false) return r;
     const { status, body } = r as { status: number; body: Record<string, unknown> | null };
     if (status === 401) this.forget();

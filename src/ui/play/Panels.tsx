@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { councilBanDays, getAvailableActions, getCallouts, getForecast, getIntents, getLawViews, getModifierViews, getVillagerView, memoryLines, previewAction, describeAction, stagingOmen } from '../../engine/index.ts';
-import type { Action, ClaimDef, Landmark, Preview, RunState } from '../../engine/index.ts';
+import type { Action, ClaimDef, GameEvent, Landmark, Preview, RunState, VillagerView } from '../../engine/index.ts';
 import { findClaimDef, neighborsOf } from '../../engine/core/lookup.ts';
 import { firstName } from '../../engine/core/names.ts';
 import { lawWitnesses } from '../../engine/mind/view.ts';
@@ -188,6 +188,7 @@ function VillagerCard({ id }: { id: string }) {
           </div>
         </div>
       </div>
+      {view.status !== 'dead' && <Glance state={state} view={view} claimId={claimId} />}
       <p className="small" style={{ margin: '0.5rem 0 0.2rem' }}><em>{view.want}</em></p>
       <p className="small muted" style={{ margin: 0 }}>{view.archetype.label}: {view.archetype.blurb}</p>
       {view.status !== 'dead' && <p className="small" style={{ margin: '0.3rem 0 0' }}>{view.dutyNote}{view.place ? ` (${view.place})` : ''}</p>}
@@ -265,6 +266,61 @@ function VillagerCard({ id }: { id: string }) {
         <div className="kv" key={t.key}><span>{t.label}</span><Bar value={t.value} label={t.label} kind="gold" /><b className="small">{t.value}</b></div>
       ))}
     </div>
+  );
+}
+
+/** Open the log at one event (a "Why?" link): the event, what caused it, and the place or person it concerns on the map. */
+export function showEvent(s: RunState, id: number): void {
+  const e = s.log.find((x) => x.id === id);
+  store.set({ tab: 'log', sheetOpen: true, logFocus: id });
+  if (e?.tile) getRenderer()?.focusTile(e.tile[0], e.tile[1], 1.4);
+  else if (e?.target) getRenderer()?.focusVillager(e.target);
+}
+
+/**
+ * The questions a player asks of a villager, answered first (phase 12): what they think of the story in hand, why (with one link
+ * to the event that last moved them), whether hearing it from you would move them (the engine's own dry run of the telling), and
+ * what they mean to do next. The detail below stays for whoever wants it.
+ */
+function Glance({ state, view, claimId }: { state: RunState; view: VillagerView; claimId: string | null }) {
+  const def = claimId ? findClaimDef(state, claimId) : undefined;
+  const b = def ? view.beliefs.find((x) => x.claimId === def.id) : view.beliefs[0];
+  const next = getIntents(state, view.id).find((i) => i.chosen);
+  const first = firstName(view.name);
+  const seed = def && playable(state, def.id) && state.claims.find((c) => c.id === def.id)?.available ? previewAction(state, { type: 'SEED', claim: def.id, target: view.id }) : null;
+  const moved = seed?.ok ? seed.deltas.find((d) => d.id === view.id && d.claim === def!.id) : undefined;
+  const skeptic = (state.villagers.find((x) => x.id === view.id)?.traits.skepticism ?? 0) >= 70;
+  let listen: string;
+  if (!def) listen = 'Choose a story card to see whether they would listen.';
+  else if (seed?.ok) listen = `Yes: hearing it from you now would move them ${moved ? `${moved.before} → ${moved.after}` : 'a little'}${skeptic ? ', but words barely move a skeptic; seeing it work does' : ''}.`;
+  else if (seed?.error?.code === 'NO_TRUST' || seed?.error?.code === 'NO_PATH') listen = `Not from you: ${seed.error.message} A believer they trust can carry it.`;
+  else listen = seed?.error?.message ?? 'Not with this story.';
+  return (
+    <dl className="glance" data-testid="villager-glance">
+      <div>
+        <dt>Thinks</dt>
+        <dd data-testid="glance-thinks">{def && !b ? <>Has not heard “{def.short}”.</> : b ? <>“{b.short}”: <b>{b.label}</b>{b.conv !== null ? ` (${b.conv})` : ''}</> : 'Has not heard any of your stories yet.'}</dd>
+      </div>
+      {b?.why && (
+        <div>
+          <dt>Why</dt>
+          <dd data-testid="glance-why">
+            {b.why}.{' '}
+            {b.whyEvent !== null && <button type="button" className="link-btn" onClick={() => showEvent(state, b.whyEvent!)} data-testid="glance-why-link" aria-label={`Why does ${first} think this? Show the event`}>Why?</button>}
+          </dd>
+        </div>
+      )}
+      <div>
+        <dt>Would listen?</dt>
+        <dd data-testid="glance-listen">{listen}</dd>
+      </div>
+      {next && (
+        <div>
+          <dt>Next</dt>
+          <dd data-testid="glance-next">{next.label}<span className="muted"> — {next.why}.</span></dd>
+        </div>
+      )}
+    </dl>
   );
 }
 
@@ -559,11 +615,38 @@ export function ForecastPanel() {
 
 // ------------------------------------------------------------------ log
 
+/** The event a "Why?" link asked about, with what caused it (the engine's own cause links, a few steps back). */
+function FocusedEvent({ state, id }: { state: RunState; id: number }) {
+  const e = state.log.find((x) => x.id === id);
+  if (!e) return null;
+  const chain: GameEvent[] = [];
+  let causes = e.cause ?? [];
+  while (causes.length && chain.length < 4) {
+    const c = state.log.find((x) => x.id === causes[0]);
+    if (!c || chain.includes(c)) break;
+    chain.push(c);
+    causes = c.cause ?? [];
+  }
+  return (
+    <section className="card log-focus" data-testid="log-focus" aria-label="The event you asked about">
+      <p className="small" style={{ margin: 0 }}><span className="log-day">Day {e.day}</span> {e.text}</p>
+      {chain.length > 0 && (
+        <ul className="small muted" style={{ margin: '0.3rem 0 0' }} data-testid="log-focus-causes">
+          {chain.map((c) => <li key={c.id}>Because, day {c.day}: {c.text}</li>)}
+        </ul>
+      )}
+      <button type="button" className="btn small" style={{ marginTop: '0.4rem' }} onClick={() => store.set({ logFocus: undefined })}>Show the whole log</button>
+    </section>
+  );
+}
+
 export function LogPanel() {
   const state = useStore((s) => s.state)!;
+  const focus = useStore((s) => s.ui.logFocus);
   const events = state.log.filter((e) => e.importance >= 1).slice(-120).reverse();
   return (
     <div data-testid="log-panel">
+      {focus !== undefined && <FocusedEvent state={state} id={focus} />}
       {state.v2?.minds && (
         <Suspense fallback={null}>
           <InfluenceJournal />
@@ -573,7 +656,8 @@ export function LogPanel() {
       {events.map((e) => (
         <button
           key={e.id}
-          className={`log-item i${e.importance}`}
+          aria-current={e.id === focus ? 'true' : undefined}
+          className={`log-item i${e.importance}${e.id === focus ? ' focused' : ''}`}
           onClick={() => {
             if (e.tile) getRenderer()?.focusTile(e.tile[0], e.tile[1], 1.4);
             else if (e.target) {

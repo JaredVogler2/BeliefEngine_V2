@@ -51,6 +51,30 @@ describe('reality reading client', () => {
     for (const v of s.villagers) expect(JSON.stringify(body)).not.toContain(v.name);
   });
 
+  it('the player can stop a reading: it ends as "cancelled", not as a timeout or a network failure, and nothing comes back', async () => {
+    // a server that never answers until it is aborted, as a slow model would
+    const sent: string[] = [];
+    const hung = new AiClient({
+      fetch: (async (url: string, init: RequestInit) => {
+        if (url.endsWith('/api/session')) return { status: 200, json: async () => ({ ok: true, token: 'a.b', expiresAt: Date.now() + 3600_000 }) };
+        sent.push(url);
+        return new Promise((_, reject) => init.signal!.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))));
+      }) as unknown as typeof fetch,
+    });
+    const ac = new AbortController();
+    const pending = hung.interpretReality(reality(), 'Chickens fly when the bell rings.', { signal: ac.signal, timeoutMs: 60_000 });
+    setTimeout(() => ac.abort(), 5);
+    expect(await pending).toEqual({ ok: false, reason: 'cancelled', why: 'You stopped the online reading.' });
+    // an already-stopped request is not sent at all
+    const before = new AbortController();
+    before.abort();
+    const n = sent.length;
+    expect(await hung.interpretReality(reality(), 'Chickens fly when the bell rings.', { signal: before.signal })).toMatchObject({ ok: false, reason: 'cancelled' });
+    expect(sent.length).toBe(n);
+    // and without a Stop, the same silence is a timeout
+    expect(await hung.interpretReality(reality(), 'Chickens fly when the bell rings.', { timeoutMs: 5 })).toMatchObject({ ok: false, reason: 'timeout' });
+  });
+
   it('drops a reading the engine will not accept, whatever the server sent', async () => {
     const { client } = wired((c) => {
       const out = demoInterpretV2(c.prompt);

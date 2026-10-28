@@ -4,6 +4,8 @@ import type { Action, ActionResult, CreateRunOptions, GameEvent, DaySummary, Run
 import { DEFAULT_SETTINGS, KEYS, loadSettings, readKey, removeKey, saveSettings, writeKey, type Settings } from './persist.ts';
 import { sfx } from '../audio/audio.ts';
 import { recordRun } from './progress.ts';
+import type { Reading } from '../engine/reality/read.ts';
+import type { ReadingMeta } from '../ai/client.ts';
 
 export type Screen = 'title' | 'scenarios' | 'howto' | 'settings' | 'credits' | 'briefing' | 'play' | 'debrief' | 'atlas';
 export type Lens = 'none' | 'social';
@@ -49,6 +51,28 @@ export interface UiState {
   reward: RunReward | null;
   /** events of the Keeper's latest accepted action, for immediate map feedback (never persisted) */
   lastAction: { events: GameEvent[] } | null;
+  /** the main menu's choice: which tab the mode screen opens on, and which V2 mode its chapter cards lead with */
+  startTab?: 'story' | 'expedition' | 'daily' | 'reality';
+  v2Mode?: 'chronicle' | 'living' | 'lab';
+  /** the reality composer's unsent words and its last reading, kept while the dialog is closed (never persisted; see RealityDraftUi) */
+  realityDraft?: RealityDraftUi;
+  /** the event a "Why?" link asked the log to show */
+  logFocus?: number;
+}
+
+/**
+ * What the reality composer keeps when it closes before anything is written: the words, the region and, with them, the last reading
+ * and the choices made on it. `rev` is the run revision the reading was made at; a reading is only shown again at that same
+ * revision (a confirmation built on an older village would be refused), otherwise the words come back and the reading is redone.
+ */
+export interface RealityDraftUi {
+  text: string;
+  region: string;
+  rev: number;
+  reading: Reading | null;
+  meta: ReadingMeta | null;
+  pick: number;
+  title: string | null;
 }
 
 type Listener = () => void;
@@ -101,6 +125,11 @@ export class GameStore {
     if (typeof window !== 'undefined') window.setTimeout(() => this.dismissToast(t.id), kind === 'error' ? 6000 : 3800);
   }
 
+  /** Keep (or drop) the composer's unsent draft. Nothing on screen shows it while the composer is closed, so nothing re-renders. */
+  keepDraft(draft: RealityDraftUi | undefined): void {
+    this.ui = { ...this.ui, realityDraft: draft };
+  }
+
   dismissToast(id: number): void {
     this.ui = { ...this.ui, toasts: this.ui.toasts.filter((t) => t.id !== id) };
     this.emit();
@@ -124,7 +153,7 @@ export class GameStore {
   newRun(opts: CreateRunOptions): void {
     this.session = GameSession.create(opts);
     this.prevState = null;
-    this.ui = { ...this.ui, screen: 'briefing', selection: null, activeClaim: null, digest: null, confirmEnd: false, lens: 'none', tab: 'selected', sheetOpen: false, composing: false, announce: '', loadError: null, scenarioId: opts.scenarioId, notes: [], reward: null, tutorialDone: !this.ui.settings.tutorial };
+    this.ui = { ...this.ui, screen: 'briefing', selection: null, activeClaim: null, digest: null, confirmEnd: false, lens: 'none', tab: 'selected', sheetOpen: false, composing: false, announce: '', loadError: null, scenarioId: opts.scenarioId, notes: [], reward: null, tutorialDone: !this.ui.settings.tutorial, realityDraft: undefined, logFocus: undefined };
     this.persist();
     this.emit();
   }
@@ -149,7 +178,7 @@ export class GameStore {
     this.prevState = null;
     this.persist();
     const first = r.state.scn.starters.find((c) => r.state.claims.find((x) => x.id === c)?.available) ?? null;
-    this.ui = { ...this.ui, screen: r.state.outcome ? 'debrief' : 'play', selection: null, activeClaim: first, digest: null, confirmEnd: false, loadError: null, scenarioId: r.state.scenarioId, tutorialDone: true };
+    this.ui = { ...this.ui, screen: r.state.outcome ? 'debrief' : 'play', selection: null, activeClaim: first, digest: null, confirmEnd: false, loadError: null, scenarioId: r.state.scenarioId, tutorialDone: true, realityDraft: undefined, logFocus: undefined };
     this.emit();
     return true;
   }
@@ -166,7 +195,7 @@ export class GameStore {
     this.session = new GameSession(r.state);
     this.prevState = null;
     const first = r.state.scn.starters.find((c) => r.state.claims.find((x) => x.id === c)?.available) ?? null;
-    this.ui = { ...this.ui, screen: r.state.outcome ? 'debrief' : 'play', selection: null, activeClaim: first, digest: null, confirmEnd: false, loadError: null, scenarioId: r.state.scenarioId, tutorialDone: true };
+    this.ui = { ...this.ui, screen: r.state.outcome ? 'debrief' : 'play', selection: null, activeClaim: first, digest: null, confirmEnd: false, loadError: null, scenarioId: r.state.scenarioId, tutorialDone: true, realityDraft: undefined, logFocus: undefined };
     this.emit();
     return true;
   }

@@ -26,7 +26,10 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **11 Generative gameplay and balance: VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds
   strategic variety" needs a provider). Written-belief rules 2 are recorded per run (older runs keep rules 1 and replay exactly).
   Reference: [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md); tournament reports in [`data/tournament-v2/`](data/tournament-v2/).
-- **12 Desktop and iPhone UX: NOT STARTED. It is the next task (below).**
+- **12 Desktop and iPhone UX: VERIFIED in Chromium** (desktop 1366×768, the phone profile and four iPhone sizes); WebKit, the
+  iPhone 14 profile and Firefox run the new Generative Reality smoke in CI only; **real iPhone Safari UNVERIFIED**; the dialog
+  staying above the iOS keyboard UNVERIFIED (no device). Reference: [`UX_V2.md`](UX_V2.md).
+- **13 MCP and tool play: IN PROGRESS. It is the next task (below).**
 
 ## Last good commit / branch
 
@@ -35,7 +38,19 @@ at phase 03 (`d9312bc`); everything since is in the open follow-up JaredVogler2/
 without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`; phases 04/06 (engine): `e33209b`; phase 05: `e093c4f` … `70575ad`; phase 07:
 `802dbe2` … `d842cc6`; phase 08: `e48a7ca`; V1 merge: `08877e7`, `1b7086b`; phase 09: `07e06f7` (engine) and the commit after it
 (browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
-matrix, docs, `39ab15b`); phase 11: the commit after `39ab15b` (rules 2, modes, tournament, docs).
+matrix, docs, `39ab15b`); phase 11: `e9d6847` (rules 2, modes, tournament, docs); phase 12: the commit after `e9d6847` (menu,
+composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs).
+
+## Working files changed in phase 12
+
+New: `src/ui/play/TellFirst.tsx` (who tells it first), `src/ui/viewport.ts` (visual viewport → `--vvh`/`--vvt`),
+`tests/e2e/v2-ux.spec.ts`, `docs/UX_V2.md`, `docs/screenshots/v2-phase12/`. Changed: `src/ui/play/RealityCompose.tsx` (draft kept in
+`store.ui.realityDraft`, Stop, manual retry, the tell-first step), `src/ui/play/Panels.tsx` (villager glance, `showEvent`, the log's
+focused event), `src/ui/screens.tsx` (menu modes, reading explainer, New seed keeps the mode), `src/ui/store.ts` (`realityDraft`,
+`keepDraft`, `logFocus`), `src/ui/play/Provenance.tsx` (what it cost), `src/ai/client.ts` (a player's Stop ends as `cancelled`),
+`src/engine/core/selectors.ts` (`BeliefView.whyEvent`), `src/engine/reality/provenance.ts` (`harm`), `src/engine/progress/options.ts`
+(`v2ModeOf`), `src/main.tsx`, `src/styles.css`, the three V2 specs that write a belief (they close the new step), `smoke.spec.ts`
+(a Generative Reality run for CI's WebKit/iPhone/Firefox), `tests/unit/{ai-reality-client,belief-bridge}.test.ts`.
 
 ## Working files changed in phase 11
 
@@ -50,9 +65,9 @@ invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging ome
 
 ## Commands run and exact results
 
-In [`PROGRESS.md`](PROGRESS.md) (phase 11 entry): typecheck and lint pass; `npm test` 50 files, 607 passed; the V2 tournament at
-30 seeds under both rule sets (the table in the entry); `v2-modes.spec.ts` 4 passed; the V2 browser specs and the re-recorded
-`v2-bridge.spec.ts` green; size: entry 289 KB gzip of 300; V1 golden hashes unchanged.
+In [`PROGRESS.md`](PROGRESS.md) (phase 12 entry): typecheck and lint pass; `npm test` 50 files, 608 passed; `v2-ux.spec.ts` and
+`smoke.spec.ts` 21 passed (7 skipped by design); the whole Chromium suite 189 passed, 71 skipped, 0 failed; size: entry 292 KB gzip
+of 300; V1 golden hashes unchanged (Classic engine untouched).
 
 ## Mock vs LIVE model tests
 
@@ -61,7 +76,9 @@ Every model-facing test used a scripted provider or the offline policy standing 
 
 ## Screenshots and browser/device
 
-[`screenshots/v2-phase11/`](screenshots/v2-phase11/): the mode screen, a Living Village conversation, a written belief offered for
+[`screenshots/v2-phase12/`](screenshots/v2-phase12/), production build, Chromium: the main menu (desktop, phone), the reality tab with
+the reading explainer, who tells it first (desktop and 320/375/390/430 wide), the composer preview at each phone width, the villager
+glance, the log opened by "Why?", and the outage fallback. [`screenshots/v2-phase11/`](screenshots/v2-phase11/): the mode screen, a Living Village conversation, a written belief offered for
 staging at the bell tower (desktop and phone, production build). [`screenshots/v2-phase10/`](screenshots/v2-phase10/): the 3D effect
 matrix. [`screenshots/v2-phase09/`](screenshots/v2-phase09/), from the production build: the composer's full preview (desktop, and the
 compound rain belief on desktop and phone), the law ledger's provenance, the debrief's provenance, the classic map with the hens a law
@@ -78,7 +95,7 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
    plan); the strongest written law in each chapter does what one of the chapter's own stories does (priced at least as high);
    Harvest's growth belief leaves about 3.5 idle days once it holds (dead time). Generated villages were not in the tournament.
    Classic is unchanged.
-3. **Entry bundle**: 285 of 300 KB gzip. New V2 engine code ships in the entry (it must be present wherever a day resolves). If
+3. **Entry bundle**: 292 of 300 KB gzip (phase 12 added the glance, the viewport tracker and the menu). New V2 engine code ships in the entry (it must be present wherever a day resolves). If
    headroom runs out, move the V2-only engine to a chunk installed before any V2 run starts (a hook in `resolve.ts`), never after.
 4. **V1's later 3D work is merged**; any further V1 change would merge the same way (procedure at the end of this file). CI now
    has a separate 3D job (software WebGL, about 30-45 minutes).
@@ -87,23 +104,27 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 12: complex generative play made intuitive on desktop and iPhone)
+## Next exact code changes (phase 13: MCP stays a real game interface)
 
-[`../prompts/12_DESKTOP_IPHONE_UX.md`](../prompts/12_DESKTOP_IPHONE_UX.md). Start by walking the generative flow in the browser at
-1366×768 and on 320×568, 375×667, 390×844, 430×932 (Playwright WebKit as the iPhone stand-in; real iPhone Safari stays UNVERIFIED).
+[`../prompts/13_MCP_AND_TOOL_PLAY.md`](../prompts/13_MCP_AND_TOOL_PLAY.md). Keep every V1 tool name and behaviour; add, in
+`mcp/service.ts` and `mcp/server.ts`:
 
-1. **Main menu**: Classic (offline), Generative Reality (with the model requirement, consent and cost said plainly; offline reader
-   when the backend is not configured), Living Village, Reality Lab, Continue. Never a "live" label on a stub.
-2. **Generative flow**: the composer from a compact tray; region or landmark selector; "understand" with a cancel and a timeout, no
-   retry loops; the preview already shows said/can-do, clauses, omissions, strength, evidence, targets, threshold and side effects
-   (phase 09) — check it fits a phone; then choose the first villager in 3D or a roster with the AP cost confirmed.
-3. **Villager card**: what they think, why, who told them, persuadable or not, what you can say, their next move, one "Why?" link
-   to the source event; recorded dialogue replayed without new calls.
-4. **Phone**: safe areas, dynamic viewport, 44 px targets, the software keyboard never hiding the composer, orientation change
-   keeping the draft and the run revision, no world gesture submitting anything.
-5. **Outage**: "Online interpretation unavailable; use the offline composer", no Influence lost, live dialogue disabled honestly.
-6. E2E on desktop Chromium and WebKit phone: start, write, choose, seed, advance, inspect, law and effect, save, reload, win or lose,
-   retry; keyboard and screen-reader audit; reduced motion; orientation and keyboard tests.
+1. `create_game { variant: classic | generative | living | lab }` (Inventor stays Classic); the variant in every state view and kept
+   by `retry_or_new_game` and `import_game`.
+2. `get_interpreter_status` (offline reader always; online only when the person starting the server sets `BE_AI_ENABLED=1`, which
+   runs the game's own inference service in-process with its consent, quotas and validation: `mcp/online.ts`; no tool argument can
+   switch it on or carry a credential).
+3. `propose_belief` (the reality reader; free; tokens bound to the revision; `online: off | prefer | require`) and `confirm_belief`
+   for those tokens (STALE_REVISION if the village changed; UNSUPPORTED_EFFECT without `acknowledge: true` when the reading leaves
+   part of the sentence out, as the browser's checkbox).
+4. `speak_to_villager` (TALK; the engine decides the effect; a model line only under quota, recorded), `stage_evidence` (RITUAL with
+   the claim and tonight's omen), `inspect_object`, `inspect_region`, `get_social_graph` (no convictions), `get_rule_explanation`.
+5. Versioned error kinds on every failure (`kind`, `errorsVersion: 2`): INVALID_CLAIM, STALE_REVISION, OUT_OF_BUDGET, LLM_UNAVAILABLE,
+   UNSUPPORTED_EFFECT, NOT_AUTHORIZED, ...; `code` stays the detail.
+6. Proof: the official SDK client over stdio replays the recorded `hens` chain (tests/fixtures/v2-bridge-traces.json) with
+   propose/confirm in place of COMPOSE and ends on the browser's state hash; unauthorized, duplicate and stale calls change nothing;
+   the online path tested against the scripted provider only (TESTED MOCK ONLY). Remote Streamable HTTP stays NOT BUILT (no
+   durable shared store). Then `docs/MCP_V2.md`.
 
 ## Parallel track: the 3D world
 

@@ -155,6 +155,11 @@ export const PRESETS: PresetDef[] = [
 // ------------------------------------------------------------------ rebuilding a run's options
 
 /** The options that would recreate this run from scratch (retry, share, replay): scenario, seed, difficulty and every chosen extra. */
+/** The V2 mode a run was played in (Generative Chronicle, Reality Lab, Living Village), as run options: a new seed keeps the mode. */
+export function v2ModeOf(s: import('../core/types.ts').RunState): Pick<import('../core/types.ts').CreateRunOptions, 'reality' | 'realityLab' | 'living'> {
+  return s.flags.reality === 2 ? { realityLab: true } : s.flags.reality === 1 ? { reality: true } : s.flags.reality === 3 ? { living: true } : {};
+}
+
 export function optionsFromState(s: import('../core/types.ts').RunState): import('../core/types.ts').CreateRunOptions {
   const pledges = pledgesOf(s.modifiers);
   const mods = s.modifiers.filter((m) => !m.startsWith(PLEDGE_PREFIX));
@@ -171,7 +176,7 @@ export function optionsFromState(s: import('../core/types.ts').RunState): import
     // twists the player chose (as opposed to the ones a generated village drew from its seed)
     ...(s.flags.twisted ? { modifiers: mods } : {}),
     ...(s.flags.inventor ? { inventor: true } : {}),
-    ...(s.flags.reality === 2 ? { realityLab: true } : s.flags.reality === 1 ? { reality: true } : s.flags.reality === 3 ? { living: true } : {}),
+    ...v2ModeOf(s),
     // a Generative Reality run made under older written-belief rules is recreated under them
     ...(s.v2 && !s.v2.living && (s.v2.rules ?? 1) !== REALITY_RULES ? { realityRules: s.v2.rules ?? 1 } : {}),
   };

@@ -16,12 +16,51 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 09 Belief-to-reality bridge | **VERIFIED offline and with mocks; LIVE UNVERIFIED.** A typed sentence becomes law only through the whole chain (preview → hashed confirmation → real persuasion → threshold with hysteresis → catalyst → executor → V1 hazards), proven in the browser for the three proof claims plus a complete win and a complete loss; below threshold nothing happens; replays need no model and no network. Measured: written beliefs reach law in 6-9 days, so they rarely decide a chapter (phase 11) | [`BELIEF_TO_REALITY.md`](BELIEF_TO_REALITY.md), entry below, [`screenshots/v2-phase09/`](screenshots/v2-phase09/) |
 | 10 3D visual effects | **IN PROGRESS: the effect registry and three physical laws in 3D VERIFIED (they match canonical state, tested over the recorded chains and in the browser); the gate's "looks like premium real-time gameplay" NOT MET by my own reading (the art stages of the 3D plan remain); frame times on a GPU or phone UNVERIFIED** | [`3D_EFFECTS.md`](3D_EFFECTS.md), `tests/unit/render3d-reality.test.ts`, `tests/e2e/v2-world3d.spec.ts`, [`screenshots/v2-phase10/`](screenshots/v2-phase10/) |
 | 11 Generative gameplay and balance | **VERIFIED offline (gate met by measurement); LIVE UNVERIFIED** (the gate's "the model adds strategic variety" needs a provider). Under the old rules no written-belief policy won a single seed of 30 in any chapter; under rules 2 (recorded per run; older runs replay exactly) written beliefs win in all three (Redbank 27/30, Harvest 28/30, Ashwood 21/30), a decoy belief backfires on 11 of 30, the dominant cheap win (a written copy of the unpicked opening story, 20/20) is closed (0/30); four modes with separate records; leaders stand against magic that harms livelihoods | [`GAMEPLAY_V2.md`](GAMEPLAY_V2.md), [`data/tournament-v2/`](data/tournament-v2/), `tests/unit/gameplay-v2.test.ts`, `tests/e2e/v2-modes.spec.ts`, [`screenshots/v2-phase11/`](screenshots/v2-phase11/) |
-| 12-17 | NOT STARTED | |
+| 12 Desktop and iPhone UX | **VERIFIED in Chromium (desktop and phone profile, four iPhone sizes); WebKit and the iPhone 14 profile run in CI's cross-browser smoke; real iPhone Safari UNVERIFIED; LIVE UNVERIFIED.** A main menu that names every mode; the composer keeps an unsent belief and its reading, can stop an online reading, falls back on an outage with nothing spent; "who tells it first" after writing; a villager card that answers what they think, why, whether they would listen and what they will do, with a "Why?" link to the event; the debrief says what a written law cost; a new seed keeps the V2 mode (it used to start a Classic run) | [`UX_V2.md`](UX_V2.md), entry below, `tests/e2e/v2-ux.spec.ts`, [`screenshots/v2-phase12/`](screenshots/v2-phase12/) |
+| 13-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stages 1-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 12: generative play made legible on desktop and iPhone (VERIFIED in Chromium; real iPhone UNVERIFIED)
+
+**What was done** (reference: [`UX_V2.md`](UX_V2.md))
+
+- **Main menu**: Play Classic (offline, the hand-made stories), then Generative Reality, Living Village and Reality Lab, each with
+  its few words; each opens the mode screen on its tab with its button leading. The mode screen explains how reading works before
+  anything is played (offline first; a model only when asked, after a notice; who pays; a failure costs nothing; a model only
+  proposes).
+- **Composer**: the unsent sentence, region and (at the same run revision) the reading come back when the dialog is reopened; a
+  stale reading is dropped with a note; a turning phone does not close it. "Stop reading" for an online reading (the client ends it
+  as `cancelled` and sends nothing if stopped before sending); an outage shows the offline reading with the reason and "no Influence
+  was spent"; "Try online again" by hand only, waiting out a rate limit's `retryAfterSec`. Phone keyboards: dictation, 16px fields.
+- **Who tells it first?** after writing: the people who vote on the new law, ranked by the engine's dry run of telling them (weighted
+  as support is weighed), each with what it would do and **Tell · 1**; or close and choose in the village.
+- **Villager glance** (every mode): Thinks / Why (+ **Why?**, which opens the log at the event with its causes and points the camera)
+  / Would listen? (the dry run, or the engine's reason) / Next. `BeliefView.whyEvent` carries the event id (the MCP's
+  `inspect_villager` gets it too).
+- **Debrief**: "What it cost" for a written law that harmed people (`Provenance.harm` from `LAW_HARMED`). **Bug fixed**: "New seed"
+  on a Generative Reality debrief started a Classic run (`v2ModeOf` now shared with `optionsFromState`).
+- **Phones**: 44px controls on coarse pointers; the dialog overlay follows the visual viewport (`src/ui/viewport.ts`) so the iOS
+  keyboard cannot cover the field (UNVERIFIED without an iPhone); safe-area padding.
+- **Accessibility**: axe found that the Tell buttons' spoken names did not contain their visible label (WCAG 2.5.3): they are named
+  by their content now ("Tell · 1 Influence, to Ivo Thatcher").
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `npm test` | 50 files, **608 passed** (new: the client's Stop path; the provenance harm counts on the recorded bell-rain chain) |
+| `npx playwright test tests/e2e/v2-ux.spec.ts tests/e2e/smoke.spec.ts` (desktop, phone) | **21 passed**, 7 skipped by design (phone sizes run on the phone profile; keyboard, online and retry on desktop). Axe: no serious or critical violations on the five new surfaces once the Tell buttons were fixed |
+| `npx playwright test --project=desktop --project=phone` (every spec; the three V2 specs that write a belief now close "who tells it first") | **189 passed, 71 skipped by design, 0 failed** (15.1 min), on the build before the retry fix; the phase 12 spec and smoke re-run after it (row above) |
+| `tests/e2e/smoke.spec.ts` (new Generative Reality smoke) | desktop and phone Chromium: passed; WebKit, iPhone 14 and Firefox: run by CI only (not installed here) |
+| `npm run size` | entry 292 KB gzip (budget 300; 289 before this phase), composer chunk 28 (budget 40), CSS 9.2 (budget 12) |
+
+**Mock vs LIVE:** no model was called. The online reading tests use the local simulated server, and routed responses for the hung
+request, the outage (503) and the rate limit (429).
 
 ## 2026-10-28 — Phase 11: a strategy game, not a wish machine (VERIFIED offline; LIVE UNVERIFIED)
 

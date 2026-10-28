@@ -1,6 +1,7 @@
 import { findClaimDef } from '../core/lookup.ts';
 import type { GameEvent, RunState } from '../core/types.ts';
 import { chainOf } from '../mind/journal.ts';
+import { regionAt } from '../world/grid.ts';
 
 /**
  * How a written belief became real, or why it did not (phase 09): the player's words, the people they told, the network that carried
@@ -26,6 +27,8 @@ export interface Provenance {
   /** firm believers when it became law, by how it first reached them: from you, through a neighbour (gossip, a carried message, a
    *  gathering's talk), or by seeing it shown */
   believers: { keeper: number; neighbour: number; witness: number };
+  /** the harm it did to the people who live with it (rules 2, LAW_HARMED): on how many nights, where, and how many people it reached */
+  harm: { nights: number; regions: string[]; people: number };
 }
 
 const TOLD = new Set(['RUMOR_SEEDED', 'GATHERING', 'MESSENGER_SENT', 'EVIDENCE_STAGED', 'KEEPER_TALKED', 'NPC_ACT']);
@@ -93,7 +96,10 @@ export function provenanceOf(s: RunState, claim: string): Provenance | null {
     else believers.neighbour++;
   }
   const status = laws.some((l) => l.status === 'active' || l.status === 'wavering') ? 'law' : laws.some((l) => l.progress > 0) ? 'waking' : 'story';
-  return { claim, short: def.short, status, steps, believers };
+  const harmed = s.log.filter((e) => e.code === 'LAW_HARMED' && e.claim === claim);
+  const regions = [...new Set(harmed.map((e) => (e.tile ? regionAt(s.world, e.tile[0], e.tile[1]) : null)).filter((r): r is string => !!r))].map((r) => s.world.regions.find((x) => x.id === r)?.name ?? r);
+  const people = harmed.reduce((n, e) => n + (Number(/(\d+) people who live with it/.exec(e.text)?.[1]) || 0), 0);
+  return { claim, short: def.short, status, steps, believers, harm: { nights: new Set(harmed.map((e) => e.day)).size, regions, people } };
 }
 
 /** Provenance for every belief the player wrote in this run. */

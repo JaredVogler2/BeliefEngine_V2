@@ -61,6 +61,7 @@ test.describe('V2 modes (phase 11)', () => {
     await page.getByTestId('reality-preview').click();
     await expect(page.getByTestId('reality-kind')).toHaveText('Understood');
     await page.getByTestId('reality-confirm').click();
+    await page.getByTestId('tell-first-done').click();
     const id = await page.evaluate(() => (window as unknown as { __belief: { state: { claims: { id: string; def?: { reality?: unknown; ritual?: string } }[] } } }).__belief.state.claims.find((c) => c.def?.reality)!.id);
     const ritual = await page.evaluate((cid) => (window as unknown as { __belief: { state: { claims: { id: string; def?: { ritual?: string } }[] } } }).__belief.state.claims.find((c) => c.id === cid)!.def!.ritual, id);
     expect(ritual).toBe('ring_bells');

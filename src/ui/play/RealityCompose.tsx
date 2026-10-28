@@ -8,6 +8,7 @@ import { V2_FEATURES } from '../../v2/features.ts';
 import { Modal } from '../components.tsx';
 import { store, useStore } from '../store.ts';
 import { OnlineRow, useOnlineReading } from './online.tsx';
+import { TellFirst } from './TellFirst.tsx';
 
 const MAX_CHARS = 240;
 const MAX_TITLE = 40;
@@ -28,49 +29,84 @@ function candidatesOf(r: Reading | null): ReadCandidate[] {
   return r.kind === 'ambiguous' ? r.choices : r.kind === 'unsupported' ? r.alternatives : r.candidates;
 }
 
+// failures worth asking the online reader again for, by hand (never automatically): it was slow, busy or out of reach
+const RETRYABLE = new Set(['timeout', 'provider_unavailable', 'network', 'busy', 'rate_limited']);
+
 /**
  * Write a belief in a Generative Reality run. Any sentence: the reader (offline, or a model when the player opts in) proposes what
  * the reality language can make of it; the engine builds each proposal against this village and the player sees, side by side,
  * what they said and exactly what the game would do, what it would leave out, what it needs and what it costs. Only a confirmed,
- * engine-built belief is written, bound to the village as it is now (a stale confirmation is refused).
+ * engine-built belief is written, bound to the village as it is now (a stale confirmation is refused). Once written, the dialog
+ * asks who hears it first.
+ *
+ * Closing before writing keeps the words, and the reading if the village has not changed since (store.ui.realityDraft); a phone
+ * turning does not close it at all. An online reading can be stopped; nothing is spent either way.
  */
 export default function RealityCompose() {
   const state = useStore((s) => s.state);
-  const [text, setText] = useState('');
-  const [region, setRegion] = useState('');
-  const [reading, setReading] = useState<Reading | null>(null);
-  const [pick, setPick] = useState(0);
+  // the unsent draft from the last time the composer was open, if any (read once, when it opens)
+  const [saved] = useState(() => store.ui.realityDraft);
+  const fresh = !!saved && saved.rev === state?.nextEventId;
+  const [text, setText] = useState(saved?.text ?? '');
+  const [region, setRegion] = useState(saved?.region ?? '');
+  const [reading, setReading] = useState<Reading | null>(fresh ? saved.reading : null);
+  const [pick, setPick] = useState(fresh ? saved.pick : 0);
   const [accepted, setAccepted] = useState(false);
-  const [title, setTitle] = useState<string | null>(null);
+  const [title, setTitle] = useState<string | null>(fresh ? saved.title : null);
   const [busy, setBusy] = useState(false);
-  const [meta, setMeta] = useState<ReadingMeta | null>(null);
-  const [note, setNote] = useState<string | null>(null);
+  const [meta, setMeta] = useState<ReadingMeta | null>(fresh ? saved.meta : null);
+  const [note, setNote] = useState<string | null>(saved?.reading && !fresh ? 'The village has changed since you read this, so it needs reading again (reading is free).' : null);
+  const [retry, setRetry] = useState<{ at: number } | null>(null);
+  const [written, setWritten] = useState<string | null>(null);
   const o = useOnlineReading();
   const seq = useRef(0);
-  useEffect(() => () => void (seq.current = -1), []);
+  const stopper = useRef<AbortController | null>(null);
+  // what to keep if the dialog closes now: the latest words and reading (a ref, so the close sees the last keystroke)
+  const keep = useRef({ text, region, reading, meta, pick, title, written });
+  useEffect(() => {
+    keep.current = { text, region, reading, meta, pick, title, written };
+  });
+  useEffect(
+    () => () => {
+      seq.current = -1;
+      stopper.current?.abort();
+      const k = keep.current;
+      const rev = store.state?.nextEventId ?? 0;
+      store.keepDraft(k.written || !k.text.trim() ? undefined : { text: k.text, region: k.region, rev, reading: k.reading, meta: k.meta, pick: k.pick, title: k.title });
+    },
+    [],
+  );
   if (!state?.v2) return null;
   const close = () => store.set({ composing: false });
   const made = state.claims.filter((c) => c.def?.reality && !c.def.rival).length;
   const max = MAX_REALITY_CLAIMS + (state.v2.lab ? 2 : 0);
+  const online = o.online && V2_FEATURES.serverInference;
 
   const run = (sentence: string) => {
     const mine = ++seq.current;
     setBusy(true);
     setNote(null);
+    setRetry(null);
     window.setTimeout(async () => {
       const s = store.state as RunState;
       const opts = region ? { region } : {};
       let r: Reading;
       let m: ReadingMeta | null = null;
       let why: string | null = null;
-      if (o.online && V2_FEATURES.serverInference) {
-        const res = await aiClient.interpretReality(s, sentence, { region: region || null });
+      let again: { at: number } | null = null;
+      if (online) {
+        const ac = new AbortController();
+        stopper.current = ac;
+        const res = await aiClient.interpretReality(s, sentence, { region: region || null, signal: ac.signal });
+        if (stopper.current === ac) stopper.current = null;
+        if (seq.current !== mine) return;
         if (res.ok) {
           r = res.reading;
           m = res.meta;
         } else {
           why = `${res.why} Here is the offline reading instead; no Influence was spent.`;
-          r = readBelief(s, sentence, opts);
+          if (RETRYABLE.has(res.reason)) again = { at: Date.now() + (res.retryAfterSec ?? 0) * 1000 };
+          r = readBelief(store.state as RunState, sentence, opts);
         }
       } else r = readBelief(s, sentence, opts);
       if (seq.current !== mine) return;
@@ -80,8 +116,18 @@ export default function RealityCompose() {
       setAccepted(false);
       setTitle(null);
       setNote(why);
+      setRetry(again);
       setBusy(false);
     }, 10);
+  };
+
+  // stop an online reading: its answer, if one still comes, is dropped; the words stay, and nothing is spent
+  const stop = () => {
+    seq.current++;
+    stopper.current?.abort();
+    stopper.current = null;
+    setBusy(false);
+    setNote('Stopped. No Influence was spent. If the question had already reached the model, it may still count toward today’s online allowance. Read it again, online or offline, whenever you like.');
   };
 
   const list = candidatesOf(reading);
@@ -99,10 +145,25 @@ export default function RealityCompose() {
     if (!claim || !draft) return;
     const res = store.act({ type: 'COMPOSE', claim });
     if (res?.ok) {
-      store.set({ composing: false, activeClaim: draft.claim.id, tab: 'village' });
-      store.toast(`Written: “${claim.short}”. Now tell someone.`, 'good');
+      setWritten(draft.claim.id);
+      store.set({ activeClaim: draft.claim.id });
     }
   };
+
+  if (written) {
+    const finish = (how: 'world' | 'done') => {
+      const short = state.claims.find((c) => c.id === written)?.def?.short ?? '';
+      store.set({ composing: false, activeClaim: written, selection: null, sheetOpen: false });
+      if (how === 'world') store.toast(`Tap someone in the village, then Tell them “${short}”.`, 'good');
+    };
+    return (
+      <Modal title="Who tells it first?" onClose={() => finish('done')} wide>
+        <div data-testid="reality-compose">
+          <TellFirst claimId={written} onClose={finish} />
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal title="Write a belief into reality" onClose={close} wide>
@@ -126,6 +187,9 @@ export default function RealityCompose() {
               maxLength={MAX_CHARS}
               rows={3}
               placeholder="e.g. Chickens fly when the bell rings."
+              autoCapitalize="sentences"
+              enterKeyHint="go"
+              spellCheck
               onChange={(e) => setText(e.target.value.replace(/\n/g, ' '))}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -145,10 +209,15 @@ export default function RealityCompose() {
             </select>
           </label>
           {V2_FEATURES.serverInference && <OnlineRow o={o} prefix="reality" leaves="Your sentence, which village this is (its name and seed), the region you picked and the day leave this device: they go to this game's server and, through the Vercel AI Gateway, to a language-model provider. Nothing about your villagers is sent." />}
-          <div className="row" style={{ gap: '0.5rem' }}>
+          <div className="row wrap" style={{ gap: '0.5rem' }}>
             <button type="submit" className="btn primary" disabled={busy || !text.trim()} data-testid="reality-preview">{busy ? 'Reading…' : 'See what it would do'}</button>
-            <button type="button" className="btn" onClick={close}>Cancel</button>
+            {busy && online ? (
+              <button type="button" className="btn" onClick={stop} data-testid="reality-stop">Stop reading</button>
+            ) : (
+              <button type="button" className="btn" onClick={close} title="Your words are kept until you write them or start another run." data-testid="reality-close">Close</button>
+            )}
           </div>
+          {busy && <p className="small muted" role="status" style={{ margin: '0.3rem 0 0' }} data-testid="reality-busy">{online ? 'Asking the online reader… (it gives up after 25 seconds; the offline reading is used then)' : 'Reading…'}</p>}
         </form>
 
         {!reading && (
@@ -162,7 +231,17 @@ export default function RealityCompose() {
           </details>
         )}
 
-        {note && <p className="small muted" data-testid="reality-note">{note}</p>}
+        {note && (
+          <p className="small muted" data-testid="reality-note" role="status">
+            {note}
+            {retry && online && text.trim() && (
+              <>
+                {' '}
+                <RetryButton at={retry.at} onRetry={() => run(text)} />
+              </>
+            )}
+          </p>
+        )}
 
         {reading && !busy && (
           <section aria-live="polite" data-testid="reality-result" style={{ marginTop: '0.8rem' }}>
@@ -280,5 +359,21 @@ export default function RealityCompose() {
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Ask the online reader again, by hand, once any wait the server asked for has passed (never automatically). */
+function RetryButton({ at, onRetry }: { at: number; onRetry: () => void }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (now >= at) return;
+    const t = window.setTimeout(() => setNow(Date.now()), Math.min(1000, at - now));
+    return () => window.clearTimeout(t);
+  }, [now, at]);
+  const wait = Math.ceil((at - now) / 1000);
+  return (
+    <button type="button" className="btn small" disabled={wait > 0} onClick={onRetry} data-testid="reality-retry">
+      {wait > 0 ? `Try online again in ${wait} s` : 'Try online again'}
+    </button>
   );
 }
