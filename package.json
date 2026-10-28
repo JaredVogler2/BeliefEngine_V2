@@ -40,7 +40,9 @@
     "acceptance:fun": "tsx scripts/acceptance-fun.ts",
     "acceptance:novice": "tsx scripts/novice-pass.ts",
     "monkey": "tsx scripts/monkey.ts",
-    "eval": "tsx scripts/eval.ts"
+    "eval": "tsx scripts/eval.ts",
+    "scan:secrets": "tsx scripts/scan-secrets.ts",
+    "ai:monitor": "tsx scripts/ai-monitor.ts"
   },
   "dependencies": {
     "ai": "7.0.155",

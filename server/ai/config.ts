@@ -26,13 +26,14 @@ export const ENV_NAMES = {
   dailyBudgetUsd: 'BE_AI_DAILY_BUDGET_USD',
   callsPerDay: 'BE_AI_CALLS_PER_DAY',
   adminToken: 'BE_ADMIN_TOKEN',
+  zeroRetention: 'BE_AI_ZERO_RETENTION',
 } as const;
 
 /**
  * Default model ids, chosen from the Vercel AI Gateway catalog (https://ai-gateway.vercel.sh/v1/models) on 2026-10-27, with that
  * day's prices in budget.ts. A fast low-cost model reads simple beliefs and voices villagers; a more accurate one is used for
  * long or multi-clause beliefs. Both support structured output. These are starting points to benchmark, not a measured choice:
- * docs/AI_COSTS.md records what has and has not been measured. Override them with BE_AI_MODEL_FAST / BE_AI_MODEL_ACCURATE.
+ * docs/COST_AND_QUOTAS.md records what has and has not been measured. Override them with BE_AI_MODEL_FAST / BE_AI_MODEL_ACCURATE.
  */
 export const DEFAULT_MODELS = { fast: 'anthropic/claude-haiku-5.5', accurate: 'anthropic/claude-sonnet-5.5' } as const;
 
@@ -95,6 +96,8 @@ export interface AiConfig {
   dailyBudgetUsd: number;
   limits: Limits;
   adminToken: string | null;
+  /** ask the gateway for zero-data-retention routing on every call (Vercel Pro and Enterprise); no-training routing is always on */
+  zeroRetention: boolean;
   onVercel: boolean;
   /** names (never values) of what is missing for the service to run */
   missing: string[];
@@ -160,6 +163,7 @@ export function loadAiConfig(env: Env): AiConfig {
     dailyBudgetUsd: num(env[ENV_NAMES.dailyBudgetUsd], 1, 0, 1_000),
     limits,
     adminToken: (env[ENV_NAMES.adminToken] ?? '').trim().length >= MIN_SECRET ? (env[ENV_NAMES.adminToken] ?? '').trim() : null,
+    zeroRetention: env[ENV_NAMES.zeroRetention] === '1',
     onVercel,
     missing,
   };

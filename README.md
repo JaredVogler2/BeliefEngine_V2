@@ -42,6 +42,11 @@ what a village believes, and enough shared belief becomes physical law.
   ([`docs/MCP_V2.md`](docs/MCP_V2.md)); every input that did not come from the rules (a belief read, a model's proposals) is recorded
   in an external-decision ledger, so a run replays offline exactly, and the debrief checks it; readers and villager decisions are
   measured on labelled corpora (`npm run eval`, [`docs/REPLAY_V2.md`](docs/REPLAY_V2.md)), offline and MOCK only.
+- **Phase 15: security, privacy and cost, with evidence.** A threat model mapping every attack to a control and a test, a chaos suite,
+  physics and compute limits no mode relaxes, a secret scan CI runs over every file and commit, gateway calls that never go to a
+  provider that trains on them (zero data retention by setting), and an operator cost monitor (`npm run ai:monitor`)
+  ([`docs/SECURITY.md`](docs/SECURITY.md), [`docs/PRIVACY.md`](docs/PRIVACY.md), [`docs/COST_AND_QUOTAS.md`](docs/COST_AND_QUOTAS.md)).
+  Verified with scripted providers only.
 - Not deployed (no live URL). No human has played V2. Never run on a real GPU, a real phone or real Safari.
 - The art direction for V2's 3D world is set ([`docs/3D_VISUAL_STANDARD.md`](docs/3D_VISUAL_STANDARD.md), a lantern-lit valley at
   dusk); the baseline report ([`docs/3D_QUALITY_REPORT.md`](docs/3D_QUALITY_REPORT.md)) predates the V1 merge, and the work to reach
@@ -70,6 +75,8 @@ or `?renderer=2d` for the classic map. The V1 player guide (controls, a three-mi
 | `npm run test:e2e` | Playwright on the production build: V1's specs (2D map), `v2-world3d.spec.ts` (the Three.js world) and `v2-online.spec.ts` (online reading against the local simulator) |
 | `npm run dev:api` | the inference service locally on :8787 (Vite forwards `/api`); `BE_AI_ENABLED=1 BE_AI_DEV_PROVIDER=mock BE_AI_DEV_MEMORY_STORE=1` runs it with scripted answers and no key |
 | `npm run ai:smoke` | the LIVE provider smoke test; only runs with a privately configured credential ([`docs/AI_SETUP.md`](docs/AI_SETUP.md)) |
+| `npm run ai:monitor` | the operator's cost panel from `/api/ai-metrics` (`BE_ADMIN_TOKEN` from your environment; `-- --demo` needs no server or key) |
+| `npm run scan:secrets` | the secret scan CI runs (`-- --history` for every commit, `-- --dist` for the built site); prints rules and lines, never values |
 | `BE_SLOW_3D=1 npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop` | also replays two days of a recorded route by clicks in 3D (slow on a software rasteriser) |
 | `npm run test:e2e:browsers` | smoke tests in Chromium, Firefox, WebKit and an iPhone 14 profile |
 | `npm run test:sim:smoke` | 256 bot runs: balance, determinism, exploit search |

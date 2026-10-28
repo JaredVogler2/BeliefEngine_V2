@@ -7,7 +7,7 @@ import type { QuotaStore } from './store.ts';
  * address or a credential: only route, outcome, tier, model id, token counts, milliseconds and micro-dollars.
  */
 
-export type Outcome = 'ok' | 'cache_hit' | 'invalid' | 'timeout' | 'unavailable' | 'rate_limited' | 'refused' | 'malformed' | 'auth' | 'budget' | 'bad_model';
+export type Outcome = 'ok' | 'cache_hit' | 'invalid' | 'timeout' | 'unavailable' | 'rate_limited' | 'refused' | 'malformed' | 'auth' | 'budget' | 'bad_model' | 'over_quota' | 'over_budget';
 
 export interface MeterEvent {
   route: 'interpret' | 'npc';
@@ -43,11 +43,21 @@ export class Meter {
       fields['tok.cached'] = e.cachedInputTokens ?? 0;
       fields['cost.micros'] = e.costMicros ?? 0;
       if (e.latencyMs !== undefined) fields[`lat.${LATENCY_BUCKETS.find((b) => e.latencyMs! <= b) ?? 'inf'}`] = 1;
-      if (e.modelId) fields[`model.${e.modelId}`] = 1;
+      if (e.modelId) {
+        fields[`model.${e.modelId}`] = 1;
+        fields[`spend.${e.modelId}`] = e.costMicros ?? 0;
+      }
     }
     if (e.agents) fields[`${e.route}.agents`] = e.agents;
     // metrics are best effort: a store hiccup after the call must not turn a paid answer into an error
     await this.store.hincr(`m:${dayKey(this.now())}`, fields, METRICS_TTL_MS).catch(() => undefined);
+  }
+
+  /** A request the application's own limits refused before any call: no tokens, no cost, but the player was answered offline. */
+  async refused(route: MeterEvent['route'], reason: 'over_quota' | 'over_budget'): Promise<void> {
+    this.log(JSON.stringify({ evt: 'be.ai', route, outcome: reason }));
+    if (!this.store) return;
+    await this.store.hincr(`m:${dayKey(this.now())}`, { [`${route}.${reason}`]: 1 }, METRICS_TTL_MS).catch(() => undefined);
   }
 }
 
@@ -60,14 +70,23 @@ export interface MetricsSummary {
   cacheHitRate: number | null;
   latencyMs: { p50: number | null; p95: number | null; samples: number };
   models: Record<string, number>;
+  /** estimated spend per model id (the gateway's reported cost where it gave one, else catalog price x tokens) */
+  spendByModelUsd: Record<string, number>;
+  /** answers the player got from the offline reader or the game's own policy because the model's could not be used */
+  fallbacks: number;
 }
+
+/** Outcomes after which the game answered for itself (the offline reader, the villagers' own policy). */
+export const FALLBACK_OUTCOMES: Outcome[] = ['invalid', 'timeout', 'unavailable', 'rate_limited', 'refused', 'malformed', 'auth', 'budget', 'bad_model', 'over_quota', 'over_budget'];
 
 /** Percentiles from the latency buckets: an upper bound (the bucket edge), never an invented precise number. */
 export function summarize(day: string, raw: Record<string, number>): MetricsSummary {
   const outcomes: Record<string, number> = {};
   const models: Record<string, number> = {};
+  const spendByModelUsd: Record<string, number> = {};
   for (const [k, v] of Object.entries(raw)) {
     if (k.startsWith('model.')) models[k.slice(6)] = v;
+    else if (k.startsWith('spend.')) spendByModelUsd[k.slice(6)] = v / 1_000_000;
     else if (/^(interpret|npc)\./.test(k) && !k.endsWith('.calls') && !k.endsWith('.agents')) outcomes[k] = v;
   }
   const buckets = [...LATENCY_BUCKETS.map(String), 'inf'].map((b) => ({ edge: b === 'inf' ? Infinity : Number(b), n: raw[`lat.${b}`] ?? 0 }));
@@ -92,5 +111,7 @@ export function summarize(day: string, raw: Record<string, number>): MetricsSumm
     cacheHitRate: interpretCalls ? hits / interpretCalls : null,
     latencyMs: { p50: pct(0.5), p95: pct(0.95), samples },
     models,
+    spendByModelUsd,
+    fallbacks: Object.entries(outcomes).reduce((a, [k, v]) => a + (FALLBACK_OUTCOMES.includes(k.split('.')[1] as Outcome) ? v : 0), 0),
   };
 }

@@ -57,6 +57,15 @@ describe('SdkProvider over the AI SDK (mock language model, no network)', () => 
     }
   });
 
+  it('asks the gateway, on every call, for providers that do not train on the data; and for zero data retention when configured', async () => {
+    for (const zeroRetention of [false, true]) {
+      const model = new MockLanguageModelV4({ doGenerate: async () => result(JSON.stringify(GOOD)) });
+      expect((await new SdkProvider({ model: () => model, zeroRetention }).call(call())).ok).toBe(true);
+      const gateway = (model.doGenerateCalls[0].providerOptions as { gateway?: Record<string, unknown> } | undefined)?.gateway;
+      expect(gateway).toEqual(zeroRetention ? { disallowPromptTraining: true, zeroDataRetention: true } : { disallowPromptTraining: true });
+    }
+  });
+
   it('treats a content-filter finish as a refusal', async () => {
     const p = new SdkProvider({ model: () => new MockLanguageModelV4({ doGenerate: async () => result(JSON.stringify(GOOD), 'content-filter') }) });
     expect(await p.call(call())).toMatchObject({ ok: false, kind: 'refused' });
@@ -77,6 +86,7 @@ describe('SdkProvider over the AI SDK (mock language model, no network)', () => 
       [{ name: 'GatewayAuthenticationError', statusCode: 401 }, 'auth'],
       [{ name: 'GatewayInternalServerError', statusCode: 402, type: 'quota_for_entity_exceeded' }, 'budget'],
       [{ name: 'GatewayModelNotFoundError', statusCode: 404 }, 'bad_model'],
+      [{ name: 'GatewayInvalidRequestError', statusCode: 400, type: 'no_providers_available' }, 'unavailable'],
       [{ name: 'AI_APICallError', statusCode: 503 }, 'unavailable'],
       [{ name: 'TypeError' }, 'unavailable'],
     ];

@@ -19,11 +19,16 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          # the whole history, so the secret scan sees every commit, not just the last one
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      # no credential-shaped value in any tracked file or any commit reachable from HEAD; no tracked env file; no VITE_ secret
+      - run: npm run scan:secrets -- --history
       # a real Redis, so the quota store's atomic Lua scripts run in tests (tests/unit/ai-store.test.ts, ai-app.test.ts)
       - run: sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends redis-server && sudo systemctl stop redis-server || true
       - run: npm run lint
@@ -32,6 +37,8 @@ jobs:
         env:
           BE_REQUIRE_REDIS: '1'
       - run: npm run build
+      # and nothing in the built site names or holds a credential
+      - run: npm run scan:secrets -- --dist
       - run: npm run size
       - run: npx playwright install --with-deps chromium
       - run: npm run verify:hosting

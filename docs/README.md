@@ -14,7 +14,9 @@ the date and provenance before trusting a number: **only the V2 records were pro
 | [`BASELINE.md`](BASELINE.md) | phase 02: V1 and V2 test, build, replay, MCP and browser results side by side |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | how the migrated game is put together and where V2 work plugs in |
 | [`AI_SETUP.md`](AI_SETUP.md) | phase 03: the online-reading service, its security and cost controls, setup steps (names only), the LIVE smoke test, what is and is not verified |
-| [`AI_COSTS.md`](AI_COSTS.md) | phase 03: chosen models and catalog prices, per-call estimates (not measurements), the four spend limits |
+| [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md) | phases 03 and 15 (formerly `AI_COSTS.md`): chosen models and catalog prices, per-call estimates (not measurements), every limit layer by layer, the operator monitor (`npm run ai:monitor`), configuration and evidence |
+| [`SECURITY.md`](SECURITY.md) | phase 15: threat model, attacks with their controls and tests, physics and compute limits, the reliability chaos suite, the secret scan in CI, configuration, known limitations |
+| [`PRIVACY.md`](PRIVACY.md) | phase 15: what leaves the device and why, who receives it and the gateway privacy routing (no training always; zero retention by setting), what the server keeps, device controls |
 | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) | phases 04 and 06: the AST v2 belief language, its world vocabulary and operators, price, grounding, the night executor, the new entities and the V1 bridge |
 | [`MINDS.md`](MINDS.md) | phase 07: villager minds (personality, goals, memories with provenance), who thinks and what they can do, the model's `npc v2` contract, and conversations |
 | [`REPLAY_V2.md`](REPLAY_V2.md) | phase 14: the external-decision ledger, how saves and MCP run files carry and check it, the debrief's offline replay check, privacy controls, and the evaluation corpus with its results ([`data/evals/REPORT.md`](data/evals/REPORT.md)) |

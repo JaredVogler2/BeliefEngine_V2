@@ -7,7 +7,7 @@ import { realityRules } from './state.ts';
 import { ANCHOR_WORDS, KINDS, REALITY_LANG, type TargetKind } from './ontology.ts';
 import { OPERATORS, type OpId } from './operators.ts';
 import {
-  ACTIVE_MODIFIERS, CONDITIONS, FLAVOR, ILLNESS_WORDS, INSTRUCTION_PATTERNS, IRREGULAR, KIND_WORDS, NEAR_PREPS, NEGATORS, NUMBERS, PRONOUNS, READER_ID, REASONS, SENSES,
+  ACTIVE_MODIFIERS, CONDITIONS, FLAVOR, ILLNESS_WORDS, INSTRUCTION_PATTERNS, IRREGULAR, KIND_WORDS, MEASURE_UNITS, NEAR_PREPS, NEGATORS, NUMBERS, PRONOUNS, READER_ID, REASONS, SENSES,
   SPEECH_VERBS, STRENGTH, SUBORDINATORS, TRIGGERS, UNKNOWN_PLACES, type ReasonDef, type Sense,
 } from './lexicon.ts';
 
@@ -105,6 +105,7 @@ export function stripInstructions(text: string): { rest: string; removed: string
 }
 
 const PUNCT = new Set([',', ';', '.', '!', '?', ':']);
+const MEASURE = REASONS.find((r) => r.id === 'measure')!;
 const DETERMINERS = new Set(['the', 'a', 'an', 'our', 'every', 'each', 'all', 'no', 'this', 'that', 'these', 'those', 'its', 'their', 'his', 'her', 'my', 'your', 'any']);
 const JOINERS = new Set(['and', 'but', 'then', 'yet']);
 const SPLIT_SUBS = new Set(['when', 'whenever', 'while', 'if', 'unless', 'wherever', 'until']);
@@ -276,6 +277,10 @@ export function mentionsOf(toks: Tok[], s: RunState): Mention[] {
   for (const [w, n] of Object.entries(NUMBERS)) if (w !== 'a') add('number', w, { value: n });
   toks.forEach((t, i) => {
     if (/^\d+$/.test(t.w)) cands.push({ cat: 'number', toks: [i], at: i, end: i + 1, phrase: t.w, value: Math.min(1e6, Number(t.w)) });
+    // a number with a unit is a measure, not a count: "5000 metres high" is named as left out (the amounts are the game's own)
+    const next = toks[i + 1];
+    if (next && (/^\d+$/.test(t.w) || (t.w !== 'a' && t.w in NUMBERS)) && variants(next.w).some((v) => MEASURE_UNITS.has(v)))
+      cands.push({ cat: 'reason', toks: [i, i + 1], at: i, end: i + 2, phrase: `${t.w} ${next.w}`, reason: MEASURE });
   });
   for (const n of NEGATORS) add('negator', n);
   for (const p of PRONOUNS) add('pronoun', p);

@@ -195,6 +195,9 @@ export const STRENGTH: { phrase: string; value: number }[] = [
 
 export const NUMBERS: Record<string, number> = { one: 1, a: 1, single: 1, two: 2, pair: 2, couple: 2, three: 3, four: 4, five: 5, six: 6, ten: 10, dozen: 12, hundred: 100, thousand: 1000 };
 
+/** Units of measure after a number ("5000 metres", "minus five kilograms"): named and left out, never silently dropped. */
+export const MEASURE_UNITS = new Set(['metre', 'meter', 'm', 'centimetre', 'centimeter', 'cm', 'kilometre', 'kilometer', 'km', 'foot', 'feet', 'ft', 'inch', 'inche', 'yard', 'mile', 'league', 'kilogram', 'kilo', 'kg', 'gram', 'pound', 'lb', 'ton', 'tonne', 'degree', 'celsius', 'fahrenheit', 'litre', 'liter', 'gallon', 'mph']);
+
 export const NEGATORS = ['not', 'never', 'no', 'cannot', 'nobody', 'none', 'nothing', 'no longer', 'neither', 'nor', 'without'];
 
 /**
@@ -215,7 +218,7 @@ export const REASONS: ReasonDef[] = [
   { id: 'game', block: true, why: 'a belief is about the village, not about the game itself', phrases: ['infinite influence', 'influence', 'victory', 'declare victory', 'can never lose', 'cannot lose', 'win the game', 'game master', 'game', 'player', 'score', 'cheat', 'api key', 'developer mode', 'save file', 'delete save', 'call the tool', 'level up', 'mark this belief', 'fully supported', 'highest strength', 'maximum strength', 'max strength'] },
   { id: 'infinite_resource', block: true, why: 'nothing in the village is endless: lanterns burn fuel, food runs out', phrases: ['infinite', 'never go out', 'endless', 'unlimited', 'light themselves', 'light itself', 'never run out', 'never empty', 'refill itself', 'without using * fuel', 'without fuel', 'burn on forever', 'burn forever', 'never run dry', 'bottomless'] },
   { id: 'unbounded_spawn', block: true, why: 'no belief makes something from nothing without end: a coop holds twelve, and each chick costs food', phrases: ['without end', 'endlessly', 'infinitely', 'forever multiply'] },
-  { id: 'absolute', block: true, why: 'a belief acts on one village, night by night, and can be lost: it cannot reach everywhere or last forever', phrases: ['everywhere', 'forever', 'in the world', 'never again', 'eternally', 'for all time', 'nowhere', 'again'] },
+  { id: 'absolute', block: true, why: 'a belief acts on one village, night by night, and can be lost: it cannot reach everywhere or last forever', phrases: ['everywhere', 'forever', 'in the world', 'whole world', 'entire world', 'all the world', 'all over the world', 'across the world', 'the world over', 'never again', 'eternally', 'for all time', 'nowhere', 'again'] },
   { id: 'transform', block: true, why: 'turning one thing into another would make something from nothing; a belief can change how things behave, not what they are', phrases: ['turn into', 'turn to stone', 'transform into', 'change into', 'become a', 'turn to wine', 'turn into wine', 'turn to gold', 'turn into gold', 'turn to glass', 'turn to ice', 'turn to dust', 'turn to salt', 'turn to sand', 'turn to honey', 'turn to milk', 'turn to blood', 'turn into bread', 'turn to bread'] },
   { id: 'animals_not_modelled', block: true, why: 'this village has chickens, penned animals and wolves; no other animals are simulated', phrases: ['bee', 'cat', 'rat', 'mouse', 'mice', 'dog', 'horse', 'bird', 'crow', 'raven', 'owl', 'fish', 'frog', 'snake', 'fox', 'deer', 'pig', 'duck', 'goose', 'geese', 'insect', 'spider', 'moth', 'butterfly', 'swan', 'heron', 'cow bell'] },
   { id: 'incompatible', block: true, why: 'the village has nothing that could make that happen', phrases: ['freeze', 'frozen', 'ice', 'breathe', 'underwater', 'uphill', 'melt', 'boil', 'evaporate', 'explode', 'fly away with'] },
@@ -238,6 +241,7 @@ export const REASONS: ReasonDef[] = [
   { id: 'unknown_place', block: false, why: 'that place is not one a belief can be measured from: it can name a region or a landmark' },
   { id: 'third_clause', block: false, why: 'a balanced belief holds at most two clauses (three in Reality Lab)' },
   { id: 'too_many', block: false, why: 'numbers are bounded: the reading uses the largest the language allows' },
+  { id: 'measure', block: false, why: 'amounts are the game\'s own steps (a law lifts, lightens, warms or pulls by one to three), so a measure in metres, kilograms or degrees is left out' },
   { id: 'sky_bodies', block: false, why: 'the sun, moon and stars are not things the village can change; a clear night can still power a belief' },
   { id: 'not_here', block: false, why: 'this village does not have that, so that part cannot happen here' },
   { id: 'narrative', block: false, why: 'kept as flavour; it changes nothing in the simulation' },

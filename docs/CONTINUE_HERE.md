@@ -8,7 +8,7 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **01 V1 audit, 02 migration and baseline: VERIFIED.**
 - **03 Provider, auth and budgets: VERIFIED with mocks, a real Redis and an offline `vercel build`. LIVE: UNVERIFIED** (no
   credential exists here; `npm run ai:smoke` refuses and exits 2). **NOT DEPLOYED** (no Vercel project). Details:
-  [`AI_SETUP.md`](AI_SETUP.md), [`AI_COSTS.md`](AI_COSTS.md).
+  [`AI_SETUP.md`](AI_SETUP.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md).
 - **04 Generative belief language: VERIFIED** (engine gate). Reference: [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md).
 - **05 Interpreter and compiler: VERIFIED offline and with mocks; LIVE UNVERIFIED.** Generalisation (second held-out corpus,
   scored untuned): 51/80 labels, 13/30 supported sentences read faithfully; V1's composer on the same sentences: 34/80 and 3/30.
@@ -32,7 +32,9 @@ Read this first after any context reset, then [`../prompts/AGENT_RUNBOOK.md`](..
 - **13 MCP and tool play: VERIFIED locally** (stdio, the official SDK client, on the browser's hash); online reading through MCP
   **TESTED MOCK ONLY**; a model-powered V2 agent session NOT RUN; remote Streamable HTTP **NOT BUILT**. Reference: [`MCP_V2.md`](MCP_V2.md).
 - **14 Replay, persistence and evals: VERIFIED offline (gate met)**; LIVE evals not run. Reference: [`REPLAY_V2.md`](REPLAY_V2.md).
-- **15 Security, privacy, cost and failure: NOT STARTED. It is the next task (below).**
+- **15 Security, privacy, cost and failure: VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.**
+  References: [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md).
+- **16 Integration and release testing: NOT STARTED. It is the next task (below).**
 
 ## Last good commit / branch
 
@@ -43,8 +45,20 @@ without rewriting history, `2308bda`; it changed no files). Phase 03: `0344851`;
 (browser chains, drawing, provenance UI, docs); phase 10: `48693d1` (effect registry, lifts) and the commit after it (hen model,
 matrix, docs, `39ab15b`); phase 11: `e9d6847` (rules 2, modes, tournament, docs); phase 12: the commit after `e9d6847` (menu,
 composer draft and Stop, who tells it first, villager glance and Why?, retry in mode, phone and keyboard work, docs: `49beb00`);
-phase 13: `6ba4996` (MCP V2 tools, error kinds, online reader, stdio proof, docs); phase 14: the commit after `6ba4996`
-(ledger, saves, replay check, privacy controls, evals).
+phase 13: `6ba4996` (MCP V2 tools, error kinds, online reader, stdio proof, docs); phase 14: `c656869` (ledger, saves, replay
+check, privacy controls, evals); phase 15: the commit after `c656869` (chaos suite, physics limits, secret scan in CI, privacy
+routing, cost monitor, SECURITY/PRIVACY/COST_AND_QUOTAS).
+
+## Working files changed in phase 15
+
+New: `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts`, `scripts/scan-secrets.ts`, `scripts/ai-monitor.ts`,
+`server/ai/monitor.ts`, `docs/SECURITY.md`, `docs/PRIVACY.md`; `docs/AI_COSTS.md` renamed to `docs/COST_AND_QUOTAS.md` and rewritten.
+Changed: `src/engine/save/serialize.ts` (impossible entity counts refused at load; living-hen cap), `src/engine/reality/{lexicon,read}.ts`
+(`absolute` for "the whole world", `measure` for a number with a unit), `server/ai/sdk-provider.ts` (privacy routing; the
+`no_providers_available` error), `server/ai/{config,vercel,app,meter}.ts` (`BE_AI_ZERO_RETENTION`, routing in the status, refusals
+metered, the lease released on a refusal, spend per model, fallbacks), `src/ui/play/online.tsx` (one consent line),
+`.github/workflows/ci.yml` (full-depth checkout; the scan before the tests and after the build), `package.json` (`scan:secrets`,
+`ai:monitor`), `.env.example`, `tests/unit/{ai-app,ai-sdk-provider}.test.ts`.
 
 ## Working files changed in phase 14
 
@@ -88,7 +102,9 @@ invented laws in the atlas), `ai/bots/generic.ts` (tactics exported; staging ome
 
 ## Commands run and exact results
 
-Phase 14 (entry in [`PROGRESS.md`](PROGRESS.md)): `npm test` 56 files, 641 tests (two timing-sensitive ones need a quiet machine);
+Phase 15 (entry in [`PROGRESS.md`](PROGRESS.md)): lint and typecheck clean; `npm test` 58 files, 662 passed; the consent-touching browser specs (desktop and phone) 42 passed, 14 skipped, 0 failed; entry
+295 KB gzip of 300; the secret
+scan clean over the tree, the history and `dist/`. Phase 14: `npm test` 56 files, 641 tests (two timing-sensitive ones need a quiet machine);
 the whole Chromium suite 192 passed, 72 skipped, 0 failed; `npm run eval` (report in `docs/data/evals/`). Phase 13 (entry in [`PROGRESS.md`](PROGRESS.md)): the MCP tests 62 passed (V1's 45 unchanged); the stdio proof ends on the
 browser's state hash; `npm test` 52 files, 625 passed. In [`PROGRESS.md`](PROGRESS.md) (phase 12 entry): typecheck and lint pass; `npm test` 50 files, 608 passed; `v2-ux.spec.ts` and
 `smoke.spec.ts` 21 passed (7 skipped by design); the whole Chromium suite 189 passed, 71 skipped, 0 failed; size: entry 292 KB gzip
@@ -120,7 +136,7 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
    plan); the strongest written law in each chapter does what one of the chapter's own stories does (priced at least as high);
    Harvest's growth belief leaves about 3.5 idle days once it holds (dead time). Generated villages were not in the tournament.
    Classic is unchanged.
-3. **Entry bundle**: 292 of 300 KB gzip (phase 12 added the glance, the viewport tracker and the menu). New V2 engine code ships in the entry (it must be present wherever a day resolves). If
+3. **Entry bundle**: 295 of 300 KB gzip (measured at phase 15). New V2 engine code ships in the entry (it must be present wherever a day resolves). If
    headroom runs out, move the V2-only engine to a chunk installed before any V2 run starts (a hook in `resolve.ts`), never after.
 4. **V1's later 3D work is merged**; any further V1 change would merge the same way (procedure at the end of this file). CI now
    has a separate 3D job (software WebGL, about 30-45 minutes).
@@ -129,23 +145,27 @@ saved and the raised bank, and the same states in the 3D world (desktop-3d, phon
 7. The offline reader understands about half of unfamiliar phrasings; the model contracts are where broad comprehension and
    richer villager voices are meant to come from, and they are unmeasured until a provider is configured.
 
-## Next exact code changes (phase 15: security, privacy, cost and failure)
+## Next exact code changes (phase 16: integration and release testing)
 
-[`../prompts/15_SECURITY_PRIVACY_COST_AND_FAILURE.md`](../prompts/15_SECURITY_PRIVACY_COST_AND_FAILURE.md). Most controls exist
-since phase 03 (`server/ai/app.ts`: signed sessions, origin checks, durable atomic quotas that fail closed, spend reservations, size
-limits, one request at a time, a validated-only cache); the phase is an adversarial pass with evidence:
+[`../prompts/16_INTEGRATION_RELEASE_TESTING.md`](../prompts/16_INTEGRATION_RELEASE_TESTING.md). No credential and no deployment
+exist, so the live parts stay LIVE UNVERIFIED / NOT DEPLOYED; everything else is a test to run or add:
 
-1. **Threat model and chaos suite** (`tests/unit/security-*.test.ts`): provider missing, 429, 401, timeout, partition, invalid model
-   id, malformed or refused output, over budget, poisoned cache, quota store outage, double-tap, concurrent stale request, closed
-   session, deeply nested AST, 10k entities, expensive compound rules; 100 parallel requests from several app instances on one quota
-   store must not bypass a limit; CORS/CSRF, content types, response caching, run ownership. Unicode/BiDi, HTML and hidden payloads in
-   beliefs, dialogue, imported saves/replays and MCP inputs.
-2. **Physics limits**: AST depth, target counts, radius, per-night execution time and memory budgets enforced and tested (Lab relaxes
-   balance, never compute limits).
-3. **Secrets**: a CI secret scan (no key patterns in the tree or the built bundle; no `VITE_` AI variables); `.env.example` names only.
-4. **Cost monitor**: the operator metrics route and a dev monitor (calls, tokens, spend by model, cache hits, quota counters, p95,
-   fallbacks, budget).
-5. Docs: `docs/SECURITY.md`, `docs/PRIVACY.md`, `docs/COST_AND_QUOTAS.md` (configuration steps, mocked vs live evidence, limits).
+1. **Journeys as browser and headless tests**, each recorded with its command and seed: A Classic (inference disabled, offline: win,
+   loss, save, replay, Harvest/Ashwood, an expedition, the V1 MCP smoke; goldens unchanged); B novel laws (the hens, a material
+   change, the compound rain/fire belief, each with distinct world deltas and its 3D effect; a time-reversal sentence refused with
+   the exact clause; a full win and a full loss); C living society (six named villagers' different reactions to one statement and to
+   contradicting evidence, trust changes, a faction response; offline policy, plus the scripted provider path); D replay (a complete
+   V2 run with recorded proposals reloaded and replayed offline to the same hashes; a changed prompt/model version does not
+   reinterpret a stored AST; corrupted-save recovery); E MCP (the SDK client: propose/confirm, talk, advance, inspect, finish, replay;
+   unauthorized, stale and duplicate actions denied); F phone (WebKit 320/390/430, Chrome and Firefox smoke, keyboard viewport,
+   consent/timeout/error, focus, reduced motion, save/resume).
+2. **Test targets with real counts**: `npm run test:sim` over hundreds to thousands of seeds; 150+ interpretation fixtures (332
+   exist), 100+ cognitive cases (211 exist), 1,000+ generated simulation states without a provider; console/network checks, CSP
+   (`npm run verify:hosting`), WebGL2, bundle report, secret scan.
+3. **Docs**: `docs/FINAL_ACCEPTANCE.md` (V2 table: PASS / FAIL / UNVERIFIED per capability with command, seed, versions, screenshot
+   path) replacing V1's inherited one; `docs/RELEASE.md` (install, build, Vercel configuration, keys/OIDC by name, cost caps); the
+   README separating Classic offline from Generative Reality live, without asking anyone to paste a secret.
+4. The UI must not say "LLM enabled live" anywhere while LIVE is unverified (check every label).
 
 ## Parallel track: the 3D world
 
@@ -170,7 +190,8 @@ existing version: every run records its version and older runs must replay exact
 
 For LIVE: `BE_AI_ENABLED`, `AI_GATEWAY_API_KEY` (local) or Vercel OIDC (deployed), `BE_SESSION_SECRET`, `BE_ALLOWED_ORIGINS`,
 `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` + `KV_REST_API_TOKEN`), optionally
-`BE_AI_DAILY_BUDGET_USD`, `BE_ADMIN_TOKEN`; plus an AI Gateway budget in the Vercel dashboard. Never paste a value into a prompt,
+`BE_AI_DAILY_BUDGET_USD`, `BE_AI_CALLS_PER_DAY`, `BE_ADMIN_TOKEN`, `BE_AI_ZERO_RETENTION` (Pro/Enterprise); plus an AI Gateway
+budget in the Vercel dashboard. Never paste a value into a prompt,
 an issue, a commit or a `VITE_` variable. Steps: [`AI_SETUP.md`](AI_SETUP.md).
 
 ## Current daily inference budget / usage

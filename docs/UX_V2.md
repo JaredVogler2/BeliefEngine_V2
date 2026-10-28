@@ -95,7 +95,7 @@ to end the day) are unchanged and ignored while typing.
 |---|---|---|
 | Menu, draft (close, reopen, turn, stale), roster, glance and "Why?", Stop, outage, rate-limit wait, keyboard, retry in mode, four phone sizes | **VERIFIED in Chromium** (desktop 1366×768 and phone profile) | `tests/e2e/v2-ux.spec.ts` |
 | No serious or critical axe violations on the menu, the mode screen, the roster, the villager glance and the focused log | **VERIFIED in Chromium** | the same spec (`audit`); axe found that the Tell buttons' spoken names did not contain their visible label (WCAG 2.5.3): fixed |
-| A Generative Reality run (write, tell first, resolve a night, reload) in desktop WebKit, an iPhone 14 profile and Firefox | **IMPLEMENTED UNVERIFIED locally** (only Chromium is installed here); runs in CI's cross-browser smoke | `tests/e2e/smoke.spec.ts` |
+| A Generative Reality run (write, tell first, resolve a night, reload) in desktop WebKit, an iPhone 14 profile and Firefox | **VERIFIED in CI** (GitHub Actions run 40644114976 at `6ba4996`, job "Browser tests (Chromium)", step `npm run test:e2e:browsers`: 12 passed, the Generative smoke among them in webkit 22.6 s, iphone 11.4 s, firefox 4.3 s); not installed in this container | `tests/e2e/smoke.spec.ts` |
 | The dialog stays above the iPhone software keyboard | **UNVERIFIED** (needs a real iPhone: no emulator shows a software keyboard) | `src/ui/viewport.ts` |
 | Real iPhone Safari | **UNVERIFIED** (no hardware) | |
 | Online reading against a real model | **LIVE UNVERIFIED** (no provider configured; the simulated server and routed failures only) | |
