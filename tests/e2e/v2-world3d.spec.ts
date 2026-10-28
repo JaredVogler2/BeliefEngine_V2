@@ -62,12 +62,30 @@ test.describe('3D world (Three.js, forced on)', () => {
     await world3d(page);
     await chooseClaim(page, 'river_fears_fire');
 
-    // pick Ivo Thatcher by pointing at him in the 3D scene: the raycast answers with an engine id, the store selects it
-    const at = await villagerOnPage(page, 'ivo');
+    // pick a person by pointing at them in the 3D scene: the raycast answers with an engine id, the store selects it. The person is
+    // the one standing furthest on screen from everyone else, inside the open middle of the canvas, so no other body covers the point
+    // (people who share a tile can stand in front of each other, and how they stand depends on the frame the click lands on)
+    const who = await page.evaluate(() => {
+      const w = window as unknown as { __beRenderer: R3D; __belief: { state: { villagers: { id: string; name: string; status: string }[] } } };
+      const c = (document.querySelector('.stage canvas') as HTMLCanvasElement).getBoundingClientRect();
+      const pts = w.__belief.state.villagers
+        .filter((v) => v.status !== 'dead')
+        .map((v) => ({ id: v.id, name: v.name, p: w.__beRenderer.entityScreen('villager', v.id) }))
+        .filter((x): x is { id: string; name: string; p: { x: number; y: number } } => !!x.p);
+      const inside = pts.filter((x) => x.p.x > c.width * 0.2 && x.p.x < c.width * 0.75 && x.p.y > c.height * 0.25 && x.p.y < c.height * 0.7);
+      let best: { id: string; name: string; d: number } | null = null;
+      for (const a of inside) {
+        const d = Math.min(...pts.filter((b) => b.id !== a.id).map((b) => Math.hypot(a.p.x - b.p.x, a.p.y - b.p.y)));
+        if (!best || d > best.d) best = { id: a.id, name: a.name, d };
+      }
+      return best;
+    });
+    expect(who, 'someone stands in the open middle of the view').not.toBeNull();
+    const at = await villagerOnPage(page, who!.id);
     await page.mouse.click(at.x, at.y - 4);
     // the card beside the selection (V1's immersive HUD) names them and holds the quick actions
-    await expect(page.getByTestId('selection-pop')).toContainText('Ivo Thatcher');
-    await page.locator('.act', { hasText: 'Tell Ivo Thatcher' }).first().click();
+    await expect(page.getByTestId('selection-pop')).toContainText(who!.name);
+    await page.locator('.act', { hasText: `Tell ${who!.name}` }).first().click();
     await expect.poll(() => page.evaluate(() => (window as unknown as { __beRenderer: R3D }).__beRenderer.stats().effects), { message: 'telling a story puts an effect in the world' }).toBeGreaterThan(0);
 
     await page.getByTestId('end-day').click();
@@ -78,7 +96,7 @@ test.describe('3D world (Three.js, forced on)', () => {
     // the same actions played directly in the engine (on day 1 the first story card chosen is the opening story) give the same run:
     // the renderer observes, it never decides
     const g = GameSession.create({ scenarioId: 'redbank', seed: 1 });
-    const plan: Action[] = [{ type: 'PICK_STARTER', claim: 'river_fears_fire' }, { type: 'SEED', claim: 'river_fears_fire', target: 'ivo' }, { type: 'END_DAY' }];
+    const plan: Action[] = [{ type: 'PICK_STARTER', claim: 'river_fears_fire' }, { type: 'SEED', claim: 'river_fears_fire', target: who!.id }, { type: 'END_DAY' }];
     for (const a of plan) expect(g.act(a).ok, JSON.stringify(a)).toBe(true);
     const st = await browserState(page);
     expect(st.day).toBe(2);
