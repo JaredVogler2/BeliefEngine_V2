@@ -6,7 +6,6 @@ import { validateRealityAst, LAB_LIMITS, LIMITS, type Clause, type Condition, ty
 import { balanceReality, type Rating } from './balance.ts';
 import { groundAst } from './ground.ts';
 import { ANCHOR_LABEL, KINDS } from './ontology.ts';
-import { OPERATORS } from './operators.ts';
 
 /**
  * From a validated AST v2 to a claim the game can run, and the honest preview the player confirms. The composer, MCP tools and
@@ -26,7 +25,7 @@ export interface RealityDraft {
   mechanics: string[];
   /** what has to physically happen for it to act */
   requires: string[];
-  /** the costs the world charges (operator downsides) */
+  /** what else it does to the world, as the engine plays it (sideEffectsOf) */
   risks: string[];
   /** what the balance changed and why */
   adjustments: string[];
@@ -158,6 +157,45 @@ export function clauseText(s: RunState, c: Clause, regions: string[]): string {
   return `${when}${dur}: ${selectorText(s, c.target, regions)} ${effectText(s, c)}.`;
 }
 
+/** What else a clause does to the world, exactly as the engine plays it: never more than it does. */
+export function sideEffectsOf(s: RunState, c: Clause, regions: string[]): string[] {
+  const e = c.effect;
+  const dest = (toward: string | null) => regionName(s, toward ?? regions.find((r) => r !== 'river') ?? regions[0]);
+  switch (e.op) {
+    case 'APPLY_FORCE':
+      return e.direction === 'up'
+        ? [`On a windy night a lift of 2 or more carries them downwind, across the river if it blows that way: a stray lays no eggs and walks home only over a standing bridge (on a still night a lifted stray flies home).`]
+        : ['Pushed hens can be driven into floodwater, where they drown.'];
+    case 'REDIRECT_FLOW':
+      return e.mode === 'attract' ? ['Water drawn in stands deeper on the ground around each source: homes there flood worse.'] : [`It spares only the ground within ${e.radius} tile${e.radius === 1 ? '' : 's'} of each source; the river rises as high everywhere else.`];
+    case 'WEATHER_MODIFIER':
+      if (e.mode === 'repel') return [];
+      return [s.scn.features.crops ? `The rain lands on ${dest(e.toward)}, where its fields drink it.` : `The rain lands on ${dest(e.toward)}: up to ${6 * e.magnitude} of its lowest dry tiles stand a tile deep, and homes there take flood damage.`];
+    case 'RELOCATE_RESOURCE':
+      return [`The water lands on ${regionName(s, e.toward)}: up to ${6 * e.magnitude} of its lowest dry tiles stand a tile deep, and homes there take flood damage.`];
+    case 'SET_MATERIAL_PROPERTY':
+      return e.property === 'mass' && e.delta < 0 ? ['A stone made light that stands in floodwater floats off and rams the bridge (6 integrity each).'] : [];
+    case 'ALTER_TEMPERATURE':
+      return e.delta < 0
+        ? ['The hearths warm less: children, elders and anyone run down lose health each night it acts.', ...(e.delta <= -2 ? ['The river fears a cooler fire less: flood wards kept by lit beacons or smoke fires stand a step lower those nights.'] : [])]
+        : ['Fires that start burn homes harder.'];
+    case 'CHANGE_LIGHT':
+      return e.delta > 0 ? ['Brighter lanterns burn their fuel twice as fast.'] : [];
+    case 'MOVE_TOWARD':
+      return c.target.kind === 'wolf' ? ['Lured packs come exactly where the source stands.'] : c.target.kind === 'water' ? ['Water drawn in stands deeper on the ground around each source.'] : [];
+    case 'MODIFY_VISIBILITY':
+      return e.delta > 0 ? ['Packs are drawn to what is shown to them.'] : [];
+    case 'MODIFY_MOVEMENT':
+      return e.delta > 0 ? [c.target.kind === 'fire' ? 'Faster flames spread further.' : 'Faster packs arrive sooner.'] : [];
+    case 'INFLUENCE_MOTIVATION':
+      return e.motive === 'diligence' ? [] : ['Calmer people are harder to convince of anything, your stories included (fear makes people listen).'];
+    case 'SPAWN_BOUNDED_ENTITY':
+      return ['Each chick costs one food from the store; a coop holds at most twelve.'];
+    default:
+      return [];
+  }
+}
+
 function requiresOf(s: RunState, ast: RealityAst): string[] {
   const out = new Set<string>();
   const walk = (t: Trigger) => {
@@ -221,7 +259,7 @@ export function buildRealityClaim(s: RunState, astIn: unknown, opts: { title?: s
     if (e) electorate[r] = e;
   }
   const mechanics = ast.clauses.map((c) => clauseText(s, c, ast.regions));
-  const risks = [...new Set(ast.clauses.map((c) => OPERATORS[c.effect.op].downside).filter(Boolean))];
+  const risks = [...new Set(ast.clauses.flatMap((c) => sideEffectsOf(s, c, ast.regions)))];
   const rev = opts.rev ?? s.nextEventId;
   const unlockDay = realityUnlockDay(s, ast);
   if (unlockDay !== undefined && s.day < unlockDay) notes.push(`The village will take this up on day ${unlockDay}: the chapter holds back its own answer of this kind until then, and a written one cannot jump the queue.`);

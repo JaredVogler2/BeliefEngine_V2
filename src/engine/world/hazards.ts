@@ -10,6 +10,7 @@ import { runSickness } from './sickness.ts';
 import { runWolves } from './wolves.ts';
 import { landmarkAtTile, runFire } from './fire.ts';
 import { T, idx } from './grid.ts';
+import { poolSinks } from '../reality/project.ts';
 
 function lawsFor(s: RunState, subjects: string[]): string[] {
   const out: string[] = [];
@@ -70,18 +71,13 @@ export function runNight(ctx: Ctx, mods: Modifiers): void {
         });
     }
     // Generative Reality moves water by volume: each step is six tile-depths, laid one deep on the region's lowest dry ground
-    for (const sink of mods.sinks ?? []) {
-      const tiles: number[] = [];
-      for (let i = 0; i < w.region.length; i++) if (w.regions[w.region[i]]?.id === sink.region && w.terrain[i] !== T.RIVER && water[i] === 0) tiles.push(i);
-      tiles.sort((a, b) => w.elev[a] - w.elev[b] || a - b);
-      const pooledTiles = tiles.slice(0, 6 * sink.amount);
-      for (const i of pooledTiles) water[i] += 1;
-      if (pooledTiles.length)
+    for (const pool of poolSinks(w, water, mods.sinks ?? []))
+      if (pool.tiles.length)
         emit(ctx, {
           step: 'hazard', code: 'WATER_POOLED', importance: 2,
-          text: `Water moved by belief pools on the low ground of ${w.regions.find((r) => r.id === sink.region)?.name ?? sink.region}: ${pooledTiles.length} tiles stand a tile deep.`,
+          ...(pool.laws[0] ? { law: pool.laws[0], claim: s.laws.find((l) => l.id === pool.laws[0])?.claimId } : {}),
+          text: `Water moved by belief pools on the low ground of ${w.regions.find((r) => r.id === pool.region)?.name ?? pool.region}: ${pool.tiles.length} tiles stand a tile deep.`,
         });
-    }
   }
   w.water = water;
 

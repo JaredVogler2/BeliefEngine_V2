@@ -361,7 +361,8 @@ interface Draft {
   conds: { test: string; words: string }[];
   near: { anchor: string; radius: number; words: string } | null;
   place: { region: string; words: string } | null;
-  toward: { region: string; words: string } | null;
+  /** where moved rain or water goes; `kind` when the words named a kind of place ("the orchard") rather than a region */
+  toward: { region: string; words: string; kind?: 'field' | 'home' } | null;
   strength: number | null;
   count: number | null;
   problem: string | null;
@@ -489,7 +490,7 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       // "the orchard hungers for thunder": the rain comes to the place that wants it
       take(objFit, 'rain', towardSense);
       const r = regionWith(s, subj.kind);
-      if (r) d.toward = { region: r, words: wordsOf(subj) };
+      if (r) d.toward = { region: r, words: wordsOf(subj), kind: subj.kind };
     } else if (subj?.cat === 'kind' && subj.kind && !objFit && inG.some((m) => m.cat === 'pronoun' && m.at > senseM.at)) {
       // "the wolves have trouble finding them": the subject does not fit, so the pronoun is what changes; which thing is it?
       const pron = inG.find((m) => m.cat === 'pronoun' && m.at > senseM.at)!;
@@ -582,7 +583,7 @@ export function readBelief(s: RunState, raw: string, optsIn: ReadOptions = {}): 
       else if (m.cat === 'number' && m.value) d.count = m.value;
       else if (m.cat === 'kind' && m.kind && d.sense?.toward && m.at > d.senseM.at && (m.kind === 'field' || m.kind === 'home')) {
         const r = regionWith(s, m.kind);
-        if (r) d.toward = { region: r, words: wordsOf(m) };
+        if (r) d.toward = { region: r, words: wordsOf(m), kind: m.kind };
       } else if (m.cat === 'kind' && m.kind && sourceOf(m) && m.kind !== d.kind && g === d.seg) {
         // a lantern named beside a change it does not undergo powers it ("the river dreams of lamplight and bends toward it")
         const ev = sourceOf(m)!;
@@ -937,6 +938,17 @@ function assemble(s: RunState, text: string, use: { d: Draft; clause: Clause }[]
   for (const u of use) {
     const t = triggerOf(u.d);
     if (t.assumed && !assumed.includes(t.assumed) && !extra.some((x) => x.startsWith('powered by'))) assumed.push(t.assumed);
+  }
+  // a kind of place the village does not literally have ("the orchard" where there are only fields) is read as the nearest thing
+  // it does have, and the player is told which
+  for (const u of use) {
+    const tw = u.d.toward;
+    if (!tw?.kind) continue;
+    const head = tw.words.toLowerCase().split(/\s+/).pop() ?? '';
+    const literal = tw.kind === 'field' ? /^(field|fields|crop|crops)$/ : /^(home|homes|house|houses)$/;
+    if (literal.test(head) || s.world.landmarks.some((l) => l.district === tw.region && l.name.toLowerCase().includes(head.replace(/s$/, '')))) continue;
+    const note = `“${tw.words}”: read as the ${tw.kind === 'field' ? 'fields' : 'homes'} of ${s.world.regions.find((r) => r.id === tw.region)?.name ?? tw.region} (this village has no ${head.replace(/s$/, '')} of its own)`;
+    if (!assumed.includes(note)) assumed.push(note);
   }
   const omitted: Omission[] = [];
   if (removed.length) omitted.push({ text: removed.join(' … ').slice(0, 120), reason: 'unsupported', why: REASONS.find((r) => r.id === 'instruction')!.why });

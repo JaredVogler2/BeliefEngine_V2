@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MAX_REALITY_CLAIMS, previewAction } from '../../engine/index.ts';
 import type { RunState } from '../../engine/index.ts';
 import { readBelief, type ReadCandidate, type Reading } from '../../engine/reality/read.ts';
+import { describeDraft } from '../../engine/reality/preview.ts';
 import { aiClient, type ReadingMeta } from '../../ai/client.ts';
 import { V2_FEATURES } from '../../v2/features.ts';
 import { Modal } from '../components.tsx';
@@ -20,7 +21,7 @@ const KIND: Record<Reading['kind'], { cls: string; label: string }> = {
 
 const RATING_WORD = { light: 'A light belief', moderate: 'A moderate belief', strong: 'A strong belief' } as const;
 
-const EXAMPLES = ['Chickens fly when the bell rings.', 'Wet stone becomes light beside lanterns.', 'At night, bell ringing pulls rain toward the fields and makes local flames burn weaker.'];
+const EXAMPLES = ['Chickens fly when the bell rings.', 'Wet stone becomes light beside lanterns.', 'At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.'];
 
 function candidatesOf(r: Reading | null): ReadCandidate[] {
   if (!r) return [];
@@ -222,10 +223,30 @@ export default function RealityCompose() {
                               <ul style={{ margin: '0.2rem 0' }}>{d.omitted.map((x, j) => <li key={j}>“{x.text}”: {x.why}</li>)}</ul>
                             </div>
                           )}
-                          <p style={{ margin: '0.2rem 0' }}><b>To work it needs:</b> {d.requires.join(' ')}</p>
-                          <p style={{ margin: '0.2rem 0' }} data-testid="reality-support"><b>Support:</b> at least {d.support.percent}% of the villagers where it acts, and {d.support.believers} firm believers, before it can become real.</p>
-                          <p style={{ margin: '0.2rem 0' }}><b>Cost:</b> {d.cost.compose} Influence to write it, then {d.cost.perTelling} each time you tell someone.</p>
-                          {d.risks.length > 0 && <ul className="warn-list" style={{ margin: '0.2rem 0' }} data-testid="reality-risks">{d.risks.map((r, j) => <li key={j}>{r}</li>)}</ul>}
+                          {(() => {
+                            const x = describeDraft(state, d);
+                            return (
+                              <>
+                                <div data-testid="reality-plan">
+                                  <b>What it acts on, and when:</b>
+                                  <ul style={{ margin: '0.2rem 0' }}>
+                                    {x.plan.map((p) => (
+                                      <li key={p.id} data-testid={`reality-plan-${p.id}`}>
+                                        <b>{p.target}</b>{p.count !== null ? ` (${p.count} here now)` : ''}, {p.reach}; {p.duration}. Set off when {p.catalyst}:{' '}
+                                        <span className={`chip ${p.ready.now ? 'good' : ''}`} data-testid={`reality-ready-${p.id}`}>{p.ready.now ? 'could act tonight' : 'not tonight yet'}</span>
+                                        <span className="muted"> {p.ready.why}.</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <p style={{ margin: '0.2rem 0' }} data-testid="reality-support"><b>Support:</b> at least {x.threshold.percent}% of the {x.threshold.voters} villagers who vote on it in {x.threshold.where}, and {x.threshold.believers} firm believers, before it can become real; it fades if support falls below {x.threshold.off}%. Nothing else can make it real: not a reading, not a model, only belief and what sets it off.</p>
+                                <div data-testid="reality-upkeep"><b>Keeping it working:</b><ul style={{ margin: '0.2rem 0' }}>{x.upkeep.map((u, j) => <li key={j}>{u}</li>)}</ul></div>
+                                <p style={{ margin: '0.2rem 0' }}><b>Cost:</b> {d.cost.compose} Influence to write it, then {d.cost.perTelling} each time you tell someone.</p>
+                                {d.risks.length > 0 && <div><b>What else it does:</b><ul className="warn-list" style={{ margin: '0.2rem 0' }} data-testid="reality-risks">{d.risks.map((r, j) => <li key={j}>{r}</li>)}</ul></div>}
+                                {x.opposition.length > 0 && <div data-testid="reality-opposition"><b>Who may push back:</b><ul style={{ margin: '0.2rem 0' }}>{x.opposition.map((o, j) => <li key={j}>{o}</li>)}</ul></div>}
+                              </>
+                            );
+                          })()}
                           {d.adjustments.length > 0 && <ul className="small muted" data-testid="reality-adjustments" style={{ margin: '0.2rem 0' }}>{d.adjustments.map((a, j) => <li key={j}>{a}</li>)}</ul>}
                           {[...c.assumed, ...d.notes].length > 0 && <ul className="small muted" style={{ margin: '0.2rem 0' }} data-testid="reality-assumed">{[...c.assumed, ...d.notes].map((a, j) => <li key={j}>{a}</li>)}</ul>}
                           <label className="field" style={{ margin: '0.3rem 0' }}>

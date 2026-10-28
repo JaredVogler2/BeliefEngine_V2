@@ -43,8 +43,8 @@ export interface Modifiers {
   homeFireCut?: Record<string, number>;
   /** villagers fire cannot hurt tonight */
   fireproof?: string[];
-  /** water moved by reality laws onto the low ground of a region (in addition to `sinkPool`) */
-  sinks?: { region: string; amount: number }[];
+  /** water moved by reality laws onto the low ground of a region (in addition to `sinkPool`), with the laws that moved it */
+  sinks?: { region: string; amount: number; laws?: string[] }[];
   /** tiles a pack may move beyond its usual steps (negative: slower), -2..2 */
   wolfStepDelta?: number;
 }

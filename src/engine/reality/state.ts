@@ -134,6 +134,13 @@ export function initReality(s: RunState, lab = false): RealityState {
   const candidates = banks.length ? banks : w.landmarks.filter((l) => l.kind === 'mill' || l.kind === 'field').flatMap((l) => { const b = besideLandmark(w, l, taken); return b ? [idx(w, b.x, b.y)] : []; });
   const want = Math.min(MAX_STONES, Math.max(4, Math.round(candidates.length / 6)));
   const picked = new Set<number>();
+  // the bank is mended where the lanterns mark its weak places: the nearest stretch of bank within two tiles of each lantern keeps a
+  // stone pulled from the river (at most half of them); the rest lie wherever the river left them
+  for (const b of w.landmarks.filter((l) => l.kind === 'beacon').sort((a, c) => (a.id < c.id ? -1 : 1))) {
+    if (picked.size >= Math.floor(want / 2)) break;
+    const near = candidates.filter((i) => !picked.has(i) && Math.hypot((i % w.w) - b.x, Math.floor(i / w.w) - b.y) <= 2.5).sort((a, c) => Math.hypot((a % w.w) - b.x, Math.floor(a / w.w) - b.y) - Math.hypot((c % w.w) - b.x, Math.floor(c / w.w) - b.y) || a - c);
+    if (near.length) picked.add(near[0]);
+  }
   for (let k = 0; k < 4 * want && picked.size < want && candidates.length; k++) picked.add(candidates[Math.floor(rand(s.seed, 'reality-stone', k) * candidates.length)]);
   [...picked].sort((a, b) => a - b).forEach((i) => st.stones.push({ id: `stone${st.nextId++}`, x: i % w.w, y: Math.floor(i / w.w), base: 2 + randInt(s.seed, 'reality-stone-mass', 3, i), wet: 0, state: 'loose' }));
   return st;

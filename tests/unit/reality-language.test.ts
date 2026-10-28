@@ -238,7 +238,10 @@ describe('grounding in the actual village', () => {
     expect(d.mechanics[0]).toMatch(/When the bell is rung/);
     expect(d.mechanics[1]).toMatch(/fire damage cut by up to 50%/);
     expect(d.requires.join()).toMatch(/rings the bell/);
-    expect(d.risks.join()).toMatch(/moved, not made/);
+    // what else it does, exactly as the engine plays it: the rain pools on Eastbank's low ground, the hearths cool, fire wards sink
+    expect(d.risks.join()).toMatch(/rain lands on Eastbank: up to 12 of its lowest dry tiles stand a tile deep/);
+    expect(d.risks.join()).toMatch(/hearths warm less/);
+    expect(d.risks.join()).toMatch(/flood wards kept by lit beacons or smoke fires stand a step lower/);
     expect(d.omitted[0].text).toBe('the orchard');
     expect(d.support.percent).toBeGreaterThanOrEqual(60);
     expect(d.cost.compose).toBeGreaterThanOrEqual(1);

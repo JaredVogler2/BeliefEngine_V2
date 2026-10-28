@@ -85,7 +85,10 @@ export function realityNight(ctx: Ctx, plan: RealityPlan): void {
   let drowned = 0;
   let taken = 0;
   let strayed = 0;
+  let flewHome = 0;
+  let liftBy: { law: string; claim: string } | undefined;
   const savedBy = new Map<string, { law: string; claim: string; x: number; y: number; n: number }>();
+  const homeBy = new Map<string, { law: string; claim: string; x: number; y: number; n: number }>();
   const huntsLeft = new Map<string, number>();
   const packs = s.scn.features.wolves ? w.packs.slice(0, Math.min(w.packs.length, th?.pack ?? 0)) : [];
   for (const c of v2.chickens) {
@@ -107,13 +110,24 @@ export function realityNight(ctx: Ctx, plan: RealityPlan): void {
       const n = Math.max(Math.abs(pushv[0]), Math.abs(pushv[1]));
       for (let k = 0; k < n; k++) if (!step(k < Math.abs(pushv[0]) ? Math.sign(pushv[0]) : 0, k < Math.abs(pushv[1]) ? Math.sign(pushv[1]) : 0, lift > 0)) break;
     }
-    if (lift >= 2 && wind >= 2) for (let k = 0; k < wind - 1; k++) step(dir, 0, true);
     const coop = v2.coops.find((k) => k.id === c.coop);
+    const drifting = lift >= 2 && wind >= 2;
+    // a stray lifted on a still night flies home, over the river if it must; on foot it can cross only by the bridge
+    if (lift > 0 && c.stray && coop && !drifting) {
+      for (let k = 0; k < 3 * lift && (c.x !== coop.x || c.y !== coop.y); k++) step(Math.sign(coop.x - c.x), Math.sign(coop.y - c.y), true);
+      if (regionAt(w, c.x, c.y) === coop.region) {
+        flewHome++;
+        const by = it.by[c.id];
+        if (by) homeBy.set(by.law, { law: by.law, claim: by.claim, x: c.x, y: c.y, n: (homeBy.get(by.law)?.n ?? 0) + 1 });
+      }
+    }
+    if (drifting) for (let k = 0; k < wind - 1; k++) step(dir, 0, true);
     const wasStray = c.stray;
     c.stray = !!coop && regionAt(w, c.x, c.y) !== coop.region && w.terrain[idx(w, c.x, c.y)] !== T.RIVER;
     if (c.stray && !wasStray) strayed++;
     if (lift > 0) {
       lifted++;
+      liftBy ??= it.by[c.id];
       const deep = w.water[idx(w, c.x, c.y)] >= 1 || (coop ? w.water[idx(w, coop.x, coop.y)] >= 1 : false);
       if (deep) {
         saved++;
@@ -139,10 +153,15 @@ export function realityNight(ctx: Ctx, plan: RealityPlan): void {
       taken++;
     }
   }
-  if (lifted) emit(ctx, { step: 'hazard', code: 'CHICKENS_ROSE', importance: saved ? 3 : 2, text: `${lifted} chicken${lifted === 1 ? '' : 's'} rose into the night air${saved ? `; ${saved} rode out water that would have drowned them` : ''}${strayed ? `, and the wind carried ${strayed} across the river` : ''}.` });
+  if (lifted) emit(ctx, { step: 'hazard', code: 'CHICKENS_ROSE', importance: saved ? 3 : 2, ...(liftBy ? { law: liftBy.law, claim: liftBy.claim } : {}), text: `${lifted} chicken${lifted === 1 ? '' : 's'} rose into the night air${saved ? `; ${saved} rode out water that would have drowned them` : ''}${strayed ? `, and the wind carried ${strayed} across the river` : ''}.` });
   if (drowned) emit(ctx, { step: 'hazard', code: 'CHICKENS_DROWNED', importance: 2, text: `${drowned} chicken${drowned === 1 ? '' : 's'} drowned in the floodwater.` });
   if (taken) emit(ctx, { step: 'hazard', code: 'CHICKENS_TAKEN', importance: 2, text: `The wolves took ${taken} chicken${taken === 1 ? '' : 's'}.` });
+  if (flewHome) {
+    const by = [...homeBy.values()][0];
+    emit(ctx, { step: 'hazard', code: 'STRAYS_FLEW_HOME', importance: 2, ...(by ? { law: by.law, claim: by.claim } : {}), text: `${flewHome} stray hen${flewHome === 1 ? '' : 's'} flew home across the river in the still night air.` });
+  }
   for (const v of savedBy.values()) credit(ctx, v.law, v.claim, v.x, v.y, `watched ${v.n} hen${v.n === 1 ? '' : 's'} fly clear of the flood`);
+  for (const v of homeBy.values()) credit(ctx, v.law, v.claim, v.x, v.y, `saw ${v.n} stray hen${v.n === 1 ? '' : 's'} fly home over the river`);
 
   // stones: wetness for tomorrow, and light stones in floodwater float off against the bridge
   const raining = (th?.rain ?? 0) > 0;

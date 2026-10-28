@@ -68,25 +68,25 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
     id: 'APPLY_FORCE', family: 'dynamics', label: 'push or lift', targets: ['chicken'],
     params: [{ name: 'direction', kind: 'enum', values: ['up', 'away', 'toward'] }, MAG],
     executes: true, tickOrder: 40, weight: 6, persistence: 'temporary', property: 'altitude',
-    downside: 'what flies or is pushed can be carried off by the wind and land where nobody can reach it (stones are not thrown: a belief changes their weight)', visual: 'force_lift',
+    downside: 'what is lifted drifts with a strong wind, across the river if it blows that way (a stray walks home only over a standing bridge); pushed hens can be driven into floodwater', visual: 'force_lift',
   },
   REDIRECT_FLOW: {
     id: 'REDIRECT_FLOW', family: 'hydrology', label: 'turn floodwater', targets: ['water'],
     params: [{ name: 'mode', kind: 'enum', values: ['repel', 'attract', 'slow'] }, MAG, RADIUS],
     executes: true, tickOrder: 10, weight: 8, persistence: 'temporary', property: 'flow',
-    downside: 'water kept from one place goes somewhere else; drawing it in floods what is near the source', visual: 'water_shield',
+    downside: 'drawing water in floods the ground near the source; turning it aside spares only the ground within reach (the river rises as high everywhere else)', visual: 'water_shield',
   },
   WEATHER_MODIFIER: {
     id: 'WEATHER_MODIFIER', family: 'weather', label: 'move the rain', targets: ['rain'],
     params: [{ name: 'mode', kind: 'enum', values: ['attract', 'repel', 'redirect'] }, MAG, { name: 'toward', kind: 'region', nullable: true }],
     executes: true, tickOrder: 5, weight: 9, persistence: 'temporary', property: 'level',
-    downside: 'rain is moved, not made: the water lands on the low ground of the region it is sent to', visual: 'rain_bend',
+    downside: 'rain is moved, not made: where no crops drink it, it pools on the low ground of the region it is sent to', visual: 'rain_bend',
   },
   SET_MATERIAL_PROPERTY: {
     id: 'SET_MATERIAL_PROPERTY', family: 'materials', label: 'change what a thing is made like', targets: ['stone', 'home', 'bridge', 'field'],
     params: [{ name: 'property', kind: 'enum', values: ['mass', 'flammability', 'hardness'] }, DELTA],
     executes: true, tickOrder: 20, weight: 6, persistence: 'temporary', property: 'mass',
-    downside: 'light stones float off in floodwater and batter whatever is downstream; what burns less may also rot or crack', visual: 'material_glow',
+    downside: 'a stone made light that stands in floodwater floats off and rams the bridge', visual: 'material_glow',
   },
   TRANSFORM_MATERIAL: {
     id: 'TRANSFORM_MATERIAL', family: 'materials', label: 'turn one thing into another', targets: ['stone', 'home', 'bridge', 'field', 'water'],
@@ -97,7 +97,7 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
   GROW_ENTITY: {
     id: 'GROW_ENTITY', family: 'growth', label: 'make crops grow', targets: ['field'],
     params: [MAG], executes: true, tickOrder: 30, weight: 6, persistence: 'temporary', property: 'growth',
-    downside: 'faster crops need more hands at harvest and more water in a drought', visual: 'crop_grow',
+    downside: 'none beyond its price: faster crops are still harvested only by the people working the field', visual: 'crop_grow',
   },
   DECAY_ENTITY: {
     id: 'DECAY_ENTITY', family: 'growth', label: 'make crops wither', targets: ['field'],
@@ -107,7 +107,7 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
   ALTER_TEMPERATURE: {
     id: 'ALTER_TEMPERATURE', family: 'thermal', label: 'make flames hotter or cooler', targets: ['fire'],
     params: [DELTA], executes: true, tickOrder: 25, weight: 6, persistence: 'temporary', property: 'heat',
-    downside: 'hotter flames destroy more; cooler ones also make the beacons and hearths weaker comfort', visual: 'heat_shimmer',
+    downside: 'hotter flames destroy more; cooler ones warm the hearths less (the weak lose health), and clearly cooler flames lower the flood wards fire keeps', visual: 'heat_shimmer',
   },
   CHANGE_LIGHT: {
     id: 'CHANGE_LIGHT', family: 'light', label: 'make lantern light reach further or shorter', targets: ['lantern'],
@@ -118,22 +118,22 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
   MODIFY_DURABILITY: {
     id: 'MODIFY_DURABILITY', family: 'structure', label: 'make it stronger or weaker', targets: ['bridge', 'home'],
     params: [DELTA], executes: true, tickOrder: 15, weight: 8, persistence: 'temporary', property: 'durability',
-    downside: 'a structure the village trusts too much draws crowds onto it', visual: 'structure_glow',
+    downside: 'none beyond its price: a weaker structure is the harm itself', visual: 'structure_glow',
   },
   MODIFY_VISIBILITY: {
     id: 'MODIFY_VISIBILITY', family: 'light', label: 'hide or reveal homes and pens from wolves', targets: ['home', 'livestock'],
     params: [DELTA], executes: true, tickOrder: 12, weight: 6, persistence: 'temporary', property: 'visibility',
-    downside: 'a pack that cannot find one place hunts the next', visual: 'veil',
+    downside: 'a hidden pen or home is spared, not the pack: it waits at the edge of what it cannot find', visual: 'veil',
   },
   MODIFY_MOVEMENT: {
     id: 'MODIFY_MOVEMENT', family: 'movement', label: 'make it move faster or slower', targets: ['fire', 'wolf'],
     params: [DELTA], executes: true, tickOrder: 18, weight: 5, persistence: 'temporary', property: 'speed',
-    downside: 'slowed flames smoulder where they are instead of burning out; slowed packs linger near the village longer (water is slowed by turning its flow)', visual: 'slow_ripple',
+    downside: 'faster flames spread further and faster packs arrive sooner (water is slowed by turning its flow)', visual: 'slow_ripple',
   },
   MOVE_AWAY: {
     id: 'MOVE_AWAY', family: 'movement', label: 'drive away from the source', targets: ['wolf', 'water', 'chicken'],
     params: [MAG, RADIUS], executes: true, tickOrder: 11, weight: 7, persistence: 'temporary', property: 'position',
-    downside: 'what is driven from one place ends up in another', visual: 'repel_ring',
+    downside: 'what is driven off waits at the edge of the warded ground', visual: 'repel_ring',
   },
   MOVE_TOWARD: {
     id: 'MOVE_TOWARD', family: 'movement', label: 'draw toward the source', targets: ['wolf', 'water', 'chicken'],
@@ -168,7 +168,7 @@ export const OPERATORS: Record<OpId, OperatorDef> = {
     id: 'GIVE_STATUS_EFFECT', family: 'status', label: 'protect people or homes from one harm', targets: ['villager', 'home'],
     params: [{ name: 'status', kind: 'enum', values: ['fireproof', 'sick_resistant', 'warm'] }, MAG],
     executes: true, tickOrder: 55, weight: 7, persistence: 'temporary', property: 'health',
-    downside: 'people who feel protected take more risks: they linger where the danger is', visual: 'ward',
+    downside: 'none beyond its price and its upkeep: the protection lasts only the nights the belief acts', visual: 'ward',
   },
 };
 

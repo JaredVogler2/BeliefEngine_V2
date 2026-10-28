@@ -3,6 +3,7 @@ import { allClaimDefs, claimDef, findLandmark, findVillager, landmark } from '..
 import { hashKeys } from '../core/rng.ts';
 import type { Landmark, RunState, Villager } from '../core/types.ts';
 import { computeModifiers } from '../laws/effects.ts';
+import { poolSinks, projectReality } from '../reality/project.ts';
 import { computeWater } from '../world/flood.ts';
 import { idx } from '../world/grid.ts';
 import { bfsDist, passableMask } from '../world/nav.ts';
@@ -29,11 +30,18 @@ export function placeVillager(v: Villager, lm: Landmark, slot = 0): void {
   v.place = lm.id;
 }
 
-/** Predicted flood depth per tile tonight given everything currently committed (lit beacons, active laws, rung bells). */
+/**
+ * Predicted flood depth per tile tonight given everything currently committed (lit beacons, active laws, rung bells). In a
+ * Generative Reality run this includes what written beliefs will do to the water (turned, drawn in, moved onto low ground, a bank
+ * raised by stones at dusk); in Classic it is exactly V1's prediction.
+ */
 export function predictedWater(s: RunState): number[] {
   const L0 = s.threat[Math.min(s.day, s.threat.length) - 1]?.level ?? 0;
   const mods = computeModifiers(s);
-  return computeWater(s.world, Math.max(0, L0 + mods.levelDelta), mods.floodShield);
+  projectReality(s, mods);
+  const water = computeWater(s.world, Math.max(0, L0 + mods.levelDelta), mods.floodShield);
+  if (mods.sinks?.length && s.scn.features.flood && L0 > 0) poolSinks(s.world, water, mods.sinks);
+  return water;
 }
 
 export function homeLandmark(s: RunState, v: Villager): Landmark | undefined {
