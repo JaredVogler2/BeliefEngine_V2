@@ -22,7 +22,7 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 15 Security, privacy, cost and failure | **VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.** Threat model with every attack mapped to a control and a test; a chaos suite (hostile text, hostile structures, a heavier compute load than play can reach, physics limits, double taps, stale confirmations, session scopes, CORS and caching headers, a cold start); the secret scan runs in CI over every tracked file, every commit and the built site; gateway privacy routing (no training always, zero retention by setting); an operator cost monitor. Found and fixed four defects (entry) | [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), entry below, `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts` |
 | 16 Integration and release testing | **Integrated but not live-tested: the six journeys PASS offline and with scripted providers (A Classic offline, B novel laws, C living society, D replay, E MCP over stdio, F phone sizes in Chromium and CI WebKit); V2 runs at scale replay exactly from stored model outputs; LIVE UNVERIFIED; NOT DEPLOYED** | [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md), [`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md), entry below |
 | 17 Adversarial fun review | **Review done; two P0 and five P1 fixed and VERIFIED offline, with mocks and in Chromium; FUN SUBJECTIVE/UNVERIFIED (no playtest); LIVE UNVERIFIED; NOT DEPLOYED.** A model could swap what a sentence's change is (289 of 292 swapped readings trusted → 11); the composer's price was not always the charge (4 of 72 → 0 of 108); written-belief rules 3 price a ward around every home for the ground it covers; ideas, offers, flavour and wording fixed; a first-time player's sentence is understood 35 of 69 times (blind held-out set). V2 is not complete: LIVE, deployment, a playtest and the premium 3D look remain | [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md), [`data/fun-review-v2/`](data/fun-review-v2/), [`data/tournament-v2/`](data/tournament-v2/) `rules3-*`, `tests/unit/reality-rules3.test.ts`, `tests/e2e/v2-review.spec.ts`, [`screenshots/v2-phase17/`](screenshots/v2-phase17/) |
-| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stage 1 IN PROGRESS (wolf packs, fire, smoke and ash drawn, and a lost graphics context told to the player: VERIFIED in Chromium on software WebGL; GPU UNVERIFIED; the forecast and the social lens reach the 3D world since stage 0; high contrast, labels and console warnings NOT STARTED); stages 2-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
+| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stage 1 IN PROGRESS (wolf packs, fire, smoke and ash drawn, and a lost graphics context told to the player: VERIFIED in Chromium on software WebGL; GPU UNVERIFIED; the forecast and the social lens reach the 3D world since stage 0; a console-warning watcher keeps `v2-world3d.spec.ts` at zero warnings; high contrast, labels and particle size from the viewport NOT STARTED); stages 2-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
@@ -70,10 +70,20 @@ Context loss and density (second commit): `v2-world3d.spec.ts` "a lost graphics 
 the 2D smoke, Redbank route, mobile and resilience specs on desktop and phone: 29 passed, 9 skipped by design.
 
 The social lens, which the plan listed as missing in 3D, has been drawn since stage 0's merge (`effects.ts`); a new check in
-`v2-world3d.spec.ts` (the Social button adds standing ribbons and takes them away) passed on desktop-3d.
+`v2-world3d.spec.ts` (the Social button adds standing ribbons and takes them away, counted by `World3D.lensInfo()`) passed on desktop-3d.
+
+**Console warnings** (third commit): `v2-world3d.spec.ts` now fails on any console warning (the GPU driver's own "GPU stall due to
+ReadPixels" notes excepted). It found three things, all fixed: the tests' `mapPainted` read the canvas two hundred times (one read now);
+the lens check compared the world's whole effect count, which ambient smoke moves (a lens count now); and a restored context asked WebGL
+to delete objects that died with the lost one ("object does not belong to this context"): the old village is now dropped rather than
+disposed (layers forget shared caches), and the sky, the finishing chain, the sun's shadow map and the environment are made again.
+Traced against the dev server with every WebGL delete tagged by the context it was made in: after a restore, a resize and closing the
+3D view, at the medium and high tiers, no object from the lost context is deleted. Results: `v2-world3d.spec.ts` on desktop-3d and
+phone-3d 13 passed, 5 skipped by design, zero warnings; `world3d.spec.ts` boot, both tiers, both save-resume, restart-leak, toggle and
+first-frame tests 8 passed.
 
 **Not verified:** a GPU or a real phone (software WebGL only); a real context loss on an iPhone; the look judged by a person. The rest
-of stage 1 (high contrast in 3D, labels, console warnings) NOT STARTED.
+of stage 1 (high contrast in 3D, labels, particle size from the viewport) NOT STARTED.
 
 ---
 

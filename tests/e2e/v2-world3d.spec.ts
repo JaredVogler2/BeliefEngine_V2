@@ -11,6 +11,18 @@ import { browserState, chooseClaim, mapPainted, replayTraceViaUi, startRedbank, 
  */
 const URL_3D = '/?debug=1&renderer=3d';
 
+/**
+ * Errors and warnings both: the 3D world must not complain on the console (3D plan, stage 1). The GPU driver's own performance notes
+ * ("GL Driver Message … GPU stall due to ReadPixels", from reading the canvas back) are the browser's, not the game's.
+ */
+function watch3D(page: Page): string[] {
+  const out = watchConsole(page);
+  page.on('console', (m) => {
+    if (m.type() === 'warning' && !/GL Driver Message/.test(m.text())) out.push(`warning: ${m.text()}`);
+  });
+  return out;
+}
+
 interface Info3D { calls: number; triangles: number; tier: string; frames: number; software: boolean }
 type R3D = { kind: string; info: () => Info3D; entityScreen: (k: 'villager' | 'landmark', id: string) => { x: number; y: number } | null; hitTest: (x: number, y: number) => { kind: string; id: string } | null; stats: () => { effects: number } };
 
@@ -43,7 +55,7 @@ async function villagerOnPage(page: Page, id: string): Promise<{ x: number; y: n
 
 test.describe('3D world (Three.js, forced on)', () => {
   test('boots on WebGL2, paints the village and reports a real scene', async ({ page }) => {
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
     const i = await info(page);
@@ -57,7 +69,7 @@ test.describe('3D world (Three.js, forced on)', () => {
 
   test('a click on a person in the 3D world selects them, a story is told and the night resolves with the engine’s own hash', async ({ page }) => {
     test.setTimeout(360_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
     await chooseClaim(page, 'river_fears_fire');
@@ -118,7 +130,7 @@ test.describe('3D world (Three.js, forced on)', () => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only; the phone runs cover touch');
     test.skip(process.env.BE_SLOW_3D !== '1', 'slow on a software rasteriser: set BE_SLOW_3D=1 to run it');
     test.setTimeout(900_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     const prefix = traces.fireWall.actions.slice(0, 8);
     expect(prefix.filter((a) => a.type === 'END_DAY')).toHaveLength(2);
     await startRedbank(page, traces.canonicalSeed, 'normal', URL_3D);
@@ -135,7 +147,7 @@ test.describe('3D world (Three.js, forced on)', () => {
   test('on a phone-sized touch screen the 3D world fits, paints and answers a tap', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('phone'), 'touch profile only');
     test.setTimeout(180_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), 'no sideways scroll').toBe(true);
@@ -148,7 +160,7 @@ test.describe('3D world (Three.js, forced on)', () => {
 
   test('the dangers on the ground are drawn where the engine has them: the packs the 2D map shows, the smoke round a lit fire, fire on the ground', async ({ page }, testInfo) => {
     test.setTimeout(420_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     // Ashwood seed 1, the morning of day 6: three packs out, and the smoke of a fire lit at the first campfire on day 4
     const ash = GameSession.create({ scenarioId: 'ashwood', seed: 1 });
     expect(ash.act({ type: 'PICK_STARTER', claim: 'wolves_fear_smoke' }).ok).toBe(true);
@@ -244,25 +256,26 @@ test.describe('3D world (Three.js, forced on)', () => {
   test('the social lens is drawn in the 3D world: the Social button lays trust ties over the village and takes them away again', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
     test.setTimeout(240_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     await startRedbank(page, 1, 'normal', URL_3D);
     await world3d(page);
-    // the lens's standing ribbons are counted with the world's other effects
-    const effects = () => page.evaluate(() => (window as unknown as { __beRenderer: R3D }).__beRenderer.stats().effects);
-    const base = await effects();
+    const ties = () => page.evaluate(() => (window as unknown as { __beRenderer: { lensInfo: () => { ties: number } } }).__beRenderer.lensInfo().ties);
+    expect(await ties()).toBe(0);
     const social = page.getByRole('button', { name: 'Toggle social lens: trust ties' });
     await social.click();
     await expect(social).toHaveAttribute('aria-pressed', 'true');
-    await expect.poll(effects, { message: 'the strongest ties are drawn' }).toBeGreaterThan(base);
+    // with nobody selected, the strongest ties (at most eight, so the village is not hidden under a tangle)
+    await expect.poll(ties, { message: 'the strongest ties are drawn' }).toBeGreaterThan(0);
+    expect(await ties()).toBeLessThanOrEqual(8);
     await social.click();
-    await expect.poll(effects, { message: 'and taken away again' }).toBe(base);
+    await expect.poll(ties, { message: 'and taken away again' }).toBe(0);
     expect(errors).toEqual([]);
   });
 
   test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
     test.setTimeout(300_000);
-    const errors = watchConsole(page);
+    const errors = watch3D(page);
     // headless Chromium changes devicePixelRatio for an emulated density but raises no media-query event, as a real browser does when
     // a window moves to another screen: keep the listener the page registers for its density, to raise that event by hand below
     await page.addInitScript(() => {

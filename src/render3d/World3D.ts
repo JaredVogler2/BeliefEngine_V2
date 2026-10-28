@@ -198,12 +198,28 @@ export class World3D implements WorldRenderer {
   private onRestored = (): void => {
     this.contextLost = false;
     this.lastError = null;
+    // Everything on the graphics side died with the context. What lives for the whole view (the sky, the finishing chain, the sun's
+    // shadow map, the environment) is made again rather than disposed, as the village is below, so WebGL is never asked to delete what
+    // it no longer has ("object does not belong to this context").
+    this.scene.remove(this.sky);
+    this.sky = makeSky();
+    this.scene.add(this.sky);
+    if (this.post) {
+      const old = this.post;
+      this.post = new PostChain(this.renderer, this.quality);
+      this.post.setProfile(old.settings);
+      this.post.look = { ...old.look };
+      this.syncPostSize();
+    }
+    this.sun.shadow.map = null;
+    this.envRT = null;
     this.makeEnv();
     if (this.snap) {
       const s = this.snap;
       this.snap = null;
-      this.rebuild(s);
+      this.rebuild(s, true);
     }
+    this.applyMood();
   };
 
   // ------------------------------------------------------------------------------------------------------ lifecycle
@@ -326,44 +342,49 @@ export class World3D implements WorldRenderer {
 
   // ------------------------------------------------------------------------------------------------------ the world
 
-  private disposeWorld(): void {
+  /**
+   * Let go of everything the village owns. Normally each thing is disposed; after a lost context (`gone`) its graphics died with it, and
+   * asking WebGL to delete them only earns "object does not belong to this context" warnings, so they are dropped instead.
+   */
+  private disposeWorld(gone = false): void {
     for (const l of this.layers) {
       this.scene.remove(l.group);
-      l.dispose();
+      if (gone) l.forget?.();
+      else l.dispose();
     }
     this.layers = [];
     if (this.terrainMesh) {
       this.scene.remove(this.terrainMesh.group);
-      this.terrainMesh.dispose();
+      if (!gone) this.terrainMesh.dispose();
       this.terrainMesh = null;
     }
     if (this.water) {
       this.scene.remove(this.water.mesh);
-      this.water.dispose();
+      if (!gone) this.water.dispose();
       this.water = null;
     }
     if (this.rain) {
       this.scene.remove(this.rain.lines);
-      this.rain.dispose();
+      if (!gone) this.rain.dispose();
       this.rain = null;
     }
     if (this.clouds) {
       this.scene.remove(this.clouds.group);
-      this.clouds.dispose();
+      if (!gone) this.clouds.dispose();
       this.clouds = null;
     }
-    this.magic?.dispose();
+    if (!gone) this.magic?.dispose();
     this.magic = null;
     this.effects = null;
-    this.materials?.dispose();
+    if (!gone) this.materials?.dispose();
     this.materials = null;
     this.ctx = null;
   }
 
-  /** a new village (or the same one reloaded): drop everything the old one owned and build again from the snapshot */
-  private rebuild(snap: SceneSnapshot): void {
+  /** a new village (or the same one reloaded, or rebuilt after a lost context): drop everything the old one owned and build again */
+  private rebuild(snap: SceneSnapshot, gone = false): void {
     const t0 = performance.now();
-    this.disposeWorld();
+    this.disposeWorld(gone);
     const seedNum = seedFrom(snap.scenarioId, snap.seed);
     const terrain = buildHeightField(snap, seedNum);
     this.terrainMesh = buildTerrainMesh(snap, terrain, seedNum, Math.min(8, this.renderer.capabilities.getMaxAnisotropy()));
@@ -773,6 +794,11 @@ export class World3D implements WorldRenderer {
     const layer = this.layers.find((l) => l instanceof HazardsLayer) as HazardsLayer | undefined;
     const ashTiles = this.terrainMesh?.surface.ashTiles() ?? 0;
     return layer ? { ...layer.hazardCounts(), burning: layer.burningBuildings(), ashTiles } : { wolves: 0, packMarks: 0, fireTiles: 0, smokeTiles: 0, puffs: 0, burning: [], ashTiles };
+  }
+
+  /** the trust ties the social lens is drawing now: read by tests, never by the game */
+  lensInfo(): { ties: number } {
+    return { ties: this.effects?.lensCount() ?? 0 };
   }
 
   stats(): { fps: number; effects: number; zoom: number } {

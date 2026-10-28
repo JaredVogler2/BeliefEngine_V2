@@ -913,6 +913,12 @@ export class PeopleLayer implements Layer {
     lanternMat?.dispose();
     lanternMat = null;
   }
+
+  forget(): void {
+    geoCache.clear();
+    matCache.clear();
+    lanternMat = null;
+  }
 }
 
 function angleDiff(a: number, b: number): number {
