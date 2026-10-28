@@ -688,6 +688,27 @@ export class World3D implements WorldRenderer {
     return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
   }
 
+  /** where a region's name tag goes on screen now (over the middle of its ground), or null when that is out of view */
+  regionAnchor(id: string): { x: number; y: number } | null {
+    const r = this.snap?.regions.find((q) => q.id === id);
+    if (!r || !this.ctx) return null;
+    let a = 0;
+    let cx = 0;
+    let cz = 0;
+    for (const [x0, y0, x1, y1] of r.rects) {
+      const n = (x1 - x0 + 1) * (y1 - y0 + 1);
+      a += n;
+      cx += ((x0 + x1 + 1) / 2) * n;
+      cz += ((y0 + y1 + 1) / 2) * n;
+    }
+    if (!a) return null;
+    const x = cx / a;
+    const z = cz / a;
+    const v = new THREE.Vector3(x, this.ctx.heightAt(x, z) + 0.35, z).project(this.cam.camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02) return null;
+    return { x: ((v.x + 1) / 2) * this.W, y: ((1 - v.y) / 2) * this.H };
+  }
+
   /** test and screenshot hook */
   setView(v: Parameters<TabletopCamera['setView']>[0]): void {
     this.cam.setView(v);

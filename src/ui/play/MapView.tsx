@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { firstName, predictedWater } from '../../engine/index.ts';
+import { findClaimDef, firstName, predictedWater } from '../../engine/index.ts';
 import { MapRenderer } from '../../render/MapRenderer.ts';
 import type { WorldRenderer } from '../../render/types.ts';
 import { chooseRenderer, loadWorld3D, rememberRenderer } from '../../render/choose.ts';
@@ -265,6 +265,7 @@ export function MapView({ children }: { children?: React.ReactNode }) {
 
   // names over people in the 3D world (the classic map paints its own): the people the tutorial points at, the selected person while the
   // card is docked away from them (a phone), and everyone in view once the camera has come close. Tags follow their person every frame.
+  // The story being told is named over each stretch of ground it would govern (the ground itself glows with it).
   const namesRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const box = namesRef.current;
@@ -283,21 +284,34 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       const sel = u.selection?.kind === 'villager' ? u.selection.id : null;
       const hints = new Set(getTutorial(st, u)?.hintVillagers ?? []);
       const shown: { tag: { el: HTMLSpanElement; w: number; h: number }; x: number; y: number }[] = [];
+      const make = (key: string, text: string, cls: string): { el: HTMLSpanElement; w: number; h: number } => {
+        let tag = tags.get(key);
+        if (!tag) {
+          const el = document.createElement('span');
+          el.className = cls;
+          el.dataset.id = key;
+          el.textContent = text;
+          box.append(el);
+          tag = { el, w: el.offsetWidth, h: el.offsetHeight };
+          tags.set(key, tag);
+        }
+        return tag;
+      };
+      const story = u.activeClaim && !u.digest ? findClaimDef(st, u.activeClaim) : undefined;
+      if (story && r.regionAnchor) {
+        for (const rid of story.regions) {
+          const at = r.regionAnchor(rid);
+          if (!at) continue;
+          const place = st.world.regions.find((q) => q.id === rid)?.name ?? rid;
+          shown.push({ tag: make(`law:${story.id}:${rid}`, `${story.short} · ${place}`, 'name-tag law'), x: at.x, y: at.y });
+        }
+      }
       if (!u.digest) {
         for (const v of st.villagers) {
           if (v.status === 'dead' || !(close || hints.has(v.id) || (docked && v.id === sel))) continue;
           const at = r.nameAnchor(v.id);
           if (!at) continue;
-          let tag = tags.get(v.id);
-          if (!tag) {
-            const el = document.createElement('span');
-            el.className = 'name-tag';
-            el.dataset.id = v.id;
-            el.textContent = firstName(v.name);
-            box.append(el);
-            tag = { el, w: el.offsetWidth, h: el.offsetHeight };
-            tags.set(v.id, tag);
-          }
+          const tag = make(v.id, firstName(v.name), 'name-tag');
           tag.el.classList.toggle('sel', v.id === sel);
           shown.push({ tag, x: at.x, y: at.y });
         }

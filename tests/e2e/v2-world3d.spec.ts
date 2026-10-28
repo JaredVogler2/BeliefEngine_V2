@@ -316,6 +316,38 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('the story being told is named over each stretch of ground it would govern; the names follow the story in hand and make way for the night', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
+    test.setTimeout(240_000);
+    const errors = watch3D(page);
+    await startRedbank(page, 1, 'normal', URL_3D);
+    await world3d(page);
+    const lawTags = () => page.evaluate(() => [...document.querySelectorAll('[data-testid="name-tags"] .name-tag.law')].map((el) => el.textContent ?? ''));
+    expect(await lawTags()).toEqual([]);
+    await chooseClaim(page, 'river_fears_fire');
+    // what the page's own run says: the story's short name, and the regions it would govern
+    const wanted = (claim: string) =>
+      page.evaluate((id) => {
+        const s = (window as unknown as { __belief: { state: { scn: { claimDefs: { id: string; short: string; regions: string[] }[] }; world: { regions: { id: string; name: string }[] } } } }).__belief.state;
+        const d = s.scn.claimDefs.find((c) => c.id === id)!;
+        return d.regions.map((r) => `${d.short} · ${s.world.regions.find((q) => q.id === r)?.name ?? r}`);
+      }, claim);
+    const showing = async (claim: string) => {
+      const want = await wanted(claim);
+      const got = await lawTags();
+      return got.length > 0 && got.every((t) => want.includes(t));
+    };
+    await expect.poll(() => showing('river_fears_fire'), { message: 'named over its ground', timeout: 30_000 }).toBe(true);
+    // the names follow the story in hand
+    await page.evaluate(() => (window as unknown as { __belief: { store: { set: (p: { activeClaim: string }) => void } } }).__belief.store.set({ activeClaim: 'bridge_stands_watched' }));
+    await expect.poll(() => showing('bridge_stands_watched'), { message: 'another story, its own ground', timeout: 30_000 }).toBe(true);
+    // and make way for the night's summary
+    await page.evaluate(() => (window as unknown as { __belief: { store: { endDay: () => void } } }).__belief.store.endDay());
+    await expect(page.getByTestId('digest')).toBeVisible();
+    await expect.poll(lawTags, { message: 'none over the night summary', timeout: 30_000 }).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
   test('high contrast reaches the 3D world: the haze thins and shapes are inked at full strength, and both come back', async ({ page }, testInfo) => {
     test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code');
     test.setTimeout(240_000);
