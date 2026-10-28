@@ -100,3 +100,30 @@ export function buildNpcRequest(s: RunState, runId: string, playerMessage: strin
     playerMessage: playerMessage ? clip(playerMessage, 240) : null,
   };
 }
+
+const ASK: Record<string, (short: string) => string> = {
+  ask: (c) => `The Keeper asks what you think of "${c}".`,
+  persuade: (c) => `The Keeper argues that "${c}" is true.`,
+  challenge: (c) => `The Keeper challenges your belief in "${c}".`,
+  guess: (c) => (c ? `The Keeper asks what you make of what has happened with "${c}".` : 'The Keeper asks what you make of what has happened lately.'),
+};
+
+/** A conversation: one villager, the moment "conversation", and what the Keeper said (typed text is untrusted, and optional). */
+export function buildTalkRequest(s: RunState, runId: string, vid: string, mode: string, claim: string | null, typed: string | null = null): NpcRequestV2 | null {
+  const a = agentOf(s, { id: vid, why: 'conversation', claim, event: null });
+  if (!a) return null;
+  const short = claim ? (findClaimDef(s, claim)?.short ?? claim) : '';
+  const said = typed && typed.trim() ? typed.trim() : (ASK[mode] ?? ASK.guess)(short);
+  const claimIds = [...new Set([...(claim && ID.test(claim) ? [claim] : []), ...a.beliefs.map((b) => b.claimId), ...a.eligible.flatMap((e) => e.claims)])].slice(0, 16);
+  return {
+    v: 2,
+    run: { id: runId, rev: s.nextEventId },
+    event: { id: `d${s.day}.talk.${vid}`.slice(0, 40), kind: 'conversation', day: Math.max(0, Math.min(999, s.day)), summary: clip(`The Keeper talks with ${a.name}.`, 240), claimId: claim && claimIds.includes(claim) ? claim : null },
+    agents: [{ ...a, moment: { kind: 'conversation', summary: clip(`${a.name} is talking with the Keeper.`, 160) } }],
+    known: {
+      villagers: s.villagers.filter((v) => v.status !== 'dead' && ID.test(v.id)).slice(0, 60).map((v) => ({ id: v.id, name: clip(v.name, 40) })),
+      claims: claimIds.map((id) => ({ id, short: clip(findClaimDef(s, id)?.short ?? id, 80) })),
+    },
+    playerMessage: clip(said, 240),
+  };
+}

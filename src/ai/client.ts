@@ -4,7 +4,7 @@ import { hashValue } from '../engine/core/hash.ts';
 import type { Candidate } from '../engine/nl/parse.ts';
 import type { Reading } from '../engine/reality/read.ts';
 import { fromWire, type WireReading } from '../engine/reality/wire.ts';
-import { buildNpcRequest } from '../engine/mind/request.ts';
+import { buildNpcRequest, buildTalkRequest } from '../engine/mind/request.ts';
 import type { NpcChoiceInput } from '../engine/core/types.ts';
 
 /**
@@ -188,6 +188,20 @@ export class AiClient {
     const req = buildNpcRequest(state, runRef(state).id, null, opts.only ?? null);
     if (!req) return { ok: false, reason: 'bad_request', why: 'Nobody in the village is due to think right now.' };
     return this.postNpc(req, opts.timeoutMs ?? 25_000);
+  }
+
+  /**
+   * A villager's spoken answer in a conversation, voiced by a model from their own memories. Only the line and the memories it
+   * cites are used; the engine checks both again and decides what the conversation changes.
+   */
+  async talkReply(state: RunState, vid: string, mode: string, claim: string | null, typed: string | null = null, timeoutMs = 25_000): Promise<{ ok: true; line: string; cites: string[]; meta: ReadingMeta } | AiFailure> {
+    const req = buildTalkRequest(state, runRef(state).id, vid, mode, claim, typed);
+    if (!req) return { ok: false, reason: 'bad_request', why: 'That villager cannot talk now.' };
+    const r = await this.postNpc(req, timeoutMs);
+    if (!r.ok) return r;
+    const d = r.decisions.find((x) => x.citizenId === vid);
+    if (!d || !d.dialogue) return { ok: false, reason: 'bad_output', why: explain('bad_output') };
+    return { ok: true, line: d.dialogue, cites: d.cites, meta: r.meta };
   }
 
   /** Sends one `npc` request and reads the answer; nothing here trusts it beyond its shape. */

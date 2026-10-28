@@ -1,3 +1,4 @@
+import { Suspense, lazy } from 'react';
 import { councilBanDays, getAvailableActions, getCallouts, getForecast, getIntents, getLawViews, getModifierViews, getVillagerView, memoryLines, previewAction, describeAction, omenFor } from '../../engine/index.ts';
 import type { Action, ClaimDef, Landmark, Preview, RunState } from '../../engine/index.ts';
 import { findClaimDef, neighborsOf } from '../../engine/core/lookup.ts';
@@ -5,6 +6,10 @@ import { firstName } from '../../engine/core/names.ts';
 import { Avatar, Bar, ClaimGlyph, Icon, evIcon } from '../components.tsx';
 import { store, useStore, type SideTab } from '../store.ts';
 import { getRenderer } from './MapView.tsx';
+
+// a villager's mind and a conversation with them (V2 runs only): its own chunk, loaded when a V2 villager is opened
+const MindPanel = lazy(() => import('./MindPanel.tsx'));
+const VillageMinds = lazy(() => import('./MindPanel.tsx').then((m) => ({ default: m.VillageMinds })));
 
 // ------------------------------------------------------------------ shared action row
 
@@ -201,11 +206,16 @@ function VillagerCard({ id }: { id: string }) {
           {intents.map((i) => <li key={i.kind} className={i.chosen ? 'chosen' : ''}><b>{i.label}</b> {i.score}{i.chosen ? ' ← what they will do' : ''}<span className="muted"> — {i.why}.</span></li>)}
         </ul>
       )}
-      {memories.length > 0 && (
+      {memories.length > 0 && !state.v2?.minds && (
         <>
           <h3>What they remember</h3>
           <ul className="small" data-testid="memories">{memories.map((m, i) => <li key={i}>{m}</li>)}</ul>
         </>
+      )}
+      {state.v2?.minds && (
+        <Suspense fallback={<p className="small muted" role="status">Reading their mind…</p>}>
+          <MindPanel id={id} />
+        </Suspense>
       )}
 
       <h3>What they believe</h3>
@@ -386,6 +396,11 @@ export function VillagePanel() {
   return (
     <div data-testid="village-panel">
       <Callouts />
+      {state.v2?.minds && (
+        <Suspense fallback={null}>
+          <VillageMinds />
+        </Suspense>
+      )}
       <h3>The village</h3>
       <p className="small muted">{claim ? 'Showing belief in the active story.' : 'Choose a story to see who believes it.'} Select anyone to inspect them.</p>
       {people.map((v) => {

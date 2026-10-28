@@ -460,6 +460,8 @@ export type Action =
   | { type: 'COMPOSE'; claim: ClaimDef }
   /** decisions a model proposed for villagers due to think today (V2 minds); bound to the run revision the request was built at */
   | { type: 'NPC_DECIDE'; rev: number; decisions: NpcChoiceInput[]; model?: string; id?: string }
+  /** the Keeper talks with a villager (V2 minds): ask, argue for, challenge, or ask what they make of things; `reply` is a model's line */
+  | { type: 'TALK'; target: Id; mode: 'ask' | 'persuade' | 'challenge' | 'guess'; claim?: Id; reply?: { line: string; cites: string[] } }
   | { type: 'END_DAY' };
 
 /** A villager decision as it arrives from outside the engine (validated against the live run before anything uses it). */

@@ -16,6 +16,7 @@ the date and provenance before trusting a number: **only the V2 records were pro
 | [`AI_SETUP.md`](AI_SETUP.md) | phase 03: the online-reading service, its security and cost controls, setup steps (names only), the LIVE smoke test, what is and is not verified |
 | [`AI_COSTS.md`](AI_COSTS.md) | phase 03: chosen models and catalog prices, per-call estimates (not measurements), the four spend limits |
 | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) | phases 04 and 06: the AST v2 belief language, its world vocabulary and operators, price, grounding, the night executor, the new entities and the V1 bridge |
+| [`MINDS.md`](MINDS.md) | phase 07: villager minds (personality, goals, memories with provenance), who thinks and what they can do, the model's `npc v2` contract, and conversations |
 | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md) | the art direction and the measurable visual bar for the 3D world |
 | [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md) | the staged plan to reach that bar on the existing Three.js renderer |
 | [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) | what the 3D world looks like today, from real browser captures, scored honestly |

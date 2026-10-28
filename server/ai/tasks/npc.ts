@@ -189,7 +189,10 @@ export function demoNpc(prompt: string): NpcOutput {
         intent: move.intent,
         target: move.targets[0] ?? null,
         claimId: stories ? (stories.includes(p.event.claimId ?? '') ? p.event.claimId : (stories[0] ?? null)) : p.event.claimId,
-        dialogue: move.intent === 'wait' ? null : `${a.name.split(' ')[0]}: I will ${move.intent.replace('_', ' ')} before I believe anything.`,
+        // in a conversation the villager always answers, from their own most salient memory
+        dialogue: p.event.kind === 'conversation'
+          ? (memory ? `I remember day ${memory.day}: ${memory.text}`.slice(0, 200) : 'I have not seen enough to say.')
+          : move.intent === 'wait' ? null : `${a.name.split(' ')[0]}: I will ${move.intent.replace('_', ' ')} before I believe anything.`,
         cites: memory ? [memory.id] : [],
         topic: null,
         approach: a.traits.skepticism >= 60 ? 'evidence' : 'testimony',

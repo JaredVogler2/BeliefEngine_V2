@@ -1,6 +1,6 @@
 import { emit, type Ctx } from './events.ts';
 import { cloneState } from './clone.ts';
-import { claimDef, findLandmark, findVillager, trustOf, neighborsOf, edgeBetween, allClaimDefs, evidenceMult, modActive, repeatMult } from './lookup.ts';
+import { claimDef, findClaimDef, findLandmark, findVillager, trustOf, neighborsOf, edgeBetween, allClaimDefs, evidenceMult, modActive, repeatMult } from './lookup.ts';
 import { pledgeKey } from '../progress/options.ts';
 import { MAX_CUSTOM_CLAIMS, buildClaim, composeCostOf } from '../nl/build.ts';
 import { MAX_REALITY_CLAIMS, buildRealityClaim } from '../reality/build.ts';
@@ -10,7 +10,8 @@ import { NL_VERSION } from '../nl/ontology.ts';
 import { memoryFactor, remember } from './memory.ts';
 import type { Action, ActionError, ActionResult, ClaimDef, GameEvent, Landmark, RitualDef, RunState, Villager } from './types.ts';
 import { K, ensureBelief, evidenceGain, gossipDelta, REASON_TEXT, relevance, round1, seedGain } from '../social/persuasion.ts';
-import { validateChoice } from '../mind/decide.ts';
+import { judged, validateChoice } from '../mind/decide.ts';
+import { TALK_MODES, checkedReply, offlineReply, talkCost } from '../mind/talk.ts';
 import { THINKERS_PER_DAY, type Approach, type Intent, type Tone } from '../mind/types.ts';
 import { bfsDist, components, connected, passableMask } from '../world/nav.ts';
 import { idx } from '../world/grid.ts';
@@ -55,6 +56,8 @@ export function actionCost(s: RunState, a: Action): number {
     case 'COMPOSE':
       // what a belief costs to write follows from its strength (nl/balance.ts, reality/balance.ts), never from what the request says
       return a.claim?.reality ? realityComposeCost(s, a.claim.reality.ast) : composeCostOf(a.claim?.custom?.ast);
+    case 'TALK':
+      return talkCost(a.mode);
     case 'NPC_DECIDE':
     case 'END_DAY':
       return 0;
@@ -283,6 +286,8 @@ function perform(ctx: Ctx, a: Action): Fail | null {
       return doCompose(ctx, a);
     case 'NPC_DECIDE':
       return doNpcDecide(ctx, a);
+    case 'TALK':
+      return doTalk(ctx, a);
     case 'END_DAY':
       return fail('USE_END_DAY', 'End the day with resolveDay().');
   }
@@ -329,6 +334,67 @@ function doNpcDecide(ctx: Ctx, a: Extract<Action, { type: 'NPC_DECIDE' }>): Fail
     step: 'action', code: 'NPC_DECISIONS', importance: 1,
     text: `${accepted.length ? `${accepted.join(', ')} will act on what they decided` : 'No proposed decision could be used'}${refused.length ? `; the game decides for ${refused.join('; ')}` : ''}.`,
   });
+  return null;
+}
+
+/**
+ * The Keeper talks with a villager. They answer from their own memories (or a model's line, checked against those memories); what
+ * changes is decided here: asking changes nothing but what you learn; arguing for a story is the Keeper's word (V1's seeding,
+ * stronger if they saw it work, weaker if they saw it fail); challenging one weighs trust and stubbornness against what they saw.
+ */
+function doTalk(ctx: Ctx, a: Extract<Action, { type: 'TALK' }>): Fail | null {
+  const s = ctx.s;
+  if (!s.v2?.minds) return fail('NO_MINDS', 'Conversations belong to Generative Reality runs. In this run, tell villagers a story.');
+  if (!(TALK_MODES as readonly string[]).includes(a.mode)) return fail('BAD_MODE', 'Ask, argue, challenge, or ask what they make of things.');
+  const v = findVillager(s, a.target);
+  if (!v || v.status === 'dead') return fail('BAD_TARGET', 'That person cannot be reached.');
+  if (!keeperCanReach(s, v.x, v.y)) return fail('NO_PATH', `${v.name} is cut off. Without the bridge you cannot reach them.`);
+  const claim = a.claim ?? null;
+  if (a.mode !== 'guess' && !claim) return fail('NO_CLAIM', 'Choose the story to talk about.');
+  const def = claim ? findClaimDef(s, claim) : undefined;
+  if (claim && !def) return fail('BAD_CLAIM', 'The village does not know that story.');
+  const arguing = a.mode === 'persuade' || a.mode === 'challenge';
+  if (arguing ? spokeToday(s, v.id) : (s.flags[`talk:${v.id}`] ?? -1) === s.day) return fail('ALREADY_SPOKE', `You have already ${arguing ? 'argued with' : 'talked with'} ${v.name} today.`);
+  if (arguing && v.keeperTrust < 8) return fail('NO_TRUST', `${v.name} will not hear you.`);
+  // asking never plants a story: only arguing about it does
+  const b = claim ? (arguing ? ensureBelief(v, claim) : (v.beliefs[claim] ?? null)) : null;
+  const seen = claim ? judged(s, v.id, claim) : 0;
+  let before = b?.conv ?? 0;
+  if (a.mode === 'persuade' && b && claim) {
+    if (!claimAvailable(s, claim)) return fail('CLAIM_LOCKED', 'You have not learned that story yet.');
+    if (def!.rival && !def!.adoptable) return fail('RIVAL_CLAIM', 'That is a rival rumour. You can only challenge it.');
+    if (b.conv >= 88) return fail('ALREADY_CONVINCED', `${v.name} already believes it.`);
+    const gain = seedGain(v, b) * repeatMult(s) * memoryFactor(v, claim) * (seen > 0 ? 1.2 : seen < 0 ? 0.6 : 1);
+    before = b.conv;
+    b.conv = round1(b.conv + gain);
+    b.heard += 1;
+    b.lastSource = 'keeper';
+    ensureIntroduced(s, claim);
+    s.stats.seeds++;
+  } else if (a.mode === 'challenge' && b) {
+    if (b.conv < 10) return fail('NOTHING_TO_COUNTER', `${v.name} does not hold that story.`);
+    const reduce = 14 * (0.5 + (0.6 * v.keeperTrust) / 100) * (1 - (0.5 * v.traits.stubbornness) / 100) * (seen > 0 ? 0.5 : 1) * (b.evidence >= 40 ? 0.6 : 1);
+    before = b.conv;
+    b.conv = round1(Math.max(-20, b.conv - reduce));
+    s.stats.counters++;
+  }
+  if (b) {
+    b.lastDay = s.day;
+    b.stale = 0;
+  }
+  if (arguing) s.flags[`spoke:${v.id}`] = s.day;
+  else s.flags[`talk:${v.id}`] = s.day;
+  const moved = b ? b.conv - before : 0;
+  const reply = checkedReply(s, v.id, a.reply) ?? offlineReply(s, v, a.mode, claim, moved);
+  const first = v.name.split(' ')[0];
+  const opener = a.mode === 'ask' ? `You ask ${v.name} about “${def!.short}”.` : a.mode === 'persuade' ? `You argue for “${def!.short}” with ${v.name}.` : a.mode === 'challenge' ? `You challenge ${v.name} over “${def!.short}”.` : `You ask ${v.name} what they make of things${def ? ` (“${def.short}”)` : ''}.`;
+  const id = emit(ctx, {
+    step: 'action', code: 'KEEPER_TALKED', importance: arguing ? 2 : 1, target: v.id, reason: a.mode,
+    ...(claim ? { claim } : {}),
+    ...(arguing && b ? { delta: { conviction: [Math.round(before), Math.round(b.conv)] as [number, number] } } : {}),
+    text: `${opener} ${first}${reply.source === 'model' ? ' (voiced by a model)' : ''}: “${reply.line}”${arguing && b ? ` Conviction ${Math.round(before)} → ${Math.round(b.conv)}.` : ''}`,
+  });
+  if (b && moved > 0) b.cause = id;
   return null;
 }
 
@@ -610,6 +676,8 @@ function labelOf(s: RunState, a: Action): string {
       return `Write a belief: “${a.claim.short || a.claim.text}”`;
     case 'NPC_DECIDE':
       return `Villagers decide (${a.decisions.length})`;
+    case 'TALK':
+      return `${a.mode === 'ask' ? 'Ask' : a.mode === 'persuade' ? 'Argue with' : a.mode === 'challenge' ? 'Challenge' : 'Ask what they make of it:'} ${nm(a.target)}${a.claim ? ` about ${cl(a.claim)}` : ''}`;
     case 'END_DAY':
       return 'End the day';
   }

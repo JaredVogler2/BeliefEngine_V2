@@ -11,12 +11,52 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 04 Generative belief language | **VERIFIED (gate: typed, validated, deterministic, V1-compatible, three novel executable claims, property tests); the interactive preview UI arrives with phase 05's composer** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md), `tests/unit/reality-language.test.ts`, `tests/unit/reality-properties.test.ts`, `tests/fixtures/reality-corpus-1.json` |
 | 05 Interpreter and compiler | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider configured: model accuracy, latency and token cost not measured). On sentences neither reader was tuned on, the offline reader v2 reads 13/30 supported sentences faithfully against V1's 3/30 (labels 51/80 against 34/80); it refuses rather than invents (1 invented effect in 32 impossible sentences, 0/7 injections obeyed); written beliefs become executable rules that change the world (integration test, two villages) | entry below, [`screenshots/v2-phase05/`](screenshots/v2-phase05/) |
 | 06 Simulation primitives | **IN PROGRESS: executor, 17 operators, chickens and loose stones VERIFIED in engine tests; their 3D drawing and the browser check NOT STARTED (phase 10)** | [`REALITY_LANGUAGE.md`](REALITY_LANGUAGE.md) §7, `tests/unit/reality-execute.test.ts` |
-| 07-17 | NOT STARTED | |
+| 07 Agent cognition and memory | **VERIFIED offline and with mocks; LIVE UNVERIFIED** (no provider: no model-backed decision has been made). Every villager of a V2 run has a personality, goals and memories with provenance; a few a day decide at moments that matter (legal moves only, V1 rules decide the effect); the player can talk with any of them; a model may propose decisions and voice answers, checked twice and recorded so replays need no model | [`MINDS.md`](MINDS.md), entry below, [`screenshots/v2-phase07/`](screenshots/v2-phase07/) |
+| 08-17 | NOT STARTED | |
 | 3D visual track (standard, plan, report) | standard and plan written; implementation NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
 ---
+
+## 2026-10-28 — Phase 07: villager minds, decisions and conversation (VERIFIED offline and with mocks; LIVE UNVERIFIED)
+
+**What was done** (reference: [`MINDS.md`](MINDS.md))
+
+- **Minds** for every villager of a V2 run (`s.v2.minds`; Classic has none): personality from V1 traits, archetype and seed
+  (bounded, drifting at most 15 after major events); goals from household, work and character.
+- **Memories** captured twice a day from the engine's own log, each with its event id, seen or heard and from whom, credibility,
+  salience, valence and privacy: what a villager saw within sight, was told, lost, or heard their law decided. Bounded (24 kept,
+  older minor ones folded into summary lines that keep their sources); memories that judge a story are never dropped.
+- **Decisions**: each night the strongest moments queue at most four villagers; each picks one legal move at dusk (spread,
+  persuade, challenge, ask, investigate, comfort, stage evidence, and in a flood leaving early or taking in a neighbour); effects
+  only through V1's persuasion and evidence rules. The game's own deterministic policy decides offline.
+- **Model path** (`npc v2`): the engine builds the request (only what each thinker knows); the server checks the answer against
+  the request; `NPC_DECIDE` checks it against the live run, bound to the run revision, with a per-run allowance; refused or stale
+  proposals fall back to the policy. Recorded, so replays never call a model.
+- **Conversation** (`TALK`): ask, argue for (1 Influence), challenge (1 Influence) or ask what they make of things; answers come
+  only from the villager's own memories; a model may voice them (checked against those memories), never decide what changes.
+- **UI**: a lazy mind panel in the villager card (traits, goals, memories with "saw it" / "heard from …", what they did at the
+  last dusk, the conversation, its own online opt-in) and a "who is thinking today" section in the village panel with an opt-in
+  "let them decide now".
+- Fixes found on the way: asking about a story no longer plants it; evacuation reads early moves and offered floors (V2 only).
+- Bundle: the entry budget was raised from 260 to 300 KB gzip (the V2 engine is part of the deterministic core; measured 266 KB
+  before the mind panel moved to its own 3 KB chunk; now 270 KB including small shared chunks). The script says why and how to
+  split it later.
+
+**Tests and results**
+
+| Command | Result |
+|---|---|
+| `npm run typecheck`, `npm run lint` | pass |
+| `BE_REQUIRE_REDIS=1 npm test` | 45 files, **524 passed** |
+| `npx vitest run tests/unit/mind-*.test.ts tests/unit/ai-npc-v2.test.ts` | memories and provenance, bounds, drift, saves; queue limits, legal moves, effects, refusals, stale requests, allowance, replay with recorded model decisions, six villagers choosing differently on the same story and evidence, flood choices, cost; conversation answers and knowledge limits, costs, effects, model lines checked; npc v2 requests from real runs always match the contract, simulated answers legal, 50+ forged answers refused |
+| `npx playwright test tests/e2e/v2-minds.spec.ts tests/e2e/v2-reality.spec.ts --project=desktop --project=phone` | **13 passed, 3 skipped** (online tests run on desktop only by design) |
+| `npm run build`, `npm run size` | entry 270 KB gzip (budget 300), mind panel 3 KB (20), reality composer 23 KB (40), 3D 193 KB (270) |
+
+**Mock vs LIVE:** every model-facing test used a scripted provider standing in for a model: **TESTED MOCK ONLY**. The phase gate's
+"six named villagers make legal model-backed decisions under a real configured provider" is **LIVE UNVERIFIED**; latency, tokens,
+cost and a fallback-versus-model comparison are not measured.
 
 ## 2026-10-27 — Phase 05: reading any sentence, the model contract and the composer (VERIFIED offline and with mocks; LIVE UNVERIFIED)
 
