@@ -540,6 +540,9 @@ textarea[data-testid='compose-text'], .field textarea { background: #0b1220; bor
 /* the one-line note shown when the classic map is used because there is no graphics acceleration */
 .stage-note { position: absolute; left: 10px; top: 10px; z-index: 6; display: flex; align-items: center; gap: 0.5rem; max-width: calc(100% - 80px); padding: 0.25rem 0.5rem 0.25rem 0.8rem; border-radius: 999px; background: rgba(16, 26, 43, 0.9); border: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
 .stage-note .btn { min-height: 32px; padding: 0.15rem 0.7rem; }
+/* the 3D view lost its graphics context: said in the middle of the (paused) village, clear of the bars round it */
+.stage-note.lost { top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 13; width: max-content; max-width: min(560px, calc(100% - 32px)); flex-wrap: wrap; justify-content: center; text-align: center; border-radius: 14px; padding: 0.6rem 0.9rem; font-size: 0.9rem; color: var(--ink); }
+.stage-note.lost .btn { min-height: 44px; }
 
 /* the end-of-run screen: the real village at the end, with the last important events under it */
 .scene.aftermath { margin: 0 0 1rem; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: #0b1220; }

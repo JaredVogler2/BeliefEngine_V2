@@ -19,6 +19,8 @@ export function MapView({ children }: { children?: React.ReactNode }) {
   const state = useStore((s) => s.state);
   const [mode, setMode] = useState(() => chooseRenderer());
   const [ready, setReady] = useState(false);
+  /** the 3D view lost its graphics context (a phone taking back memory, a driver reset): it is paused until the browser restores it */
+  const [lost, setLost] = useState(false);
   /** what the loading veil says while the 3D world arrives: its code is fetched, then the village is built */
   const [stage, setStage] = useState<'fetching' | 'building'>('fetching');
   const choice = mode.choice;
@@ -51,6 +53,16 @@ export function MapView({ children }: { children?: React.ReactNode }) {
     let ro: ResizeObserver | null = null;
     const cleanups: (() => void)[] = [];
     setReady(false);
+    // (the 3D world keeps the context restorable and rebuilds the village when it comes back; this only tells the player)
+    const onLost = (): void => setLost(true);
+    const onRestored = (): void => setLost(false);
+    canvas.addEventListener('webglcontextlost', onLost);
+    canvas.addEventListener('webglcontextrestored', onRestored);
+    cleanups.push(() => {
+      canvas.removeEventListener('webglcontextlost', onLost);
+      canvas.removeEventListener('webglcontextrestored', onRestored);
+      setLost(false);
+    });
 
     /** a name beside the pointer for whatever is under it (the card with the detail opens on a tap) */
     const showTip = (hit: { kind: 'villager' | 'landmark'; id: string } | null, x: number, y: number): void => {
@@ -90,6 +102,20 @@ export function MapView({ children }: { children?: React.ReactNode }) {
       size();
       ro = new ResizeObserver(size);
       ro.observe(wrap);
+      // a window moved to a screen of another pixel density changes no size the observer sees: follow the density too
+      let density: MediaQueryList | null = null;
+      const onDensity = (): void => {
+        size();
+        watchDensity();
+      };
+      const watchDensity = (): void => {
+        density?.removeEventListener('change', onDensity);
+        if (typeof matchMedia !== 'function') return;
+        density = matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
+        density.addEventListener('change', onDensity);
+      };
+      watchDensity();
+      cleanups.push(() => density?.removeEventListener('change', onDensity));
       const s0 = store.state;
       if (s0) r.setState(s0);
       r.start();
@@ -337,6 +363,12 @@ export function MapView({ children }: { children?: React.ReactNode }) {
           <div className="sl-bar" aria-hidden="true">
             <i style={{ width: stage === 'fetching' ? '38%' : '86%' }} />
           </div>
+        </div>
+      )}
+      {lost && choice === '3d' && (
+        <div className="stage-note lost" role="alert" data-testid="context-lost">
+          <span>The 3D view has paused: the device took back its graphics memory. It should come back by itself.</span>
+          <button className="btn small" onClick={() => switchTo('2d')}>Use the classic map</button>
         </div>
       )}
       {noteShown && choice === '2d' && (

@@ -241,6 +241,66 @@ test.describe('3D world (Three.js, forced on)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('a lost graphics context pauses the 3D view with a notice and the village comes back with it; a new pixel density is followed', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.name.startsWith('desktop'), 'desktop only: the phone runs the same code, and the density is changed for a desktop window');
+    test.setTimeout(300_000);
+    const errors = watchConsole(page);
+    // headless Chromium changes devicePixelRatio for an emulated density but raises no media-query event, as a real browser does when
+    // a window moves to another screen: keep the listener the page registers for its density, to raise that event by hand below
+    await page.addInitScript(() => {
+      const w = window as unknown as { __beDensity: ((e: Event) => void)[] };
+      w.__beDensity = [];
+      const real = window.matchMedia.bind(window);
+      window.matchMedia = (q: string) => {
+        const m = real(q);
+        if (q.includes('resolution')) {
+          const add = m.addEventListener.bind(m);
+          m.addEventListener = ((type: string, fn: (e: Event) => void, opts?: AddEventListenerOptions) => {
+            if (type === 'change') w.__beDensity.push(fn);
+            add(type as 'change', fn, opts);
+          }) as typeof m.addEventListener;
+        }
+        return m;
+      };
+    });
+    // a tier asked for by name is left alone by the quality monitor, so the drawing buffer changes only when the density does
+    await startRedbank(page, 1, 'normal', '/?debug=1&renderer=3d&quality=medium&scale=0.5');
+    await world3d(page);
+    const context = (how: 'loseContext' | 'restoreContext') =>
+      page.evaluate((h) => {
+        const w = window as unknown as { __beLose?: WEBGL_lose_context };
+        w.__beLose ??= (document.querySelector('.stage canvas') as HTMLCanvasElement).getContext('webgl2')!.getExtension('WEBGL_lose_context')!;
+        w.__beLose[h]();
+      }, how);
+    // lost the way a phone loses it when it takes the memory back: the player is told, and offered the classic map
+    await context('loseContext');
+    await expect(page.getByTestId('context-lost')).toBeVisible();
+    await expect(page.getByTestId('context-lost').getByRole('button', { name: 'Use the classic map' })).toBeVisible();
+    // and nothing of the interface covers it (visible is not enough: the top bar once hid it)
+    const covered = await page.getByTestId('context-lost').evaluate((el) => {
+      const b = el.getBoundingClientRect();
+      const pts = [[0.5, 0.5], [0.15, 0.5], [0.85, 0.5]].map(([fx, fy]) => document.elementFromPoint(b.left + b.width * fx, b.top + b.height * fy));
+      return pts.filter((hit) => !hit || !el.contains(hit)).length;
+    });
+    expect(covered, 'points of the notice covered by something else').toBe(0);
+    if (process.env.BE_SHOTS === '1') await page.screenshot({ path: 'docs/screenshots/v2-phase17/world3d-context-lost-desktop.jpg', type: 'jpeg', quality: 85 });
+    // and when the browser gives it back the notice goes and the village is drawn again
+    await context('restoreContext');
+    await expect(page.getByTestId('context-lost')).toHaveCount(0);
+    await expect.poll(mapPainted(page), { message: 'the village is drawn again', timeout: 60_000 }).toBeGreaterThan(0.25);
+    // a window moved to a denser screen: the same size in CSS pixels, so only the density watch can notice (medium tier: up to 1.5)
+    const buffer = () => page.evaluate(() => (document.querySelector('.stage canvas') as HTMLCanvasElement).width);
+    const before = await buffer();
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 2, mobile: false });
+    expect(await page.evaluate(() => window.devicePixelRatio)).toBe(2);
+    expect(await buffer(), 'no size changed, so nothing else redraws at the new density').toBe(before);
+    await page.evaluate(() => (window as unknown as { __beDensity: ((e: Event) => void)[] }).__beDensity.at(-1)?.(new Event('change')));
+    await expect.poll(buffer, { message: 'the drawing buffer follows the density' }).toBe(Math.floor(before * 1.5));
+    await expect.poll(mapPainted(page), { timeout: 30_000 }).toBeGreaterThan(0.25);
+    expect(errors).toEqual([]);
+  });
+
   test('what a written law did is drawn in the 3D world: the hens it saved, the stone carried to the bank, the bank raised', async ({ page }, testInfo) => {
     test.setTimeout(360_000);
     const fx = JSON.parse(readFileSync(new URL('../fixtures/v2-bridge-traces.json', import.meta.url), 'utf8')) as Record<string, { opts: CreateRunOptions; actions: Action[] }>;

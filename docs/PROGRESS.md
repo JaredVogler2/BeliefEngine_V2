@@ -22,7 +22,7 @@ NOT STARTED, IN PROGRESS, IMPLEMENTED UNVERIFIED, VERIFIED, BLOCKED. V1's own bu
 | 15 Security, privacy, cost and failure | **VERIFIED with scripted providers and a real Redis; LIVE UNVERIFIED; NOT DEPLOYED.** Threat model with every attack mapped to a control and a test; a chaos suite (hostile text, hostile structures, a heavier compute load than play can reach, physics limits, double taps, stale confirmations, session scopes, CORS and caching headers, a cold start); the secret scan runs in CI over every tracked file, every commit and the built site; gateway privacy routing (no training always, zero retention by setting); an operator cost monitor. Found and fixed four defects (entry) | [`SECURITY.md`](SECURITY.md), [`PRIVACY.md`](PRIVACY.md), [`COST_AND_QUOTAS.md`](COST_AND_QUOTAS.md), entry below, `tests/unit/{security-chaos,scan-secrets,ai-monitor}.test.ts` |
 | 16 Integration and release testing | **Integrated but not live-tested: the six journeys PASS offline and with scripted providers (A Classic offline, B novel laws, C living society, D replay, E MCP over stdio, F phone sizes in Chromium and CI WebKit); V2 runs at scale replay exactly from stored model outputs; LIVE UNVERIFIED; NOT DEPLOYED** | [`FINAL_ACCEPTANCE.md`](FINAL_ACCEPTANCE.md), [`RELEASE.md`](RELEASE.md), [`data/sim-v2/REPORT.md`](data/sim-v2/REPORT.md), entry below |
 | 17 Adversarial fun review | **Review done; two P0 and five P1 fixed and VERIFIED offline, with mocks and in Chromium; FUN SUBJECTIVE/UNVERIFIED (no playtest); LIVE UNVERIFIED; NOT DEPLOYED.** A model could swap what a sentence's change is (289 of 292 swapped readings trusted → 11); the composer's price was not always the charge (4 of 72 → 0 of 108); written-belief rules 3 price a ward around every home for the ground it covers; ideas, offers, flavour and wording fixed; a first-time player's sentence is understood 35 of 69 times (blind held-out set). V2 is not complete: LIVE, deployment, a playtest and the premium 3D look remain | [`FUN_REVIEW_V2.md`](FUN_REVIEW_V2.md), [`data/fun-review-v2/`](data/fun-review-v2/), [`data/tournament-v2/`](data/tournament-v2/) `rules3-*`, `tests/unit/reality-rules3.test.ts`, `tests/e2e/v2-review.spec.ts`, [`screenshots/v2-phase17/`](screenshots/v2-phase17/) |
-| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stage 1 IN PROGRESS (wolf packs, fire, smoke and ash drawn: VERIFIED in Chromium on software WebGL; GPU UNVERIFIED); stages 2-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
+| 3D visual track (standard, plan, report) | standard and plan written; stage 0 (V1's 3D work merged) done; stage 1 IN PROGRESS (wolf packs, fire, smoke and ash drawn, and a lost graphics context told to the player: VERIFIED in Chromium on software WebGL; GPU UNVERIFIED; the lens, high contrast, labels and console warnings NOT STARTED); stages 2-9 NOT STARTED | [`3D_VISUAL_STANDARD.md`](3D_VISUAL_STANDARD.md), [`3D_IMPLEMENTATION_PLAN.md`](3D_IMPLEMENTATION_PLAN.md), [`3D_QUALITY_REPORT.md`](3D_QUALITY_REPORT.md) |
 
 Live model calls so far: **none**. Inference spend so far: **0**. Deployments: **none**.
 
@@ -47,7 +47,11 @@ Live model calls so far: **none**. Inference spend so far: **0**. Deployments: *
   - **ash**: ground that burns out is painted as ash the same night, without rebuilding the village (`groundTexture.ts`, `terrain.ts`,
     `World3D.setState`; the engine never unburns a tile).
 - `snapshot.ts` also carries each pack's hunger and the 2D map's count of packs out; `World3D.hazardInfo()` reports what is drawn (read by
-  tests, never by the game). PR JaredVogler2/BeliefEngine_V2#4 had been merged (`6815992`), so this work starts a new pull request from
+  tests, never by the game).
+- **A lost graphics context** (a phone taking its memory back) froze the 3D view without a word. The renderer already kept the context
+  restorable and rebuilt the village when it came back; now the player sees a notice in the middle of the paused village with "Use the
+  classic map", gone when the context returns (`MapView.tsx`, `styles.css`). A window moved to a screen of another pixel density
+  changes no size the resize observer sees: the density is now watched too (both renderers). PR JaredVogler2/BeliefEngine_V2#4 had been merged (`6815992`), so this work starts a new pull request from
   the merged `main`.
 
 **Commands and results**: `npm run lint`, `npm run typecheck`: clean. `npm test`: 61 files, 690 passed (`render3d-hazards.test.ts`
@@ -61,8 +65,12 @@ first-frame tests: 5 passed. `npm run size`: entry 296 KB gzip of 300, 3D chunk 
 [`screenshots/v2-phase17/`](screenshots/v2-phase17/), from `BE_SHOTS=1 npx playwright test tests/e2e/v2-world3d.spec.ts --project=desktop-3d
 --project=phone-3d -g "dangers on the ground"`.
 
-**Not verified:** a GPU or a real phone (software WebGL only); the look judged by a person. The rest of stage 1 (the forecast, the
-social lens and high contrast in 3D, labels, console warnings, context loss) NOT STARTED.
+Context loss and density (second commit): `v2-world3d.spec.ts` "a lost graphics context pauses the 3D view…" passed on desktop-3d
+(lose → notice, checked uncovered by the interface → restore → painted again; density 1 → 2 with no size change → drawing buffer ×1.5);
+the 2D smoke, Redbank route, mobile and resilience specs on desktop and phone: 29 passed, 9 skipped by design.
+
+**Not verified:** a GPU or a real phone (software WebGL only); a real context loss on an iPhone; the look judged by a person. The rest
+of stage 1 (the social lens and high contrast in 3D, labels, console warnings) NOT STARTED.
 
 ---
 
