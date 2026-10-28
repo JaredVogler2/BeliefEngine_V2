@@ -1,0 +1,166 @@
+{
+ "root": "/tmp/claude-0/-home-user/847fc679-6e28-53e4-b609-3f1fc7f43226/scratchpad/before",
+ "reader": "offline-v2.2",
+ "rules": 2,
+ "price": {
+  "checked": 72,
+  "mismatched": 4,
+  "examples": [
+   "ashwood rules 2 ward: shown 3, charged 2 (“Wolves will not come near the smoke fires in every hamlet.”)",
+   "ashwood rules 2 backfire: shown 3, charged 2 (“Wolves are drawn to the smoke fires in every hamlet.”)",
+   "ashwood rules 2 lab ward: shown 3, charged 2 (“Wolves will not come near the smoke fires in every hamlet.”)",
+   "ashwood rules 2 lab backfire: shown 3, charged 2 (“Wolves are drawn to the smoke fires in every hamlet.”)"
+  ]
+ },
+ "swappedEffects": {
+  "honest": 193,
+  "honestKept": 191,
+  "swaps": 292,
+  "acceptedAtFullConfidence": 289,
+  "keptAtLowConfidence": 1,
+  "dropped": 2,
+  "examples": [
+   "“Chickens fly when the bell rings.” read as MOVE_AWAY instead of APPLY_FORCE (citing “fly”)",
+   "“Chickens fly when the bell rings.” read as MOVE_TOWARD instead of APPLY_FORCE (citing “fly”)",
+   "“Chickens fly when the bell rings.” read as SPAWN_BOUNDED_ENTITY instead of APPLY_FORCE (citing “fly”)",
+   "“At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.” read as MODIFY_MOVEMENT instead of ALTER_TEMPERATURE (citing “burn weaker”)",
+   "“The bridge grows stronger when people watch it.” read as SET_MATERIAL_PROPERTY instead of MODIFY_DURABILITY (citing “grows stronger”)"
+  ]
+ },
+ "ideas": {
+  "redbank": {
+   "offered": 3,
+   "understood": 3,
+   "ideas": [
+    "Chickens fly when the bell rings.",
+    "Wet stone becomes light beside lanterns.",
+    "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker."
+   ]
+  },
+  "harvest": {
+   "offered": 3,
+   "understood": 1,
+   "ideas": [
+    "Chickens fly when the bell rings.",
+    "Wet stone becomes light beside lanterns.",
+    "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker."
+   ]
+  },
+  "ashwood": {
+   "offered": 3,
+   "understood": 0,
+   "ideas": [
+    "Chickens fly when the bell rings.",
+    "Wet stone becomes light beside lanterns.",
+    "At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker."
+   ]
+  }
+ },
+ "alternatives": {
+  "sentences": 10,
+  "offered": 8,
+  "harmful": 3,
+  "examples": [
+   "“Homes cannot be damaged.” → HARMFUL “When always: homes in Eastbank burn more readily (fire damage +40%).”",
+   "“Nobody in the village can die.” → “When always: villagers in Eastbank feel braver: fear -20 at dawn (feelings only; what they”",
+   "“The village is protected from all harm.” → “When always: villagers in Eastbank feel braver: fear -20 at dawn (feelings only; what they”",
+   "“The river always stays low.” → “When a lantern (beacon) is lit: floodwater in Eastbank is turned aside: the ground counts ”",
+   "“The flood is always weak.” → “When a lantern (beacon) is lit: floodwater in Eastbank is turned aside: the ground counts ”",
+   "“The harvest is always perfect.” → HARMFUL “When always: fields and crops in The Valley burn more readily (fire damage +40%).”"
+  ]
+ },
+ "flavour": [
+  {
+   "text": "Chickens fly into the night when the bell rings.",
+   "narrative": null
+  },
+  {
+   "text": "Sickness keeps away from homes with open doors.",
+   "narrative": null
+  },
+  {
+   "text": "Wolves melt like mist in the smoke.",
+   "narrative": null
+  }
+ ],
+ "wards": [
+  {
+   "rules": 2,
+   "text": "Floodwater always flows away from every home.",
+   "power": 22,
+   "rating": "moderate",
+   "influence": 2,
+   "support": {
+    "percent": 65,
+    "believers": 4
+   },
+   "charged": 2
+  },
+  {
+   "rules": 2,
+   "text": "The river turns away from the village.",
+   "power": 22,
+   "rating": "moderate",
+   "influence": 2,
+   "support": {
+    "percent": 65,
+    "believers": 4
+   },
+   "charged": 2
+  },
+  {
+   "rules": 2,
+   "text": "The river turns away from lit lanterns.",
+   "power": 26.9,
+   "rating": "moderate",
+   "influence": 2,
+   "support": {
+    "percent": 65,
+    "believers": 4
+   },
+   "charged": 2
+  }
+ ],
+ "novice": {
+  "dev": {
+   "doable": 68,
+   "understood": 22,
+   "impossible": 22,
+   "wronglyAccepted": 0,
+   "byChapter": {
+    "redbank": [
+     6,
+     24
+    ],
+    "harvest": [
+     8,
+     21
+    ],
+    "ashwood": [
+     8,
+     23
+    ]
+   }
+  },
+  "heldOut": {
+   "doable": 69,
+   "understood": 34,
+   "impossible": 21,
+   "wronglyAccepted": 0,
+   "byChapter": {
+    "redbank": [
+     17,
+     24
+    ],
+    "harvest": [
+     9,
+     22
+    ],
+    "ashwood": [
+     8,
+     23
+    ]
+   }
+  }
+ }
+}

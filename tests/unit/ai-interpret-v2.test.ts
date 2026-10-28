@@ -127,6 +127,39 @@ describe('POST /api/interpret-reality', () => {
     }
   });
 
+  it('keeps the change to the words too (phase 17): a different change is dropped, the opposite one needs the player\'s yes', async () => {
+    // "fly" read as hens drawn to the bell tower: the right hens, the right bell, a different law
+    const drawn = chickens();
+    drawn.candidates[0].clauses[0].effect = { op: 'MOVE_TOWARD', magnitude: 2, radius: 2 } as never;
+    const a = await ask(() => ({ kind: 'ok', value: drawn }), 'Chickens fly when the bell rings.');
+    expect(a.r.body).toMatchObject({ ok: false, reason: 'bad_output', fallback: 'offline' });
+    // with no words cited for it either
+    drawn.candidates[0].map[0].effect = '';
+    expect((await ask(() => ({ kind: 'ok', value: drawn }), 'Chickens fly when the bell rings.')).r.body).toMatchObject({ ok: false, reason: 'bad_output' });
+    // "no wolf can ever enter" read as wolves lured in: the words, taken the other way round, are kept only at low confidence
+    const lured: InterpretV2Output = {
+      ...chickens(),
+      candidates: [{ regions: ['north'], clauses: [{ when: { combine: 'all', events: [{ event: 'always', min: null, negate: false }] }, where: null, target: { kind: 'wolf', near: { anchor: 'home', radius: 2 }, region: null }, effect: { op: 'MOVE_TOWARD', magnitude: 2, radius: 2 } as never, duration: 'night' }], map: [{ target: 'wolf', effect: 'enter', trigger: '', condition: null, place: 'the village' }], omitted: [], confidence: 'high' }],
+    };
+    const b = await ask(() => ({ kind: 'ok', value: lured }), 'No wolf can ever enter the village.', { scenario: { id: 'ashwood', seed: 1, lab: false } });
+    const w = b.r.body.reading as WireReading;
+    if (w.kind !== 'supported') throw new Error(`${w.kind}: ${JSON.stringify(b.r.body).slice(0, 300)}`);
+    expect(w.candidates[0].confidence).toBe('low');
+    expect(w.notes.join()).toMatch(/other way round.*draws it in/);
+    // a verb the game's vocabulary does not know is the model's to read, at low confidence
+    const ascend = chickens();
+    ascend.candidates[0].map[0].effect = 'ascend';
+    const c = await ask(() => ({ kind: 'ok', value: ascend }), 'Chickens ascend when the bell rings.');
+    const w2 = c.r.body.reading as WireReading;
+    if (w2.kind !== 'supported') throw new Error(w2.kind);
+    expect(w2.candidates[0].confidence).toBe('low');
+    expect(w2.notes.join()).toMatch(/does not know "ascend"/);
+    // and the honest reading is untouched
+    const ok = await ask(() => ({ kind: 'ok', value: chickens() }), 'Chickens fly when the bell rings.');
+    expect((ok.r.body.reading as WireReading).kind).toBe('supported');
+    expect(((ok.r.body.reading as WireReading) as { candidates: { confidence: string }[] }).candidates[0].confidence).toBe('high');
+  });
+
   it('moves a reading to a region that can hold it, and turns a "supported" with omissions into a partial', async () => {
     const west = chickens({ regions: ['west'] });
     const a = await ask(() => ({ kind: 'ok', value: west }), 'Chickens fly when the bell rings.');

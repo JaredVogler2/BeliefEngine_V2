@@ -4,6 +4,7 @@ import { believerCap, electorateOfRegion } from '../nl/build.ts';
 import { sanitizeText } from '../nl/parse.ts';
 import { validateRealityAst, LAB_LIMITS, LIMITS, type Clause, type Condition, type RealityAst, type Selector, type Trigger } from './ast.ts';
 import { balanceReality, type Rating } from './balance.ts';
+import { coverageOf, realityComposeCost } from './cost.ts';
 import { demoRitualOf } from './demonstrate.ts';
 import { groundAst } from './ground.ts';
 import { ANCHOR_LABEL, KINDS } from './ontology.ts';
@@ -88,10 +89,15 @@ function condText(c: Condition): string {
   return { wet: 'wet', dry: 'dry', raining: 'it is raining', clear: 'the sky is clear', windy: 'it is windy', flooding: 'the river is high', lit: 'lit', blue: 'wearing blue', airborne: 'in the air', healthy: 'healthy' }[c.test];
 }
 
+/** Landmarks a village has many of: a belief measured from them acts around each one ("within 2 tiles of any home"). */
+const MANY_ANCHORS = new Set(['home', 'field', 'pen', 'campfire']);
+
 function selectorText(s: RunState, sel: Selector, regions: string[]): string {
   const k = KINDS[sel.kind];
   const tags = sel.tags.length ? `${sel.tags.map((t) => ({ wet: 'wet', dry: 'dry', blue: 'blue-clad', healthy: 'healthy' })[t]).join(' ')} ` : '';
-  const near = sel.near ? ` within ${sel.near.radius} tile${sel.near.radius === 1 ? '' : 's'} of ${sel.near.anchor === 'beacon' ? 'a lantern' : `the ${ANCHOR_LABEL[sel.near.anchor] ?? sel.near.anchor}`}` : '';
+  // rules 3 say "any home" where the belief acts around every one of them (rules 1 and 2 said "the home", and keep saying it)
+  const which = (a: string) => (realityRules(s) >= 3 && MANY_ANCHORS.has(a) ? 'any' : 'the');
+  const near = sel.near ? ` within ${sel.near.radius} tile${sel.near.radius === 1 ? '' : 's'} of ${sel.near.anchor === 'beacon' ? 'a lantern' : `${which(sel.near.anchor)} ${ANCHOR_LABEL[sel.near.anchor] ?? sel.near.anchor}`}` : '';
   const where = sel.region ? regionName(s, sel.region) : regions.map((r) => regionName(s, r)).join(' or ');
   return `${tags}${k.label}${near} in ${where}`;
 }
@@ -155,9 +161,14 @@ function effectText(s: RunState, c: Clause): string {
 }
 
 export function clauseText(s: RunState, c: Clause, regions: string[]): string {
-  const when = `When ${triggerText(c.when)}${c.where ? ` and ${condText(c.where)}` : ''}`;
+  // rules 3 say "Every night" for a belief that needs nothing to set it off (rules 1 and 2 said "When always", and keep saying it)
+  const always = realityRules(s) >= 3 && 'event' in c.when && c.when.event === 'always';
+  const when = always ? `Every night${c.where ? ` when ${condText(c.where)}` : ''}` : `When ${triggerText(c.when)}${c.where ? ` and ${condText(c.where)}` : ''}`;
   const dur = c.duration === 'while_active' ? ', and from then on every night while the belief holds' : '';
-  return `${when}${dur}: ${selectorText(s, c.target, regions)} ${effectText(s, c)}.`;
+  // rules 3 name the reach an effect acts with (its own radius, once narrowed), not the selector's, which water and wolves never use
+  const e = c.effect as { radius?: number };
+  const sel = realityRules(s) >= 3 && c.target.near && typeof e.radius === 'number' ? { ...c.target, near: { ...c.target.near, radius: e.radius } } : c.target;
+  return `${when}${dur}: ${selectorText(s, sel, regions)} ${effectText(s, c)}.`;
 }
 
 /** What else a clause does to the world, exactly as the engine plays it: never more than it does. */
@@ -254,7 +265,7 @@ export function buildRealityClaim(s: RunState, astIn: unknown, opts: { title?: s
   const text = sanitizeText(checked.ast.text);
   const rules = realityRules(s);
   const twin = rules >= 2 ? authoredTwin(s, checked.ast) : null;
-  const bal = balanceReality({ ...checked.ast, text }, { lab, rules, maxBelievers: believerCap(s.villagers, checked.ast.regions), floor: twin ? { short: twin.short, thresholds: twin.spec.thresholds, watchers: twin.spec.trigger.kind === 'watchers' ? (twin.spec.trigger.min ?? 1) : undefined } : null });
+  const bal = balanceReality({ ...checked.ast, text }, { lab, rules, maxBelievers: believerCap(s.villagers, checked.ast.regions), floor: twin ? { short: twin.short, thresholds: twin.spec.thresholds, watchers: twin.spec.trigger.kind === 'watchers' ? (twin.spec.trigger.min ?? 1) : undefined } : null, ...(rules >= 3 ? { coverage: coverageOf(s, checked.ast.regions) } : {}) });
   const ast = bal.ast;
   const id = `reality_${bal.hash.slice(0, 10)}`;
   const title = sanitizeText(opts.title ?? '').replace(/[<>]/g, '').slice(0, MAX_TITLE) || defaultTitle(ast);
@@ -306,7 +317,8 @@ export function buildRealityClaim(s: RunState, astIn: unknown, opts: { title?: s
       support: { percent: Math.round(bal.thresholds.on * 100), believers: bal.thresholds.minSupporters },
       rating: bal.rating,
       power: bal.power,
-      cost: { compose: bal.apCost, perTelling: 1 },
+      // exactly what the engine charges for it (actionCost): the composer, MCP and the engine never disagree on a price
+      cost: { compose: realityComposeCost(s, ast), perTelling: 1 },
       rev,
     },
   };

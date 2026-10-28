@@ -17,7 +17,7 @@
   "alive": 10,
   "hens": 22,
   "bank": 0,
-  "stateHash": "0ce7238943cc8d",
+  "stateHash": "0f2aa559233235",
   "eventHash": "079499d360e1db",
   "actions": [
    {
@@ -75,7 +75,7 @@
        "source": {
         "reader": "offline-v2",
         "model": null,
-        "prompt": "offline-v2.2",
+        "prompt": "offline-v2.3",
         "id": null
        },
        "day": 1,
@@ -250,7 +250,7 @@
   "alive": 10,
   "hens": 0,
   "bank": 0,
-  "stateHash": "0adb9cbce41f61",
+  "stateHash": "0e119e4ab98abb",
   "eventHash": "0306ac30114cc3",
   "actions": [
    {
@@ -308,7 +308,7 @@
        "source": {
         "reader": "offline-v2",
         "model": null,
-        "prompt": "offline-v2.2",
+        "prompt": "offline-v2.3",
         "id": null
        },
        "day": 1,
@@ -428,7 +428,7 @@
   "alive": 10,
   "hens": 0,
   "bank": 3,
-  "stateHash": "155cb07108207f",
+  "stateHash": "032cc7955d72e3",
   "eventHash": "15ae7f7cf505e8",
   "actions": [
    {
@@ -486,7 +486,7 @@
        "source": {
         "reader": "offline-v2",
         "model": null,
-        "prompt": "offline-v2.2",
+        "prompt": "offline-v2.3",
         "id": null
        },
        "day": 1,
@@ -653,7 +653,7 @@
   "alive": 9,
   "hens": 0,
   "bank": 0,
-  "stateHash": "1b6d9f78dc380b",
+  "stateHash": "0225981ddf2830",
   "eventHash": "1d0a12bd6fc61c",
   "actions": [
    {
@@ -711,7 +711,7 @@
        "source": {
         "reader": "offline-v2",
         "model": null,
-        "prompt": "offline-v2.2",
+        "prompt": "offline-v2.3",
         "id": null
        },
        "day": 1,
@@ -938,7 +938,7 @@
   "alive": 14,
   "hens": 4,
   "bank": 0,
-  "stateHash": "0272c5e8205376",
+  "stateHash": "0e61e8f1b17313",
   "eventHash": "18825afc116356",
   "actions": [
    {
@@ -996,7 +996,7 @@
        "source": {
         "reader": "offline-v2",
         "model": null,
-        "prompt": "offline-v2.2",
+        "prompt": "offline-v2.3",
         "id": null
        },
        "day": 1,

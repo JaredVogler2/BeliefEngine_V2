@@ -5,7 +5,7 @@ import { applyDraft, applyExtraClaims, pledgeKey, sanitizePledges } from '../pro
 import { clone } from '../gen/blueprint.ts';
 import { buildWorld } from '../world/build.ts';
 import { assignDay } from '../ai/routines.ts';
-import { initReality } from '../reality/state.ts';
+import { LIVING_RULES, initReality } from '../reality/state.ts';
 import { initMinds } from '../mind/init.ts';
 import { emit, type Ctx } from './events.ts';
 import { hashKeys, rand } from './rng.ts';
@@ -138,7 +138,8 @@ export function createRunFromDef(base: ScenarioDef, opts: CreateRunOptions): Run
   if (opts.reality || opts.realityLab || opts.living) {
     // writing wins over a Living Village if both are asked for: a run is one mode
     const living = !!opts.living && !opts.reality && !opts.realityLab;
-    s.v2 = initReality(s, !!opts.realityLab, opts.realityRules, living);
+    // a Living Village has no written beliefs, so it stays under the rules it was introduced with and every record of one replays
+    s.v2 = initReality(s, !!opts.realityLab, living ? LIVING_RULES : opts.realityRules, living);
     s.v2.minds = initMinds(s);
     s.flags.reality = opts.realityLab ? 2 : living ? 3 : 1;
   }

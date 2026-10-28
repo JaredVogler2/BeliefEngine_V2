@@ -22,6 +22,10 @@ import { OPERATORS } from './operators.ts';
  * 0.5 + p/200 rounded up to 5% (55%..85%), believers 3 + p/15 (3..7), ramp 80 - p/2 (50..80), decay 18 + 0.4 p, where p is the
  * power per region the belief is held in (each region is its own law and gets its own share; a radius is paid once per region);
  * never less than the chapter's own law that does the same thing asks (reality/twin.ts).
+ * Rules 3 (phase 17): an effect measured from every landmark of a kind ("floodwater flows away from every home") acts around each of
+ * them, so its reach is the ground all of them cover together, in circles of its radius (never less than one a region); one measured
+ * from the trigger's own sources (the lit lanterns, the ringing bell) keeps one circle a region. Writing it costs what its whole power
+ * says (under rules 1 and 2 the Influence charged was read from the rules-1 power, whatever the run's rules).
  * Measured against the tournament (scripts/tournament-v2.ts): under rules 1 no written belief reached law within a chapter.
  * Either way never more believers than the electorate can give; Influence 1 / 2 / 3 below power 10 / 30 / above. Balanced play
  * caps power at 60, narrowing reach and then magnitude; Reality Lab caps it at 120.
@@ -68,21 +72,29 @@ function countTests(c: Clause['where']): number {
   return ('all' in c ? c.all : c.any).reduce((a, x) => a + countTests(x), 0);
 }
 
-export function clausePower(c: Clause, regions: number, rules = 1): number {
+/**
+ * Rules 3: how much ground a clause covers at a radius, in circles of that radius, all the belief's regions together (reality/cost.ts
+ * measures it in the village); null where it acts around the trigger's own sources, which keep one circle a region.
+ */
+export type Coverage = (c: Clause, radius: number) => number | null;
+
+export function clausePower(c: Clause, regions: number, rules = 1, coverage?: Coverage): number {
   const e = c.effect as Record<string, unknown>;
   const whole = 4 * Math.max(1, regions);
   // an operator's own radius is its reach (V1's stamps); a "near" selector only narrows a region-wide effect, so it never costs more.
   // Rules 2: a belief held in several regions acts around its sources in each of them, so a radius is paid once per region.
+  // Rules 3: around every landmark of a kind, it is paid for the ground they cover together.
   const per = rules >= 2 ? Math.max(1, regions) : 1;
-  const reach = typeof e.radius === 'number' ? reachOf(e.radius) * per : c.target.near ? Math.min(whole, reachOf(c.target.near.radius) * per) : whole;
+  const circles = (r: number): number => (rules >= 3 && coverage ? (coverage(c, r) ?? per) : per);
+  const reach = typeof e.radius === 'number' ? reachOf(e.radius) * circles(e.radius) : c.target.near ? Math.min(whole, reachOf(c.target.near.radius) * circles(c.target.near.radius)) : whole;
   const op = OPERATORS[c.effect.op];
   const cond = Math.max(0.5, 0.8 ** countTests(c.where));
   const dur = c.duration === 'while_active' ? 1.25 : 1;
   return reach * magnitudeOf(c) * triggerEase(c.when) * (op.weight / 8) * cond * dur;
 }
 
-export function beliefPower(ast: RealityAst, rules = 1): number {
-  const sum = ast.clauses.reduce((a, c) => a + clausePower(c, ast.regions.length, rules), 0);
+export function beliefPower(ast: RealityAst, rules = 1, coverage?: Coverage): number {
+  const sum = ast.clauses.reduce((a, c) => a + clausePower(c, ast.regions.length, rules, coverage), 0);
   return sum * (1 + 0.1 * (ast.clauses.length - 1));
 }
 
@@ -102,10 +114,10 @@ const clamp = (x: number, lo: number, hi: number): number => Math.max(lo, Math.m
 const roundUp05 = (x: number): number => Math.ceil(x * 20 - 1e-9) / 20;
 
 /** Narrow the strongest clause (reach first, then magnitude) until the belief fits the cap; every change is reported. */
-function narrow(ast: RealityAst, cap: number, notes: string[], rules: number): RealityAst {
+function narrow(ast: RealityAst, cap: number, notes: string[], rules: number, coverage?: Coverage): RealityAst {
   const out: RealityAst = JSON.parse(JSON.stringify(ast)) as RealityAst;
-  for (let guard = 0; guard < 16 && beliefPower(out, rules) > cap; guard++) {
-    const powers = out.clauses.map((c) => clausePower(c, out.regions.length, rules));
+  for (let guard = 0; guard < 16 && beliefPower(out, rules, coverage) > cap; guard++) {
+    const powers = out.clauses.map((c) => clausePower(c, out.regions.length, rules, coverage));
     const k = powers.indexOf(Math.max(...powers));
     const c = out.clauses[k];
     const e = c.effect as Record<string, unknown>;
@@ -157,13 +169,13 @@ function floorWatchers(ast: RealityAst, min: number, short: string, notes: strin
   return raised ? out : ast;
 }
 
-export function balanceReality(input: RealityAst, opts: { lab?: boolean; maxBelievers?: number; rules?: number; floor?: AuthoredFloor | null } = {}): RealityBalance {
+export function balanceReality(input: RealityAst, opts: { lab?: boolean; maxBelievers?: number; rules?: number; floor?: AuthoredFloor | null; coverage?: Coverage } = {}): RealityBalance {
   const adjustments: string[] = [];
   const cap = opts.lab ? LAB_MAX_POWER : MAX_POWER;
   const rules = opts.rules ?? 1;
   const floored = rules >= 2 && opts.floor?.watchers ? floorWatchers(input, opts.floor.watchers, opts.floor.short, adjustments) : input;
-  const ast = narrow(floored, cap, adjustments, rules);
-  const power = Math.round(beliefPower(ast, rules) * 10) / 10;
+  const ast = narrow(floored, cap, adjustments, rules, opts.coverage);
+  const power = Math.round(beliefPower(ast, rules, opts.coverage) * 10) / 10;
   const r2 = rules >= 2;
   const f = r2 ? (opts.floor ?? null) : null;
   // rules 2: a belief held in several regions is a law in each, and each region gets only its own share of the effect, so each

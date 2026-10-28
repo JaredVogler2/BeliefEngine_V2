@@ -3,6 +3,7 @@ import { MAX_REALITY_CLAIMS, previewAction } from '../../engine/index.ts';
 import type { RunState } from '../../engine/index.ts';
 import { readBelief, type ReadCandidate, type Reading } from '../../engine/reality/read.ts';
 import { describeDraft } from '../../engine/reality/preview.ts';
+import { realityIdeas } from '../../engine/reality/ideas.ts';
 import { aiClient, type ReadingMeta } from '../../ai/client.ts';
 import { V2_FEATURES } from '../../v2/features.ts';
 import { Modal } from '../components.tsx';
@@ -21,8 +22,6 @@ const KIND: Record<Reading['kind'], { cls: string; label: string }> = {
 };
 
 const RATING_WORD = { light: 'A light belief', moderate: 'A moderate belief', strong: 'A strong belief' } as const;
-
-const EXAMPLES = ['Chickens fly when the bell rings.', 'Wet stone becomes light beside lanterns.', 'At night, bell ringing pulls rain toward the orchard and makes local flames burn weaker.'];
 
 function candidatesOf(r: Reading | null): ReadCandidate[] {
   if (!r) return [];
@@ -58,6 +57,8 @@ export default function RealityCompose() {
   const [note, setNote] = useState<string | null>(saved?.reading && !fresh ? 'The village has changed since you read this, so it needs reading again (reading is free).' : null);
   const [retry, setRetry] = useState<{ at: number } | null>(null);
   const [written, setWritten] = useState<string | null>(null);
+  // sentences this village can make real (worked out when the player first opens "Ideas": a reading each)
+  const [ideas, setIdeas] = useState<string[] | null>(null);
   const o = useOnlineReading();
   const seq = useRef(0);
   const stopper = useRef<AbortController | null>(null);
@@ -223,10 +224,11 @@ export default function RealityCompose() {
         </form>
 
         {!reading && (
-          <details style={{ marginTop: '0.6rem' }} data-testid="reality-help">
+          <details style={{ marginTop: '0.6rem' }} data-testid="reality-help" onToggle={(e) => { if (e.currentTarget.open && !ideas && state) setIdeas(realityIdeas(state)); }}>
             <summary className="small" style={{ cursor: 'pointer' }}>Ideas</summary>
             <div style={{ display: 'grid', gap: '0.3rem', marginTop: '0.3rem' }}>
-              {EXAMPLES.map((x, i) => (
+              <p className="small muted" style={{ margin: 0 }}>Beliefs this village can make real, to try or to change:</p>
+              {(ideas ?? []).map((x, i) => (
                 <button key={i} type="button" className="btn small" style={{ textAlign: 'left' }} onClick={() => { setText(x); run(x); }} data-testid={`reality-example-${i}`}>{x}</button>
               ))}
             </div>
@@ -263,7 +265,12 @@ export default function RealityCompose() {
               </div>
             )}
             {reading.kind === 'unsupported' && list.length > 0 && <p className="small muted" style={{ margin: '0.5rem 0 0.2rem' }}>Beliefs about the same things that this village can make real (not what you wrote):</p>}
-            {reading.notes.length > 0 && <ul className="small muted" data-testid="reality-notes" style={{ margin: '0.3rem 0' }}>{reading.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>}
+            {(() => {
+              // a phrase the reasons above already name is not listed again below them
+              const listed = reading.kind === 'partial' || reading.kind === 'unsupported' ? reading.reasons.map((r) => `"${r.words}" was left out`) : [];
+              const notes = reading.notes.filter((n) => !listed.some((l) => n.startsWith(l)));
+              return notes.length > 0 && <ul className="small muted" data-testid="reality-notes" style={{ margin: '0.3rem 0' }}>{notes.map((n, i) => <li key={i}>{n}</li>)}</ul>;
+            })()}
 
             {list.length > 0 && (
               <div role="radiogroup" aria-label="Ways the game can read your sentence" className="drafts">
@@ -298,6 +305,9 @@ export default function RealityCompose() {
                       </div>
                       {on && d && (
                         <div className="small">
+                          {d.narrative && (
+                            <p style={{ margin: '0.2rem 0' }} data-testid="reality-narrative"><b>Kept as words only:</b> “{d.narrative}” colours the belief and changes nothing in the world.</p>
+                          )}
                           {d.omitted.length > 0 && (
                             <div data-testid="reality-omitted">
                               <b>Left out:</b>

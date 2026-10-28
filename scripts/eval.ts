@@ -165,7 +165,7 @@ const costs = {
 // ------------------------------------------------------------------------------------------ win diversity (phase 11 tournament)
 
 const diversity = ['redbank', 'harvest', 'ashwood'].map((sc) => {
-  const sum = read(`docs/data/tournament-v2/rules2-${sc}/summary.json`) as { seeds: number; cells: { policy: string; wins: number }[] };
+  const sum = read(`docs/data/tournament-v2/rules3-${sc}/summary.json`) as { seeds: number; cells: { policy: string; wins: number }[] };
   const winners = sum.cells.filter((c) => c.wins > 0);
   return { scenario: sc, seeds: sum.seeds, policiesThatWin: winners.length, of: sum.cells.length, best: winners.sort((a, b) => b.wins - a.wins).slice(0, 3).map((c) => `${c.policy} ${c.wins}/${sum.seeds}`) };
 });
@@ -222,7 +222,7 @@ md.push('| Step | p50 | p95 | n |', '|---|---|---|---|');
 for (const [k, q] of Object.entries(report.latencyMs)) md.push(`| ${k} | ${q.p50} | ${q.p95} | ${q.n} |`);
 md.push('', '## Tokens and cost: list-price ESTIMATES, not measured', '');
 md.push(`Prompt sizes measured from these corpora and cases (one token per three characters, the service's own estimate): a reading ≈ ${costs.tokensPerReading} input tokens, a six-villager batch ≈ ${costs.tokensPerNpcBatch}. At list prices: a fast reading ≈ $${costs.readingFast}, an accurate one ≈ $${costs.readingAccurate}, a fast villager batch ≈ $${costs.npcBatchFast}. Tier split for these sentences: ${tiers.fast} fast, ${tiers.accurate} accurate. Measured tokens, latency and cost need a provider (LIVE UNVERIFIED).`, '');
-md.push('## Win diversity (phase 11 tournament, rules 2, 30 seeds per chapter)', '');
+md.push('## Win diversity (phase 17 tournament, written-belief rules 3, 30 seeds per chapter)', '');
 for (const d of diversity) md.push(`- ${d.scenario}: ${d.policiesThatWin} of ${d.of} policies win at least once; best: ${d.best.join(', ')}.`);
 md.push('');
 writeFileSync(new URL('docs/data/evals/REPORT.md', ROOT), md.join('\n'));

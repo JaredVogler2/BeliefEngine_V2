@@ -63,12 +63,18 @@ export interface AppliedEffect {
 }
 
 /**
- * The rules written beliefs are balanced and staged under (not the language: a sentence reads the same under both).
+ * The rules written beliefs are balanced and staged under (not the language: a sentence reads the same under all of them).
  *   1  phases 04-10: support max(60%, 0.5 + power/160), 3 + power/8 believers, no demonstrations
  *   2  phase 11: support and believers closer to authored laws of equal power; a belief that waits for a catalyst can be staged
- * A run keeps the rules it was created under (absent in older saves: 1), so a saved or recorded run replays exactly.
+ *   3  phase 17: a belief measured from every landmark of a kind ("…away from every home") is priced for all the ground those
+ *      landmarks cover (reality/cost.ts), and writing one costs what its whole power says (the composer's price is the charge);
+ *      previews say "Every night" and "any home" where rules 1 and 2 said "When always" and "the home"
+ * A run keeps the rules it was created under (absent in older saves: 1), so a saved or recorded run replays exactly. A Living
+ * Village writes no beliefs, so these rules never change it: it is always created under 2 (core/create.ts).
  */
-export const REALITY_RULES = 2;
+export const REALITY_RULES = 3;
+/** The rules every Living Village is created under (it has no written beliefs for later rules to change). */
+export const LIVING_RULES = 2;
 
 export interface RealityState {
   lang: typeof REALITY_LANG;

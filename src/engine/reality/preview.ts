@@ -40,6 +40,9 @@ export interface DraftDetails {
 
 const regionName = (s: RunState, id: string): string => s.world.regions.find((r) => r.id === id)?.name ?? id;
 const REGION_LEVEL = new Set(['water', 'rain', 'fire', 'smoke']);
+/** Landmarks a village has many of: a belief measured from them acts around each one. */
+const MANY = new Set(['home', 'field', 'pen', 'campfire']);
+const everyNight = (t: Trigger): boolean => 'event' in t && t.event === 'always';
 
 /** A stand-in law at full strength in one region, to ask the executor what a clause would touch there tonight. */
 function pseudoLaw(region: string): LawState {
@@ -49,7 +52,7 @@ function pseudoLaw(region: string): LawState {
 function reachText(s: RunState, sel: Selector, regions: string[]): string {
   const where = sel.region ? regionName(s, sel.region) : regions.map((r) => regionName(s, r)).join(' or ');
   if (!sel.near) return REGION_LEVEL.has(sel.kind) ? `all of ${where}` : `everywhere in ${where}`;
-  const anchor = sel.near.anchor === 'beacon' ? 'a lit lantern' : `the ${ANCHOR_LABEL[sel.near.anchor] ?? sel.near.anchor}`;
+  const anchor = sel.near.anchor === 'beacon' ? 'a lit lantern' : `${MANY.has(sel.near.anchor) ? 'any' : 'the'} ${ANCHOR_LABEL[sel.near.anchor] ?? sel.near.anchor}`;
   return `within ${sel.near.radius} tile${sel.near.radius === 1 ? '' : 's'} of ${anchor}, in ${where}`;
 }
 
@@ -58,7 +61,8 @@ function readyNow(s: RunState, t: Trigger, regions: string[]): { now: boolean; w
   const on = regions.some((r) => fires(s, t, pseudoLaw(r)).on);
   const ev = triggerEvents(t);
   const hint = ev.includes('bell') ? 'ring the bell today' : ev.includes('lantern') ? 'light a lantern there' : ev.includes('smoke_fire') ? 'light a smoke fire there' : ev.includes('watchers') ? 'have believers keep watch on the bridge' : ev.includes('spoken') ? 'tell people something today' : ev.includes('ritual') ? 'perform a ritual today' : ev.includes('rain') || ev.includes('clear_night') || ev.includes('flood') ? 'it depends on tonight’s weather' : '';
-  return on ? { now: true, why: `${triggerText(t)}: yes, tonight as things stand` } : { now: false, why: `${triggerText(t)}: not tonight as things stand${hint ? ` (${hint})` : ''}` };
+  const when = everyNight(t) ? 'every night' : triggerText(t);
+  return on ? { now: true, why: `${when}: yes, tonight as things stand` } : { now: false, why: `${when}: not tonight as things stand${hint ? ` (${hint})` : ''}` };
 }
 
 function planOf(s: RunState, ast: RealityAst): ClausePlan[] {
@@ -77,9 +81,10 @@ function planOf(s: RunState, ast: RealityAst): ClausePlan[] {
       line: clauseText(s, c, ast.regions),
       target: KINDS[c.target.kind].label,
       count,
-      reach: reachText(s, c.target, ast.regions),
-      duration: c.duration === 'while_active' ? 'every night once it has first acted, for as long as the belief holds' : `only on nights it is set off${where}`,
-      catalyst: triggerText(c.when),
+      // the reach an effect acts with: its own radius where it has one (a narrowed ward), as the mechanics line says
+      reach: reachText(s, typeof (c.effect as { radius?: number }).radius === 'number' && c.target.near ? { ...c.target, near: { ...c.target.near, radius: (c.effect as { radius: number }).radius } } : c.target, ast.regions),
+      duration: c.duration === 'while_active' ? 'every night once it has first acted, for as long as the belief holds' : everyNight(c.when) ? `every night${where}` : `only on nights it is set off${where}`,
+      catalyst: everyNight(c.when) ? 'night falls (it needs nothing else)' : triggerText(c.when),
       ready: readyNow(s, c.when, ast.regions),
       side: sideEffectsOf(s, c, ast.regions),
     };

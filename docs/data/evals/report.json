@@ -148,7 +148,7 @@
     "faithful": 13,
     "unsupported": 32,
     "abstained": 29,
-    "reasonOk": 20,
+    "reasonOk": 21,
     "hallucinated": 0,
     "partial": 12,
     "partialNamed": 5,
@@ -170,7 +170,7 @@
     "faithful": 13,
     "unsupported": 32,
     "abstained": 30,
-    "reasonOk": 20,
+    "reasonOk": 21,
     "hallucinated": 0,
     "partial": 12,
     "partialNamed": 5,
@@ -219,7 +219,7 @@
   "partlyUntranslated": 0
  },
  "npc": {
-  "situations": 68,
+  "situations": 64,
   "cases": 211,
   "policyDecisions": 211,
   "mockAsked": 211,
@@ -286,40 +286,40 @@
   "opportunity": {
    "spreadsDisbelieved": 0,
    "challengesFirm": 9,
-   "skepticHearsay": 19,
-   "skeptics": 23,
+   "skepticHearsay": 21,
+   "skeptics": 25,
    "withMemories": 209
   },
   "illegalExamples": []
  },
  "latencyMs": {
   "offlineReading": {
-   "p50": 12.87,
-   "p95": 38.83,
+   "p50": 20.71,
+   "p95": 39.5,
    "n": 332
   },
   "mockPipelineReading": {
-   "p50": 20.77,
-   "p95": 41.15,
+   "p50": 47.48,
+   "p95": 87,
    "n": 332
   },
   "v1Reading": {
-   "p50": 2.68,
-   "p95": 49.47,
+   "p50": 2.91,
+   "p95": 48.19,
    "n": 332
   },
   "policyDecision": {
-   "p50": 0.15,
-   "p95": 1.52,
-   "n": 68
+   "p50": 0.12,
+   "p95": 0.85,
+   "n": 64
   }
  },
  "costEstimates": {
   "readingFast": 0.000152,
   "readingAccurate": 0.00303,
-  "npcBatchFast": 0.000602,
+  "npcBatchFast": 0.000617,
   "tokensPerReading": 765,
-  "tokensPerNpcBatch": 2522,
+  "tokensPerNpcBatch": 2673,
   "tierShare": {
    "fast": 177,
    "accurate": 155
@@ -329,7 +329,7 @@
   {
    "scenario": "redbank",
    "seeds": 30,
-   "policiesThatWin": 5,
+   "policiesThatWin": 4,
    "of": 9,
    "best": [
     "evidence-first 27/30",
@@ -351,12 +351,12 @@
   {
    "scenario": "ashwood",
    "seeds": 30,
-   "policiesThatWin": 6,
+   "policiesThatWin": 5,
    "of": 9,
    "best": [
-    "ward-greedy 21/30",
-    "rival-antagonist 21/30",
-    "evidence-first 18/30"
+    "evidence-first 15/30",
+    "inventive-compound 9/30",
+    "ward-greedy 7/30"
    ]
   }
  ]

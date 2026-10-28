@@ -166,6 +166,14 @@ function checkParam(p: ParamSpec, v: unknown): boolean {
 /** Operators that push the same property from opposite sides: drawing in and driving off, growing and withering. */
 const AXIS: Partial<Record<OpId, string>> = { MOVE_AWAY: 'MOVE', MOVE_TOWARD: 'MOVE', GROW_ENTITY: 'GROWTH', DECAY_ENTITY: 'GROWTH' };
 /** The parameter that makes two uses of one operator different things (weight versus flammability, courage versus calm). */
+/** What a clause changes, on what, measured from where: two clauses with the same signature push the same thing. */
+const sig = (c: Clause): string => `${c.target.kind}|${AXIS[c.effect.op] ?? c.effect.op}|${subKind(c.effect)}|${canonicalize(c.target.near)}`;
+
+/** Do two clauses make the same change to the same thing (a belief says it once; validateRealityAst refuses it twice)? */
+export function sameChange(a: Clause, b: Clause): boolean {
+  return sig(a) === sig(b) && direction(a.effect) === direction(b.effect);
+}
+
 function subKind(e: Effect): string {
   if (e.op === 'SET_MATERIAL_PROPERTY') return e.property;
   if (e.op === 'INFLUENCE_MOTIVATION') return e.motive;
@@ -243,7 +251,6 @@ export function validateRealityAst(x: unknown, limits: Limits = LIMITS): AstChec
       issues.push({ code: 'TARGET', at: `${at}.effect.property`, message: `${KINDS[kind].label} have no ${e.property === 'mass' ? 'weight' : e.property} a belief can change here` });
   });
   if (!issues.length) {
-    const sig = (c: Clause) => `${c.target.kind}|${AXIS[c.effect.op] ?? c.effect.op}|${subKind(c.effect)}|${canonicalize(c.target.near)}`;
     const cs = clauses as Clause[];
     for (let i = 0; i < cs.length; i++)
       for (let j = i + 1; j < cs.length; j++) {

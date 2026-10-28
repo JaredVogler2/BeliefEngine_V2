@@ -34,7 +34,7 @@ describe('MCP V2: variants and status', () => {
     const s = new GameService({ home: null });
     const g = data(s.createGame({ scenarioId: 'redbank', seed: 1, variant: 'generative' }));
     expect(g.variant).toBe('generative');
-    expect(g.generative).toMatchObject({ canWriteBeliefs: true, beliefsWritten: 0, maxBeliefs: 3, ranked: true, realityRules: 2 });
+    expect(g.generative).toMatchObject({ canWriteBeliefs: true, beliefsWritten: 0, maxBeliefs: 3, ranked: true, realityRules: 3 });
     expect(data(s.createGame({ scenarioId: 'redbank', seed: 1, variant: 'living' })).generative.canWriteBeliefs).toBe(false);
     expect(data(s.createGame({ scenarioId: 'redbank', seed: 1, variant: 'lab' })).generative).toMatchObject({ ranked: false, maxBeliefs: 5 });
     const classic = data(s.createGame({ scenarioId: 'redbank', seed: 1 }));
